@@ -28,7 +28,7 @@ To see the available commands and their options, run `yuzuha --help`.
 
 Some options can be customized through a configuration file. Default settings are declared in [defaults/yuzuha.zon](defaults/yuzuha.zon).
 
-Before trying to connect to server, make sure you have the compatible client version (`CNBetaWin3.4.2` at the time of writing) and [yuzuha-patch](https://git.xeondev.com/yuzuha/yuzuha-patch) installed.
+Before trying to connect to server, make sure you have the compatible client version (`CNBetaWin3.4.3` at the time of writing) and [yuzuha-patch](https://git.xeondev.com/yuzuha/yuzuha-patch) installed.
 
 ## Features
 Eldreda is in early state of development and has the following features available:
