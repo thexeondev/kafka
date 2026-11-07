@@ -4,18 +4,18 @@ const mem = std.mem;
 const Allocator = std.mem.Allocator;
 const IpAddress = std.Io.net.IpAddress;
 
-const yuzuha = @import("yuzuha");
-const rsa = yuzuha.rsa;
-const sdk = yuzuha.sdk;
-const Player = yuzuha.Player;
-const Command = yuzuha.Command;
-const Session = yuzuha.Session;
-const protobuf = yuzuha.protobuf;
+const kafka = @import("kafka");
+const rsa = kafka.rsa;
+const sdk = kafka.sdk;
+const Player = kafka.Player;
+const Command = kafka.Command;
+const Session = kafka.Session;
+const protobuf = kafka.protobuf;
 const PacketHead = protobuf.gen.PacketHead;
 const PlayerGetTokenCsReq = protobuf.gen.PlayerGetTokenCsReq;
 const PlayerGetTokenScRsp = protobuf.gen.PlayerGetTokenScRsp;
 
-const log = std.log.scoped(.@"yuzuha::gateway");
+const log = std.log.scoped(.@"kafka::gateway");
 
 const Server = @import("root").Server;
 
@@ -163,7 +163,7 @@ fn serveConnection(
             },
         };
 
-        try yuzuha.commands.execute(&session);
+        try kafka.commands.execute(&session);
 
         if (session.player.needs_save) {
             try player_storage.saveToFile(io, server.storage.player_dir, player_storage_file_path);
@@ -187,7 +187,7 @@ const Client = struct {
         client.player_uid = token.player_uid;
         client.packet_id_counter = 0;
 
-        yuzuha.random.getDecryptVector(&client.decrypt_vector, token.rand_key);
+        kafka.random.getDecryptVector(&client.decrypt_vector, token.rand_key);
     }
 };
 

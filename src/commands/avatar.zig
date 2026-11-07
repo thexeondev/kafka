@@ -1,10 +1,10 @@
 const std = @import("std");
 
-const yuzuha = @import("../yuzuha.zig");
-const Player = yuzuha.Player;
-const Session = yuzuha.Session;
-const protobuf = yuzuha.protobuf;
-const templates = yuzuha.templates;
+const kafka = @import("../kafka.zig");
+const Player = kafka.Player;
+const Session = kafka.Session;
+const protobuf = kafka.protobuf;
+const templates = kafka.templates;
 
 pub fn GetAvatarDataCsReq(session: *Session) !void {
     var avatar_info_list: protobuf.pack.AvatarInfoList = .empty;

@@ -2,9 +2,9 @@ const std = @import("std");
 const mem = std.mem;
 const Allocator = std.mem.Allocator;
 
-const yuzuha = @import("yuzuha.zig");
-const Configuration = yuzuha.Configuration;
-const rsa = yuzuha.rsa;
+const kafka = @import("kafka.zig");
+const Configuration = kafka.Configuration;
+const rsa = kafka.rsa;
 
 pub const QueryDispatchResponseOptions = struct {
     /// Used for scratch allocations.

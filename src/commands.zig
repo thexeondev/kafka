@@ -1,10 +1,10 @@
 const std = @import("std");
 
-const yuzuha = @import("yuzuha.zig");
-const Session = yuzuha.Session;
-const protobuf = yuzuha.protobuf;
+const kafka = @import("kafka.zig");
+const Session = kafka.Session;
+const protobuf = kafka.protobuf;
 
-const log = std.log.scoped(.@"yuzuha::commands");
+const log = std.log.scoped(.@"kafka::commands");
 
 const namespaces: []const type = &.{
     @import("commands/player.zig"),

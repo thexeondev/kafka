@@ -1,7 +1,7 @@
-const yuzuha = @import("../yuzuha.zig");
-const Player = yuzuha.Player;
-const Session = yuzuha.Session;
-const protobuf = yuzuha.protobuf;
+const kafka = @import("../kafka.zig");
+const Player = kafka.Player;
+const Session = kafka.Session;
+const protobuf = kafka.protobuf;
 
 pub fn PlayerLoginCsReq(session: *Session) !void {
     try session.sink.respond(protobuf.gen.PlayerLoginScRsp, &.{});

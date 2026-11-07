@@ -12,24 +12,24 @@ pub fn build(b: *Build) void {
     const test_step = b.step("test", "run the tests");
     const serve_step = b.step("serve", "start the server");
 
-    const module = b.addModule("yuzuha", .{
-        .root_source_file = b.path("src/yuzuha.zig"),
+    const module = b.addModule("kafka", .{
+        .root_source_file = b.path("src/kafka.zig"),
         .target = target,
         .optimize = optimize,
     });
     convertTemplates(b, module);
-    importFile(b, module, "defaults/yuzuha.zon");
+    importFile(b, module, "defaults/kafka.zon");
     importFile(b, module, "assets/textmap.bin");
     const module_tests = b.addTest(.{ .root_module = module });
     test_step.dependOn(&b.addRunArtifact(module_tests).step);
 
     const exe = b.addExecutable(.{
-        .name = "yuzuha",
+        .name = "kafka",
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/main.zig"),
             .target = target,
             .optimize = optimize,
-            .imports = &.{.{ .name = "yuzuha", .module = module }},
+            .imports = &.{.{ .name = "kafka", .module = module }},
         }),
     });
     b.installArtifact(exe);
@@ -64,7 +64,7 @@ fn maybeCompileProto(b: *Build) ?*Build.Step {
     b.dependOnDirectoryContents(b.path("proto"));
 
     const compiler = b.addExecutable(.{
-        .name = "yuzuha-compile-proto",
+        .name = "kafka-compile-proto",
         .root_module = b.createModule(.{
             .root_source_file = b.path("build/compile-proto.zig"),
             .target = b.graph.host,
@@ -99,7 +99,7 @@ fn maybeConvertTextMap(b: *Build) ?*Build.Step {
     b.root.access(b.graph.io, textmap_raw_path, .{ .read = true }) catch return null;
 
     const converter = b.addExecutable(.{
-        .name = "yuzuha-convert-textmap",
+        .name = "kafka-convert-textmap",
         .root_module = b.createModule(.{
             .root_source_file = b.path("build/convert-textmap.zig"),
             .target = b.graph.host,
@@ -120,11 +120,11 @@ fn maybeConvertTextMap(b: *Build) ?*Build.Step {
 
 const template_dir_path = "assets/TemplateTb";
 
-fn convertTemplates(b: *Build, yuzuha_module: *Build.Module) void {
+fn convertTemplates(b: *Build, kafka_module: *Build.Module) void {
     b.dependOnDirectoryContents(b.path(template_dir_path));
 
     const converter = b.addExecutable(.{
-        .name = "yuzuha-convert-templatetb",
+        .name = "kafka-convert-templatetb",
         .root_module = b.createModule(.{
             .root_source_file = b.path("build/convert-templatetb.zig"),
             .target = b.graph.host,
@@ -146,7 +146,7 @@ fn convertTemplates(b: *Build, yuzuha_module: *Build.Module) void {
 
         const converted_file_name = Io.Dir.path.stem(entry.name);
         const converted_file_path = converted_dir_path.path(b, converted_file_name);
-        yuzuha_module.addAnonymousImport(converted_file_name, .{
+        kafka_module.addAnonymousImport(converted_file_name, .{
             .root_source_file = converted_file_path,
         });
 

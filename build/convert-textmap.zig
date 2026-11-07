@@ -8,7 +8,7 @@ const Allocator = std.mem.Allocator;
 fn usage(io: Io) noreturn {
     Io.File.stdout().writeStreamingAll(
         io,
-        "usage: yuzuha-convert-textmap [input_file_path]\n",
+        "usage: kafka-convert-textmap [input_file_path]\n",
     ) catch {};
     process.exit(1);
 }

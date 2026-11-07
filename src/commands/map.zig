@@ -1,10 +1,10 @@
 const std = @import("std");
 const ArrayList = std.ArrayList;
 
-const yuzuha = @import("../yuzuha.zig");
-const Session = yuzuha.Session;
-const protobuf = yuzuha.protobuf;
-const templates = yuzuha.templates;
+const kafka = @import("../kafka.zig");
+const Session = kafka.Session;
+const protobuf = kafka.protobuf;
+const templates = kafka.templates;
 
 pub fn GetAreaMapDataCsReq(session: *Session) !void {
     var groups_buffer: [templates.UrbanAreaMapGroup.table.count]protobuf.gen.AreaGroupInfo =

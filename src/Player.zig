@@ -8,9 +8,9 @@ const std = @import("std");
 pub const Zon = @import("Player/Zon.zig");
 pub const Storage = @import("Player/Storage.zig");
 
-const yuzuha = @import("yuzuha.zig");
-const gen = yuzuha.protobuf.gen;
-const pack = yuzuha.protobuf.pack;
+const kafka = @import("kafka.zig");
+const gen = kafka.protobuf.gen;
+const pack = kafka.protobuf.pack;
 
 pub const Sync = struct {
     needs_player_sync_notify: bool,

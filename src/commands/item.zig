@@ -1,9 +1,9 @@
 const std = @import("std");
 
-const yuzuha = @import("../yuzuha.zig");
-const Player = yuzuha.Player;
-const Session = yuzuha.Session;
-const protobuf = yuzuha.protobuf;
+const kafka = @import("../kafka.zig");
+const Player = kafka.Player;
+const Session = kafka.Session;
+const protobuf = kafka.protobuf;
 
 pub fn GetWeaponDataCsReq(session: *Session) !void {
     var weapon_buffer: [Player.Storage.Weapon.count_max]protobuf.gen.WeaponInfo = undefined;

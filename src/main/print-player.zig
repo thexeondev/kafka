@@ -4,15 +4,15 @@ const mem = std.mem;
 const process = std.process;
 const Allocator = std.mem.Allocator;
 
-const yuzuha = @import("yuzuha");
-const Player = yuzuha.Player;
-const templates = yuzuha.templates;
+const kafka = @import("kafka");
+const Player = kafka.Player;
+const templates = kafka.templates;
 
-const log = std.log.scoped(.@"yuzuha-print-player");
+const log = std.log.scoped(.@"kafka-print-player");
 
 fn usage(io: Io) noreturn {
     Io.File.stdout().writeStreamingAll(io,
-        \\Usage: yuzuha print-player [input] [options]
+        \\Usage: kafka print-player [input] [options]
         \\
         \\Options:
         \\  --help, -h  Print this help and exit

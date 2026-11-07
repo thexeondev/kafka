@@ -6,10 +6,10 @@ const std = @import("std");
 const Io = std.Io;
 const Allocator = std.mem.Allocator;
 
-const yuzuha = @import("../yuzuha.zig");
-const Player = yuzuha.Player;
-const templates = yuzuha.templates;
-const Storage = yuzuha.Player.Storage;
+const kafka = @import("../kafka.zig");
+const Player = kafka.Player;
+const templates = kafka.templates;
+const Storage = kafka.Player.Storage;
 
 role: Role,
 main_city: MainCity,

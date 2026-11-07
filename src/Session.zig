@@ -3,10 +3,10 @@ const Session = @This();
 const std = @import("std");
 const Io = std.Io;
 
-const yuzuha = @import("yuzuha.zig");
-const Command = yuzuha.Command;
-const protobuf = yuzuha.protobuf;
-const Player = yuzuha.Player;
+const kafka = @import("kafka.zig");
+const Command = kafka.Command;
+const protobuf = kafka.protobuf;
+const Player = kafka.Player;
 
 command: Command,
 player: Player,

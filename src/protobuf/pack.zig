@@ -1,9 +1,9 @@
 const std = @import("std");
 
-const yuzuha = @import("../yuzuha.zig");
-const Player = yuzuha.Player;
-const gen = yuzuha.protobuf.gen;
-const BoundedMultiArray = yuzuha.BoundedMultiArray;
+const kafka = @import("../kafka.zig");
+const Player = kafka.Player;
+const gen = kafka.protobuf.gen;
+const BoundedMultiArray = kafka.BoundedMultiArray;
 
 const Skill = enum(u8) {
     common_attack = 0,

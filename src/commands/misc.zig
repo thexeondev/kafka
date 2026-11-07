@@ -1,7 +1,7 @@
-const yuzuha = @import("../yuzuha.zig");
-const Session = yuzuha.Session;
-const protobuf = yuzuha.protobuf;
-const templates = yuzuha.templates;
+const kafka = @import("../kafka.zig");
+const Session = kafka.Session;
+const protobuf = kafka.protobuf;
+const templates = kafka.templates;
 
 pub fn VideoGetInfoCsReq(session: *Session) !void {
     // TODO
@@ -18,8 +18,8 @@ pub fn GetMiscDataCsReq(session: *Session) !void {
                 .unlocked_list = templates.TeleportConfig.table.items(.id),
             },
             .post_girl = .{
-                .show_post_girl_id_list = &.{3510037},
-                .post_girl_item_list = &.{.{ .id = 3510037 }},
+                .show_post_girl_id_list = &.{3500001},
+                .post_girl_item_list = &.{.{ .id = 3500001 }},
             },
             .business_card = .{},
             .player_accessory = .{
