@@ -694,14 +694,9 @@ pub fn initDefaults(storage: *Storage) void {
     for (templates.AvatarBase.table.items(.id)) |id_int| {
         const id = Avatar.Id.fromInt(id_int) orelse continue;
 
-        // Workaround for Kafka locking the character menu,
-        // to be removed once client-side bug is fixed.
-        var avatar_bits = avatar_bits_maxed_out;
-        avatar_bits.flags.favorite = id_int == 1411;
-
         const result = storage.getOrAddAvatar(.{
             .id = id,
-            .bits = avatar_bits,
+            .bits = avatar_bits_maxed_out,
             .weapon_uid_maybe = .none,
             .dressed_equipment = @splat(.none),
         }) catch |err| switch (err) {
