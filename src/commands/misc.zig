@@ -3,13 +3,13 @@ const Session = kafka.Session;
 const protobuf = kafka.protobuf;
 const templates = kafka.templates;
 
-pub fn VideoGetInfoCsReq(session: *Session) !void {
+pub fn VideoGetInfoCsReq(session: Session(.VideoGetInfoCsReq)) !void {
     // TODO
-    try session.sink.respond(protobuf.gen.VideoGetInfoScRsp, &.{});
+    return session.respond(.{});
 }
 
-pub fn GetMiscDataCsReq(session: *Session) !void {
-    try session.sink.respond(protobuf.gen.GetMiscDataScRsp, &.{
+pub fn GetMiscDataCsReq(session: Session(.GetMiscDataCsReq)) !void {
+    return session.respond(.{
         .data = .{
             .unlock = .{
                 .unlocked_list = templates.UnlockConfig.table.items(.id),
@@ -23,7 +23,7 @@ pub fn GetMiscDataCsReq(session: *Session) !void {
             },
             .business_card = .{},
             .player_accessory = .{
-                .control_guise_avatar_id = @backingInt(session.player.storage.role.control_guise_avatar),
+                .control_guise_avatar_id = @backingInt(session.any.player.storage.role.control_guise_avatar),
             },
         },
     });

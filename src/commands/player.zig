@@ -3,39 +3,34 @@ const Player = kafka.Player;
 const Session = kafka.Session;
 const protobuf = kafka.protobuf;
 
-pub fn PlayerLoginCsReq(session: *Session) !void {
-    try session.sink.respond(protobuf.gen.PlayerLoginScRsp, &.{});
+pub fn PlayerLoginCsReq(session: Session(.PlayerLoginCsReq)) !void {
+    return session.respond(.{});
 }
 
-pub fn GetSelfBasicInfoCsReq(session: *Session) !void {
-    try session.sink.respond(protobuf.gen.GetSelfBasicInfoScRsp, &.{
-        .self_basic_info = protobuf.pack.selfBasicInfo(&session.player.storage.role),
+pub fn GetSelfBasicInfoCsReq(session: Session(.GetSelfBasicInfoCsReq)) !void {
+    return session.respond(.{
+        .self_basic_info = protobuf.pack.selfBasicInfo(&session.any.player.storage.role),
     });
 }
 
-pub fn GetServerTimestampCsReq(session: *Session) !void {
-    try session.sink.respond(protobuf.gen.GetServerTimestampScRsp, &.{
-        .timestamp = @intCast(session.time.toMilliseconds()),
+pub fn GetServerTimestampCsReq(session: Session(.GetServerTimestampCsReq)) !void {
+    return session.respond(.{
+        .timestamp = @intCast(session.any.time.toMilliseconds()),
         .utc_offset = 3,
     });
 }
 
-pub fn KeepAliveNotify(_: *Session) !void {}
+pub fn KeepAliveNotify(_: Session(.KeepAliveNotify)) !void {}
 
-pub fn ModAvatarCsReq(session: *Session) !void {
-    const request = try session.command.decodeBody(protobuf.gen.ModAvatarCsReq.Decoded);
+pub fn ModAvatarCsReq(session: Session(.ModAvatarCsReq)) !void {
+    const request = try session.decodeBody();
     const control_guise_avatar: Player.ControlGuiseAvatar = @fromBackingInt(request.control_guise_avatar_id);
 
     if (control_guise_avatar.requiresUnlock()) {
-        if (!session.player.hasAvatarWithId(request.control_guise_avatar_id))
-            return session.sink.respondMinimal(
-                .ModAvatarScRsp,
-                .{ .retcode = .RET_AVATAR_PARAM_ERROR },
-            );
+        if (!session.any.player.hasAvatarWithId(request.control_guise_avatar_id))
+            return session.fail(.RET_AVATAR_PARAM_ERROR);
     }
 
-    session.player.updateControlGuiseAvatar(control_guise_avatar);
-
-    try session.notify();
-    return session.sink.respondMinimal(.ModAvatarScRsp, .{ .retcode = .RET_SUCC });
+    session.any.player.updateControlGuiseAvatar(control_guise_avatar);
+    return session.success();
 }

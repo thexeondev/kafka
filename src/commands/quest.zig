@@ -5,52 +5,42 @@ const Player = kafka.Player;
 const Session = kafka.Session;
 const protobuf = kafka.protobuf;
 
-pub fn GetQuestDataCsReq(session: *Session) !void {
-    const request = try session.command.decodeBody(protobuf.gen.GetQuestDataCsReq.Decoded);
+pub fn GetQuestDataCsReq(session: Session(.GetQuestDataCsReq)) !void {
+    const request = try session.decodeBody();
 
-    try session.sink.respond(protobuf.gen.GetQuestDataScRsp, &.{
+    return session.respond(.{
         .quest_type = request.quest_type,
         .quest_data = .{},
     });
 }
 
-pub fn GetHollowDataCsReq(session: *Session) !void {
-    try session.sink.respond(protobuf.gen.GetHollowDataScRsp, &.{
-        .hollow_data = .{},
-    });
+pub fn GetHollowDataCsReq(session: Session(.GetHollowDataCsReq)) !void {
+    return session.respond(.{ .hollow_data = .{} });
 }
 
-pub fn GetArchiveDataCsReq(session: *Session) !void {
-    try session.sink.respond(protobuf.gen.GetArchiveDataScRsp, &.{
-        .archive_data = .{},
-    });
+pub fn GetArchiveDataCsReq(session: Session(.GetArchiveDataCsReq)) !void {
+    return session.respond(.{ .archive_data = .{} });
 }
 
-pub fn StartTrainingQuestCsReq(session: *Session) !void {
-    var request = try session.command.decodeBody(protobuf.gen.StartTrainingQuestCsReq.Decoded);
+pub fn StartTrainingQuestCsReq(session: Session(.StartTrainingQuestCsReq)) !void {
+    var request = try session.decodeBody();
 
     var avatar_id_buffer: [3]u32 = undefined;
     var avatar_id_list: std.ArrayList(u32) = .initBuffer(&avatar_id_buffer);
 
     while (try request.avatar_id_list.next()) |avatar_id|
         avatar_id_list.appendBounded(avatar_id) catch
-            return session.sink.respondMinimal(
-                .StartTrainingQuestScRsp,
-                .{ .retcode = .RET_AVATAR_PARAM_ERROR },
-            );
+            return session.fail(.RET_AVATAR_PARAM_ERROR);
 
     if (avatar_id_list.items.len == 0)
-        return session.sink.respondMinimal(
-            .StartTrainingQuestScRsp,
-            .{ .retcode = .RET_AVATAR_PARAM_ERROR },
-        );
+        return session.fail(.RET_AVATAR_PARAM_ERROR);
 
     var avatar_info_list: protobuf.pack.AvatarInfoList = .empty;
-    var avatars = session.player.avatars();
+    var avatars = session.any.player.avatars();
     while (avatars.next()) |avatar|
         protobuf.pack.avatarInfo(avatar_info_list.addOneAssumeCapacity(), avatar);
 
-    try session.sink.notify(protobuf.gen.EnterSceneScNotify, &.{
+    try session.notify(protobuf.gen.EnterSceneScNotify, .{
         .scene = .{
             .scene_type = 3,
             .scene_id = 19800014,
@@ -63,11 +53,9 @@ pub fn StartTrainingQuestCsReq(session: *Session) !void {
         },
     });
 
-    return session.sink.respondMinimal(.StartTrainingQuestScRsp, .{ .retcode = .RET_SUCC });
+    return session.success();
 }
 
-pub fn EndBattleCsReq(session: *Session) !void {
-    return session.sink.respond(protobuf.gen.EndBattleScRsp, &.{
-        .fight_settle = .{},
-    });
+pub fn EndBattleCsReq(session: Session(.EndBattleCsReq)) !void {
+    return session.respond(.{ .fight_settle = .{} });
 }

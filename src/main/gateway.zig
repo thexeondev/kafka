@@ -9,7 +9,6 @@ const rsa = kafka.rsa;
 const sdk = kafka.sdk;
 const Player = kafka.Player;
 const Command = kafka.Command;
-const Session = kafka.Session;
 const protobuf = kafka.protobuf;
 const PacketHead = protobuf.gen.PacketHead;
 const PlayerGetTokenCsReq = protobuf.gen.PlayerGetTokenCsReq;
@@ -147,7 +146,7 @@ fn serveConnection(
         const head = try protobuf.decode(PacketHead.Decoded, command.head);
         Command.xor(command.body, &client.decrypt_vector);
 
-        var session: Session = .{
+        var session: kafka.session.Any = .{
             .command = command,
             .player = .{
                 .storage = &player_storage,

@@ -5,10 +5,10 @@ const Player = kafka.Player;
 const Session = kafka.Session;
 const protobuf = kafka.protobuf;
 
-pub fn GetWeaponDataCsReq(session: *Session) !void {
+pub fn GetWeaponDataCsReq(session: Session(.GetWeaponDataCsReq)) !void {
     var weapon_buffer: [Player.Storage.Weapon.count_max]protobuf.gen.WeaponInfo = undefined;
     var weapon_list: std.ArrayList(protobuf.gen.WeaponInfo) = .initBuffer(&weapon_buffer);
-    var weapons = session.player.weapons();
+    var weapons = session.any.player.weapons();
 
     while (weapons.next()) |weapon_kv| {
         protobuf.pack.weaponInfo(
@@ -17,14 +17,12 @@ pub fn GetWeaponDataCsReq(session: *Session) !void {
         );
     }
 
-    return session.sink.respond(protobuf.gen.GetWeaponDataScRsp, &.{
-        .weapon_list = weapon_list.items,
-    });
+    return session.respond(.{ .weapon_list = weapon_list.items });
 }
 
-pub fn GetEquipDataCsReq(session: *Session) !void {
+pub fn GetEquipDataCsReq(session: Session(.GetEquipDataCsReq)) !void {
     var equip_list: protobuf.pack.EquipInfoList = .empty;
-    var equipment = session.player.equipment();
+    var equipment = session.any.player.equipment();
 
     while (equipment.next()) |equipment_kv| {
         protobuf.pack.equipInfo(
@@ -33,15 +31,15 @@ pub fn GetEquipDataCsReq(session: *Session) !void {
         );
     }
 
-    return session.sink.respond(protobuf.gen.GetEquipDataScRsp, &.{
+    return session.respond(.{
         .equip_list = equip_list.items(.equip_info),
     });
 }
 
-pub fn GetItemDataCsReq(session: *Session) !void {
-    return session.sink.respond(protobuf.gen.GetItemDataScRsp, &.{});
+pub fn GetItemDataCsReq(session: Session(.GetItemDataCsReq)) !void {
+    return session.respond(.{});
 }
 
-pub fn GetWishlistDataCsReq(session: *Session) !void {
-    return session.sink.respond(protobuf.gen.GetWishlistDataScRsp, &.{});
+pub fn GetWishlistDataCsReq(session: Session(.GetWishlistDataCsReq)) !void {
+    return session.respond(.{});
 }

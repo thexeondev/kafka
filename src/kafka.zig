@@ -8,11 +8,13 @@ pub const dispatch = @import("dispatch.zig");
 pub const protobuf = @import("protobuf.zig");
 pub const Command = @import("Command.zig");
 pub const random = @import("random.zig");
-pub const Session = @import("Session.zig");
 pub const commands = @import("commands.zig");
 pub const templates = @import("templates.zig");
 pub const Player = @import("Player.zig");
 pub const BoundedMultiArray = @import("bounded_multi_array.zig").BoundedMultiArray;
+
+pub const session = @import("session.zig");
+pub const Session = session.Session;
 
 test {
     std.testing.refAllDecls(@This());

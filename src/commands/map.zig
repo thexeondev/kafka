@@ -6,7 +6,7 @@ const Session = kafka.Session;
 const protobuf = kafka.protobuf;
 const templates = kafka.templates;
 
-pub fn GetAreaMapDataCsReq(session: *Session) !void {
+pub fn GetAreaMapDataCsReq(session: Session(.GetAreaMapDataCsReq)) !void {
     var groups_buffer: [templates.UrbanAreaMapGroup.table.count]protobuf.gen.AreaGroupInfo =
         undefined;
     var groups: ArrayList(protobuf.gen.AreaGroupInfo) = .initBuffer(&groups_buffer);
@@ -34,16 +34,16 @@ pub fn GetAreaMapDataCsReq(session: *Session) !void {
         });
     }
 
-    try session.sink.respond(protobuf.gen.GetAreaMapDataScRsp, &.{ .data = .{
+    return session.respond(.{ .data = .{
         .group = groups.items,
         .street = streets.items,
     } });
 }
 
-pub fn GetNewAreaPortalListCsReq(session: *Session) !void {
-    try session.sink.respond(protobuf.gen.GetNewAreaPortalListScRsp, &.{});
+pub fn GetNewAreaPortalListCsReq(session: Session(.GetNewAreaPortalListCsReq)) !void {
+    return session.respond(.{});
 }
 
-pub fn GetFloorActiveGroupListCsReq(session: *Session) !void {
-    return session.sink.respond(protobuf.gen.GetFloorActiveGroupListScRsp, &.{});
+pub fn GetFloorActiveGroupListCsReq(session: Session(.GetFloorActiveGroupListCsReq)) !void {
+    return session.respond(.{});
 }
