@@ -4,6 +4,7 @@ const kafka = @import("../kafka.zig");
 const Player = kafka.Player;
 const Session = kafka.Session;
 const protobuf = kafka.protobuf;
+const StaticIntMap = kafka.StaticIntMap;
 
 pub fn EnterWorldCsReq(session: Session(.EnterWorldCsReq)) !void {
     session.player.enterMainCity();
@@ -69,21 +70,57 @@ pub fn InteractWithUnitCsReq(session: Session(.InteractWithUnitCsReq)) !void {
     const log = std.log.scoped(.InteractWithUnitCsReq);
 
     const request = try session.decodeBody();
-    log.debug("unhandled interact: {d}", .{request.interact_id});
 
     var action_buffer: [1024]u8 = undefined;
 
-    const fallback: protobuf.gen.ActionInfo = .{
-        .action_type = .SHOW_TIP,
-        .body = try encodeAction(protobuf.gen.ConfigShowTip, &action_buffer, .{
-            .tip_id = 999200027,
-        }),
-    };
+    const action: protobuf.gen.ActionInfo =
+        if (UiPage.by_interact_id.get(request.interact_id)) |page| open_ui: {
+            break :open_ui .{
+                .action_type = .OPEN_UI,
+                .body = try encodeAction(protobuf.gen.ActionOpenUi, &action_buffer, .{
+                    .ui = page.name,
+                    .store_template_id = page.store_id,
+                }),
+            };
+        } else fallback: {
+            log.debug("unhandled interact: {d}", .{request.interact_id});
+            break :fallback .{
+                .action_type = .SHOW_TIP,
+                .body = try encodeAction(protobuf.gen.ConfigShowTip, &action_buffer, .{
+                    .tip_id = 999200027,
+                }),
+            };
+        };
 
     try session.notify(protobuf.gen.SectionEventScNotify, .{
         .section_id = @backingInt(session.player.storage.main_city.section),
-        .action_list = &.{fallback},
+        .action_list = &.{action},
     });
 
     return session.success();
+}
+
+const UiPage = struct {
+    store_id: u32,
+    name: []const u8,
+
+    const by_interact_id: StaticIntMap(i32, UiPage) = .initComptime(&.{
+        .{ 15001405, .{ .store_id = 1141, .name = "UIMusicPlayerPageController" } },
+        .{ 10000009, .{ .store_id = 1161, .name = "UIYorozuyaPage" } },
+        .{ 10000010, .{ .store_id = 1191, .name = "UIMainStoryPage" } },
+        .{ 10000013, .{ .store_id = 1011, .name = "UIRamenStorePageController" } },
+        .{ 10000024, .{ .store_id = 1021, .name = "UICafePageController" } },
+        .{ 15000602, .{ .store_id = 1022, .name = "UICafePageController" } },
+        .{ 10000028, .{ .store_id = 1031, .name = "UIBangbooModGaragePageController" } },
+        .{ 15000301, .{ .store_id = 1061, .name = "UINewsStandPageController" } },
+        .{ 15000302, .{ .store_id = 1062, .name = "UINewsStandPageController" } },
+        .{ 15000401, .{ .store_id = 1071, .name = "UITrendyStorePageController" } },
+        .{ 15001103, .{ .store_id = 2002, .name = "UIBattlePortal_HadalZonePageController" } },
+        .{ 15001111, .{ .store_id = 2002, .name = "UIBattlePortal_HadalZoneV2PageController" } },
+        .{ 15001106, .{ .store_id = 2010, .name = "UIMainCityTelescopePageController" } },
+    });
+};
+
+pub fn SectionRefreshCsReq(session: Session(.SectionRefreshScRsp)) !void {
+    return session.respond(.{});
 }

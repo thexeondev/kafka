@@ -155009,5 +155009,37 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"tip_id": Encoding = .normal;
             };
         };
+        pub const ActionOpenUi = struct {
+            pub const message_name = "ActionOpenUi";
+            @"ui": []const u8 = &.{},
+            @"args": u32 = 0,
+            @"store_template_id": u32 = 0,
+            @"npc_id": u32 = 0,
+            pub const xor_by_field = struct {
+            };
+            pub const oneof_by_field = struct {
+            };
+            pub const FieldNumber = enum(u29) {
+                @"ui" = 1,
+                @"args" = 2,
+                @"store_template_id" = 4,
+                @"npc_id" = 5,
+                _,
+            };
+            pub const Decoded = struct {
+                pub const Parent = ActionOpenUi;
+                pub const init: @This() = .{};
+                @"ui": []const u8 = &.{},
+                @"args": u32 = 0,
+                @"store_template_id": u32 = 0,
+                @"npc_id": u32 = 0,
+            };
+            pub const encoding_by_field = struct {
+                pub const @"ui": Encoding = .normal;
+                pub const @"args": Encoding = .normal;
+                pub const @"store_template_id": Encoding = .normal;
+                pub const @"npc_id": Encoding = .normal;
+            };
+        };
     };
 }
