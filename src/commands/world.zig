@@ -52,3 +52,38 @@ pub fn ModMainCityTimeCsReq(session: Session(.ModMainCityTimeCsReq)) !void {
 
     return session.success();
 }
+
+fn encodeAction(comptime Action: type, buffer: []u8, action: Action) ![]u8 {
+    var writer: std.Io.Writer = .fixed(buffer);
+    protobuf.encode(Action, &action, &writer) catch |err| switch (err) {
+        error.WriteFailed => {
+            std.log.err("failed to encode action of type " ++ Action.message_name, .{});
+            return error.EncodeBufferExceeded;
+        },
+    };
+
+    return writer.buffered();
+}
+
+pub fn InteractWithUnitCsReq(session: Session(.InteractWithUnitCsReq)) !void {
+    const log = std.log.scoped(.InteractWithUnitCsReq);
+
+    const request = try session.decodeBody();
+    log.debug("unhandled interact: {d}", .{request.interact_id});
+
+    var action_buffer: [1024]u8 = undefined;
+
+    const fallback: protobuf.gen.ActionInfo = .{
+        .action_type = .SHOW_TIP,
+        .body = try encodeAction(protobuf.gen.ConfigShowTip, &action_buffer, .{
+            .tip_id = 999200027,
+        }),
+    };
+
+    try session.notify(protobuf.gen.SectionEventScNotify, .{
+        .section_id = @backingInt(session.player.storage.main_city.section),
+        .action_list = &.{fallback},
+    });
+
+    return session.success();
+}
