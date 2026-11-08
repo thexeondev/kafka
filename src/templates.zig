@@ -1,6 +1,7 @@
 const std = @import("std");
 const mem = std.mem;
 const Allocator = std.mem.Allocator;
+const XxHash64 = std.hash.XxHash64;
 
 pub const AvatarBase = struct {
     pub const Table = TemplateTb(AvatarBase, "AvatarBaseTemplateTb", .id);
@@ -71,6 +72,54 @@ pub const SectionConfig = struct {
     id: u32,
     default_transform: String,
     display_name: String,
+};
+
+pub const MainCityObject = struct {
+    pub const Table = TemplateTb(MainCityObject, "MainCityObjectTemplateTb", .tag);
+    pub const table: Table = .init();
+
+    tag: u32,
+    create_position: String,
+    default_interact_ids: [2]OptionalInteractId,
+
+    pub const OptionalInteractId = enum(u32) {
+        zero = 0,
+        _,
+
+        pub fn unwrap(id: OptionalInteractId) ?u32 {
+            return switch (id) {
+                .zero => null,
+                _ => @backingInt(id),
+            };
+        }
+    };
+};
+
+pub const MainCityDefaultObject = struct {
+    pub const Table = TemplateTb(MainCityDefaultObject, "MainCityDefaultObjectTemplateTb", .tag);
+    pub const table: Table = .init();
+
+    tag: u32,
+};
+
+pub const NpcTransform = struct {
+    pub const Table = TemplateTb(NpcTransform, "NPCTransformSplitTb", .name_hash);
+    pub const table: Table = .init();
+
+    name_hash: u64,
+    section_id: u32,
+
+    pub fn getIndexByName(name: []const u8) ?u32 {
+        if (name.len == 0) return null;
+
+        var utf16_buffer: [1024]u16 = undefined;
+        const utf16_len = std.unicode.utf8ToUtf16Le(&utf16_buffer, name) catch return null;
+        const utf16_bytes: []u8 = @ptrCast(utf16_buffer[0..utf16_len]);
+
+        const hash = XxHash64.hash(0, utf16_bytes);
+
+        return table.getIndexByKey(hash);
+    }
 };
 
 pub const Text = struct {
@@ -202,7 +251,7 @@ fn TemplateTb(
 
                 pub fn hash(context: @This(), a: Key) u32 {
                     _ = context;
-                    return @bitCast(a);
+                    return @truncate(a);
                 }
             };
 

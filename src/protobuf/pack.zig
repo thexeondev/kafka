@@ -1,8 +1,11 @@
 const std = @import("std");
+const ArrayList = std.ArrayList;
 
 const kafka = @import("../kafka.zig");
 const Player = kafka.Player;
+const protobuf = kafka.protobuf;
 const gen = kafka.protobuf.gen;
+const templates = kafka.templates;
 const BoundedMultiArray = kafka.BoundedMultiArray;
 
 const Skill = enum(u8) {
@@ -38,7 +41,7 @@ pub const AvatarInfoList = BoundedMultiArray(struct {
 }, Player.Storage.Avatar.count_max);
 
 pub fn avatarInfo(out: AvatarInfoList.Ptr, avatar: Player.Avatar) void {
-    var dressed_equip_list: std.ArrayList(gen.DressedEquip) = .initBuffer(out.dressed_equip_buffer);
+    var dressed_equip_list: ArrayList(gen.DressedEquip) = .initBuffer(out.dressed_equip_buffer);
     for (std.enums.values(Player.Equipment.Type)) |equipment_type| {
         const uid = avatar.dressed_equipment.get(equipment_type) orelse continue;
 
@@ -95,7 +98,7 @@ pub fn equipInfo(out: EquipInfoList.Ptr, kv: Player.Equipment.KeyValue) void {
         .add_value = kv.equipment.main_property.add,
     };
 
-    var sub_property_list: std.ArrayList(gen.EquipProperty) =
+    var sub_property_list: ArrayList(gen.EquipProperty) =
         .initBuffer(out.sub_properties_buffer);
 
     for (kv.equipment.sub_properties) |property_maybe| {
@@ -123,20 +126,79 @@ pub const HallOptions = struct {
     time: *const Player.Storage.Time,
 };
 
-pub fn sceneDataForHall(options: HallOptions) gen.SceneData {
+pub const HallBuffer = struct {
+    npcs: BoundedMultiArray(struct {
+        npc_info: gen.NpcInfo,
+        interact_info: protobuf.KeyValue(u32, gen.InteractInfo),
+        interact_target: gen.InteractTarget,
+    }, npc_count_max),
+
+    const npc_count_max = templates.MainCityDefaultObject.table.count;
+};
+
+pub fn sceneDataForHall(options: HallOptions, buffer: *HallBuffer) gen.SceneData {
     return .{
         .scene_type = 1, // hall
-        .hall_scene_data = hall(gen.HallSceneData, options),
+        .hall_scene_data = hall(gen.HallSceneData, options, buffer),
     };
 }
 
-pub fn hall(comptime Root: type, options: HallOptions) Root {
+pub fn hall(comptime Root: type, options: HallOptions, buffer: *HallBuffer) Root {
+    const main_city_section_id = @backingInt(options.main_city.section);
+
+    for (templates.MainCityDefaultObject.table.items(.tag)) |object_tag| {
+        const object_template_index = templates.MainCityObject.table.getIndexByKey(object_tag) orelse
+            continue;
+
+        const transform_name = templates.MainCityObject.table.getString(
+            templates.MainCityObject.table.items(.create_position)[object_template_index],
+        );
+
+        const transform_index = templates.NpcTransform.getIndexByName(transform_name) orelse
+            continue;
+
+        const object_section_id = templates.NpcTransform.table.items(.section_id)[transform_index];
+        if (object_section_id != main_city_section_id) continue;
+
+        const data = buffer.npcs.addOneAssumeCapacity();
+
+        const default_interact_ids =
+            templates.MainCityObject.table.items(.default_interact_ids)[object_template_index];
+
+        var interacts: ArrayList(protobuf.KeyValue(u32, gen.InteractInfo)) =
+            .initBuffer(data.interact_info[0..1]);
+
+        if (default_interact_ids[0].unwrap()) |interact_id| {
+            data.interact_target.* = @fromBackingInt(2); // NPC
+
+            interacts.appendAssumeCapacity(.{
+                .key = interact_id,
+                .value = .{
+                    .tag_id = @intCast(object_tag),
+                    .interact_target_list = data.interact_target[0..1],
+                    .scale_x = 1,
+                    .scale_y = 1,
+                    .scale_z = 1,
+                    .scale_w = 1,
+                    .scale_r = 1,
+                },
+            });
+        }
+
+        data.npc_info.* = .{
+            .npc_id = object_tag,
+            .is_active = true,
+            .interacts_info = interacts.items,
+        };
+    }
+
     return .{
-        .section_id = @backingInt(options.main_city.section),
+        .section_id = main_city_section_id,
         .control_avatar_id = @backingInt(options.role.control_avatar),
         .control_guise_avatar_id = @backingInt(options.role.control_guise_avatar),
         .day_of_week = @backingInt(options.time.day),
         .scene_time_in_minutes = options.time.period.toMinutes(),
+        .npc_list = buffer.npcs.items(.npc_info),
     };
 }
 

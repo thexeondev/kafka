@@ -44,6 +44,9 @@ const template_tb_list: []const struct { []const u8, type } = &.{
     .{ "UrbanAreaMapTemplateTb", UrbanAreaMapTemplate },
     .{ "UrbanAreaMapGroupTemplateTb", UrbanAreaMapGroupTemplate },
     .{ "SectionConfigTemplateTb", SectionConfigTemplate },
+    .{ "MainCityObjectTemplateTb", MainCityObjectTemplate },
+    .{ "MainCityDefaultObjectTemplateTb", MainCityDefaultObjectTemplate },
+    .{ "NPCTransformSplitTb", NpcTransform },
 };
 
 const AvatarBaseTemplate = struct {
@@ -176,6 +179,82 @@ const SectionConfigTemplate = struct {
     };
 };
 
+const MainCityObjectTemplate = struct {
+    id: u32,
+    create_position: String,
+    default_interact_ids: [2]u32,
+
+    const array_defaults = struct {
+        pub const default_interact_ids: u32 = 0;
+    };
+
+    const Fbs = struct {
+        id: fbs.Int(u32),
+        npc_id: fbs.Int(u32),
+        create_position: fbs.String,
+        create_type: fbs.Discard,
+        npc_name: fbs.Discard,
+        unk_0: fbs.Discard,
+        unk_1: fbs.Discard,
+        dialogue: fbs.Discard,
+        interact_name: fbs.Discard,
+        interact_shape: fbs.Discard,
+        interact_scale: fbs.Discard,
+        secondary_interact_shape: fbs.Discard,
+        secondary_interact_scale: fbs.Discard,
+        fan_interact_param: fbs.Discard,
+        focus_interact_scale: fbs.Discard,
+        unk_2: fbs.Discard,
+        unk_3: fbs.Discard,
+        unk_4: fbs.Discard,
+        unk_5: fbs.Discard,
+        unk_6: fbs.Discard,
+        unk_7: fbs.Discard,
+        unk_8: fbs.Discard,
+        unk_9: fbs.Discard,
+        unk_10: fbs.Discard,
+        unk_11: fbs.Discard,
+        unk_12: fbs.Discard,
+        unk_13: fbs.Discard,
+        unk_14: fbs.Discard,
+        unk_15: fbs.Discard,
+        unk_16: fbs.Discard,
+        unk_17: fbs.Discard,
+        unk_18: fbs.Discard,
+        unk_19: fbs.Discard,
+        unk_20: fbs.Discard,
+        unk_21: fbs.Discard,
+        unk_22: fbs.Discard,
+        unk_23: fbs.Discard,
+        unk_24: fbs.Discard,
+        unk_25: fbs.Discard,
+        unk_26: fbs.Discard,
+        unk_27: fbs.Discard,
+        default_interact_ids: fbs.IntArray(u32),
+    };
+};
+
+const MainCityDefaultObjectTemplate = struct {
+    id: u32,
+
+    const Fbs = struct {
+        id: fbs.Int(u32),
+        primary_condition: fbs.String,
+        secondary_condition: fbs.String,
+    };
+};
+
+const NpcTransform = struct {
+    name_hash: u64,
+    section_id: u32,
+
+    const Fbs = struct {
+        name_hash: fbs.Int(u64),
+        unk_1: fbs.Int(u32),
+        section_id: fbs.Int(u32),
+    };
+};
+
 fn fieldsOrderedByAlignment(comptime T: type) bool {
     const field_types = @typeInfo(T).@"struct".field_types;
     comptime var prev_alignment = @alignOf(BackingType(field_types[0]));
@@ -246,6 +325,39 @@ const fbs = struct {
                 if (int.offset == 0) return 0;
                 const ptr = buffer[table_base + int.offset ..][0..@sizeOf(T)];
                 return mem.readInt(T, ptr, .little);
+            }
+        };
+    }
+
+    pub fn IntArray(comptime T: type) type {
+        return struct {
+            offset: u16,
+
+            pub fn copyInto(
+                array: @This(),
+                buffer: []const u8,
+                table_base: usize,
+                into: []T,
+            ) void {
+                if (array.offset == 0) return;
+
+                const payload_offset_ptr = buffer[table_base + array.offset ..][0..4];
+                const payload_offset = mem.readInt(i32, payload_offset_ptr, .little);
+                const payload_pos: usize = @intCast(@as(
+                    isize,
+                    @intCast(table_base + array.offset),
+                ) + payload_offset);
+
+                const count_ptr = buffer[payload_pos..][0..@sizeOf(u32)];
+                const count = mem.readInt(u32, count_ptr, .little);
+
+                assert(count <= into.len);
+
+                const items_base = buffer[payload_pos + @sizeOf(u32) ..];
+                for (into[0..count], 0..count) |*dest, index| {
+                    const item_ptr = items_base[@sizeOf(T) * index ..][0..@sizeOf(T)];
+                    dest.* = mem.readInt(u32, item_ptr, .little);
+                }
             }
         };
     }
@@ -406,13 +518,26 @@ fn convertTemplateList(
         const field_values = try arena.alloc(BackingType(FieldType), item_count);
 
         for (list_fbs, field_values) |template_fbs, *field_value| {
-            const value_fbs =
-                @field(template_fbs.fields, field_name).read(buffer_fbs, template_fbs.base);
+            const fbs_field = @field(template_fbs.fields, field_name);
 
-            field_value.* = switch (FieldType) {
-                String => try string_table.put(arena, value_fbs),
-                else => value_fbs,
-            };
+            switch (FieldType) {
+                String => {
+                    const slice = fbs_field.read(buffer_fbs, template_fbs.base);
+                    field_value.* = try string_table.put(arena, slice);
+                },
+                else => switch (@typeInfo(FieldType)) {
+                    .int, .bool, .float => {
+                        field_value.* = fbs_field.read(buffer_fbs, template_fbs.base);
+                    },
+                    .array => {
+                        const default_value = @field(Template.array_defaults, field_name);
+                        @memset(field_value, default_value);
+
+                        fbs_field.copyInto(buffer_fbs, template_fbs.base, field_value);
+                    },
+                    else => @compileError("Unsupported field type: " ++ @typeName(FieldType)),
+                },
+            }
         }
 
         array.* = @ptrCast(field_values);

@@ -21,6 +21,8 @@ pub const Sync = struct {
     pub const Scene = struct {
         reload_hall_scene: bool,
         time_modified: bool,
+
+        hall_buffer: pack.HallBuffer,
     };
 
     pub const init: Sync = .{
@@ -30,6 +32,7 @@ pub const Sync = struct {
         .scene = .{
             .reload_hall_scene = false,
             .time_modified = false,
+            .hall_buffer = .{ .npcs = .empty },
         },
     };
 };
@@ -401,7 +404,7 @@ pub fn buildEnterSceneScNotify(player: *Player) ?gen.EnterSceneScNotify {
             .main_city = &player.storage.main_city,
             .role = &player.storage.role,
             .time = &player.storage.time,
-        }),
+        }, &player.sync.scene.hall_buffer),
     };
 }
 
@@ -415,7 +418,7 @@ pub fn buildHallRefresh(player: *Player) ?gen.HallRefreshScNotify {
         .main_city = &player.storage.main_city,
         .role = &player.storage.role,
         .time = &player.storage.time,
-    });
+    }, &player.sync.scene.hall_buffer);
     refresh_notify.force_refresh = true;
 
     return refresh_notify;
