@@ -59,7 +59,7 @@ fn runClientTask(
     log.info("new client from {f}", .{stream.socket.address});
     defer log.info("client from {f} disconnected", .{stream.socket.address});
 
-    var read_buffer: [8192]u8 = undefined;
+    var read_buffer: [64 * 1024]u8 = undefined;
     var stream_reader = stream.reader(io, &read_buffer);
     var stream_writer = stream.writer(io, &.{});
 
