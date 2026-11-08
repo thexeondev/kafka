@@ -82,6 +82,19 @@ pub fn InteractWithUnitCsReq(session: Session(.InteractWithUnitCsReq)) !void {
                     .store_template_id = page.store_id,
                 }),
             };
+        } else if (SectionSwitch.by_interact_id.get(request.interact_id)) |section| section: {
+            break :section .{
+                .action_type = .SWITCH_SECTION,
+                .body = try encodeAction(protobuf.gen.ActionSwitchSection, &action_buffer, .{
+                    .section = section.id,
+                    .transform_id = section.transform,
+                }),
+            };
+        } else if (teleport_ui_interacts.get(request.interact_id) != null) teleport_ui: {
+            break :teleport_ui .{
+                .action_type = .SHOW_TELEPORT_UI,
+                .body = try encodeAction(protobuf.gen.ActionShowTeleportUi, &action_buffer, .{}),
+            };
         } else fallback: {
             log.debug("unhandled interact: {d}", .{request.interact_id});
             break :fallback .{
@@ -120,6 +133,28 @@ const UiPage = struct {
         .{ 15001106, .{ .store_id = 2010, .name = "UIMainCityTelescopePageController" } },
     });
 };
+
+const SectionSwitch = struct {
+    id: u32,
+    transform: []const u8,
+
+    const by_interact_id: StaticIntMap(i32, SectionSwitch) = .initComptime(&.{
+        .{ 10000001, .{ .id = 2, .transform = "Workshop_PlayerPos_FromStreet" } },
+        .{ 10000002, .{ .id = 3, .transform = "Garage_PlayerPos_FromStreet" } },
+        .{ 10000003, .{ .id = 1, .transform = "Street_PlayerPos_FromWorkshop" } },
+        .{ 10000004, .{ .id = 3, .transform = "Garage_PlayerPos_FromWorkshop" } },
+        .{ 10000005, .{ .id = 1, .transform = "Street_PlayerPos_FromGarage" } },
+        .{ 10000006, .{ .id = 2, .transform = "Workshop_PlayerPos_FromGarage" } },
+        .{ 10000016, .{ .id = 3, .transform = "Garage_PlayerPos_FromStreet2" } },
+        .{ 10000017, .{ .id = 1, .transform = "Street_PlayerPos_FromGarage2" } },
+        .{ 15001702, .{ .id = 103, .transform = "FortuneHIA_PlayerPos_Default" } },
+        .{ 15001303, .{ .id = 101, .transform = "FortuneSquare_PlayerPos_ToHIA01" } },
+    });
+};
+
+const teleport_ui_interacts: StaticIntMap(i32, void) = .initComptime(&.{
+    .{ 10000021, {} },
+});
 
 pub fn SectionRefreshCsReq(session: Session(.SectionRefreshScRsp)) !void {
     return session.respond(.{});
