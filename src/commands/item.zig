@@ -8,7 +8,7 @@ const protobuf = kafka.protobuf;
 pub fn GetWeaponDataCsReq(session: Session(.GetWeaponDataCsReq)) !void {
     var weapon_buffer: [Player.Storage.Weapon.count_max]protobuf.gen.WeaponInfo = undefined;
     var weapon_list: std.ArrayList(protobuf.gen.WeaponInfo) = .initBuffer(&weapon_buffer);
-    var weapons = session.any.player.weapons();
+    var weapons = session.player.weapons();
 
     while (weapons.next()) |weapon_kv| {
         protobuf.pack.weaponInfo(
@@ -22,7 +22,7 @@ pub fn GetWeaponDataCsReq(session: Session(.GetWeaponDataCsReq)) !void {
 
 pub fn GetEquipDataCsReq(session: Session(.GetEquipDataCsReq)) !void {
     var equip_list: protobuf.pack.EquipInfoList = .empty;
-    var equipment = session.any.player.equipment();
+    var equipment = session.player.equipment();
 
     while (equipment.next()) |equipment_kv| {
         protobuf.pack.equipInfo(

@@ -68,10 +68,10 @@ pub const EncodeOptions = struct {
 pub const EncodeError = error{EncodeBufferExceeded};
 
 /// Returns number of bytes written into `options.buffer`.
-pub fn encode(comptime Body: type, body: *const Body, options: EncodeOptions) EncodeError!usize {
+pub fn encode(comptime Body: type, body: *const Body, options: EncodeOptions) EncodeError!u32 {
     const head_len = protobuf.encodingLength(PacketHead, &options.head);
     const body_len = protobuf.encodingLength(Body, body);
-    const full_len = header_overhead + head_len + body_len + tail_overhead;
+    const full_len: u32 = @intCast(header_overhead + head_len + body_len + tail_overhead);
 
     if (options.buffer.len < full_len) return error.EncodeBufferExceeded;
     errdefer comptime unreachable;

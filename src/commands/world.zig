@@ -6,7 +6,7 @@ const Session = kafka.Session;
 const protobuf = kafka.protobuf;
 
 pub fn EnterWorldCsReq(session: Session(.EnterWorldCsReq)) !void {
-    session.any.player.enterMainCity();
+    session.player.enterMainCity();
     return session.respond(.{});
 }
 
@@ -15,7 +15,7 @@ pub fn EnterSectionCompleteCsReq(session: Session(.EnterSectionCompleteCsReq)) !
 }
 
 pub fn LeaveCurSceneCsReq(session: Session(.LeaveCurSceneCsReq)) !void {
-    session.any.player.enterMainCity();
+    session.player.enterMainCity();
     return session.success();
 }
 
@@ -24,7 +24,7 @@ pub fn EnterSectionCsReq(session: Session(.EnterSectionCsReq)) !void {
     const section = Player.MainCitySection.fromInt(request.section_id) orelse
         return session.fail(.RET_SCENE_NOT_FOUND);
 
-    session.any.player.updateMainCitySection(section);
+    session.player.updateMainCitySection(section);
     return session.success();
 }
 
@@ -46,8 +46,8 @@ pub fn ModMainCityTimeCsReq(session: Session(.ModMainCityTimeCsReq)) !void {
     };
 
     if (next_time_period_maybe) |next_time_period| {
-        const time_period_change = session.any.player.storage.time.period.fastForwardTo(next_time_period);
-        session.any.player.updateTimePeriod(time_period_change);
+        const time_period_change = session.player.storage.time.period.fastForwardTo(next_time_period);
+        session.player.updateTimePeriod(time_period_change);
     }
 
     return session.success();

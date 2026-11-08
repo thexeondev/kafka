@@ -17,7 +17,7 @@ const namespaces: []const type = &.{
     @import("commands/map.zig"),
 };
 
-const HandlerFn = *const fn (*kafka.session.Any) kafka.session.Any.Error!void;
+const HandlerFn = *const fn (*kafka.session.TypeErased) kafka.session.Error!void;
 
 const cmd_count: usize = 10_000;
 const handlers: *const [cmd_count]?HandlerFn = handlers: {
@@ -32,10 +32,7 @@ const handlers: *const [cmd_count]?HandlerFn = handlers: {
             const Fn = @TypeOf(@field(namespace, decl_name));
             const fn_params = @typeInfo(Fn).@"fn".param_types;
             assert(fn_params.len == 1);
-            const param_info = @typeInfo(fn_params[0].?).@"struct";
-            assert(param_info.layout == .@"extern");
-            assert(param_info.field_types.len == 1);
-            assert(param_info.field_types[0] == *kafka.session.Any);
+            assert(@typeInfo(fn_params[0].?) == .pointer);
 
             array[cmd_id] = @ptrCast(&@field(namespace, decl_name));
         }
@@ -45,9 +42,9 @@ const handlers: *const [cmd_count]?HandlerFn = handlers: {
     break :handlers &final;
 };
 
-pub const ExecuteError = kafka.session.Any.Error || error{CommandIdIllegal};
+pub const ExecuteError = kafka.session.Error || error{CommandIdIllegal};
 
-pub fn execute(session: *kafka.session.Any) ExecuteError!void {
+pub fn execute(session: *kafka.session.TypeErased) ExecuteError!void {
     if (session.command.id >= cmd_count) return error.CommandIdIllegal;
 
     if (handlers[session.command.id]) |handlerFn| {

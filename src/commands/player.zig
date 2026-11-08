@@ -9,13 +9,13 @@ pub fn PlayerLoginCsReq(session: Session(.PlayerLoginCsReq)) !void {
 
 pub fn GetSelfBasicInfoCsReq(session: Session(.GetSelfBasicInfoCsReq)) !void {
     return session.respond(.{
-        .self_basic_info = protobuf.pack.selfBasicInfo(&session.any.player.storage.role),
+        .self_basic_info = protobuf.pack.selfBasicInfo(&session.player.storage.role),
     });
 }
 
 pub fn GetServerTimestampCsReq(session: Session(.GetServerTimestampCsReq)) !void {
     return session.respond(.{
-        .timestamp = @intCast(session.any.time.toMilliseconds()),
+        .timestamp = @intCast(session.time.stamp.toMilliseconds()),
         .utc_offset = 3,
     });
 }
@@ -27,10 +27,10 @@ pub fn ModAvatarCsReq(session: Session(.ModAvatarCsReq)) !void {
     const control_guise_avatar: Player.ControlGuiseAvatar = @fromBackingInt(request.control_guise_avatar_id);
 
     if (control_guise_avatar.requiresUnlock()) {
-        if (!session.any.player.hasAvatarWithId(request.control_guise_avatar_id))
+        if (!session.player.hasAvatarWithId(request.control_guise_avatar_id))
             return session.fail(.RET_AVATAR_PARAM_ERROR);
     }
 
-    session.any.player.updateControlGuiseAvatar(control_guise_avatar);
+    session.player.updateControlGuiseAvatar(control_guise_avatar);
     return session.success();
 }

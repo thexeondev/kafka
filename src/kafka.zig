@@ -14,7 +14,7 @@ pub const Player = @import("Player.zig");
 pub const BoundedMultiArray = @import("bounded_multi_array.zig").BoundedMultiArray;
 
 pub const session = @import("session.zig");
-pub const Session = session.Session;
+pub const Session = session.Typed;
 
 test {
     std.testing.refAllDecls(@This());

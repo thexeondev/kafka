@@ -146,20 +146,24 @@ fn serveConnection(
         const head = try protobuf.decode(PacketHead.Decoded, command.head);
         Command.xor(command.body, &client.decrypt_vector);
 
-        var session: kafka.session.Any = .{
-            .command = command,
-            .player = .{
-                .storage = &player_storage,
-                .sync = .init,
-                .needs_save = false,
+        var player: Player = .{
+            .storage = &player_storage,
+            .sync = .init,
+            .needs_save = false,
+        };
+
+        var session: kafka.session.TypeErased = .{
+            .command = &command,
+            .player = &player,
+            .time = &.{
+                .stamp = .now(io, .real),
             },
-            .time = .now(io, .real),
-            .sink = .{
-                .buffer = &send_buffer,
-                .decrypt_vector = &client.decrypt_vector,
-                .packet_id_counter = &client.packet_id_counter,
-                .ack_packet_id = head.packet_id,
-            },
+            .sink = .init(
+                &send_buffer,
+                &client.decrypt_vector,
+                &client.packet_id_counter,
+                head.packet_id,
+            ),
         };
 
         try kafka.commands.execute(&session);
@@ -168,7 +172,7 @@ fn serveConnection(
             try player_storage.saveToFile(io, server.storage.player_dir, player_storage_file_path);
         }
 
-        try connection.writer_unbuffered.writeAll(send_buffer[0..session.sink.bytes_written]);
+        try connection.writer_unbuffered.writeAll(session.sink.written());
     }
 }
 
