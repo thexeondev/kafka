@@ -274,12 +274,12 @@ pub fn main(init: process.Init.Minimal) !void {
     switch (try select.await()) {
         .shutdown => log.info("shutting down...", .{}),
         .http => |result| result catch |err| switch (err) {
-            error.AddressInUse => log.err("http listen address is already in use", .{}),
-            else => |e| log.err("failed to initialize http server: {t}", .{e}),
+            error.AddressInUse => fatal("http listen address is already in use", .{}),
+            else => |e| fatal("failed to initialize http server: {t}", .{e}),
         },
         .gateway => |result| result catch |err| switch (err) {
-            error.AddressInUse => log.err("gateway listen address is already in use", .{}),
-            else => |e| log.err("failed to initialize gateway: {t}", .{e}),
+            error.AddressInUse => fatal("gateway listen address is already in use", .{}),
+            else => |e| fatal("failed to initialize gateway: {t}", .{e}),
         },
     }
 }
