@@ -93,7 +93,7 @@ pub fn updateFromFileOrExit(
         .diagnostics = &diag,
         .ignore_unknown_fields = false,
     }) catch |err| switch (err) {
-        error.ParseZon => diag.fatal(options.path_cwd_relative),
+        error.ParseZon => fatal("{f}", .{diag.fmt(options.path_cwd_relative)}),
         error.OutOfMemory => fatal(
             "parsing file {q} caused out of memory",
             .{options.path_cwd_relative},
