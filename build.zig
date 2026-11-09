@@ -29,22 +29,25 @@ const build_version: std.SemanticVersion = .{
     .patch = 0,
 };
 
-pub fn build(b: *Build) void {
+const template_dir_path = "assets/TemplateTb"; // Required asset.
+const textmap_raw_path = "assets/TextMap_EnTemplateTb.bin"; // Optional asset.
+const textmap_converted_path = "assets/textmap.bin"; // Required if `textmap_raw_path` is missing.
+
+pub fn build(b: *Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-
-    const test_step = b.step("test", "run the tests");
-    const serve_step = b.step("serve", "start the server");
 
     const module = b.addModule("kafka", .{
         .root_source_file = b.path("src/kafka.zig"),
         .target = target,
         .optimize = optimize,
     });
-    convertTemplates(b, module);
+    try convertTemplates(b, module);
     importFile(b, module, "defaults/kafka.zon");
-    importFile(b, module, "assets/textmap.bin");
+    importFile(b, module, textmap_converted_path);
+
     const module_tests = b.addTest(.{ .root_module = module });
+    const test_step = b.step("test", "run the tests");
     test_step.dependOn(&b.addRunArtifact(module_tests).step);
 
     const exe = b.addExecutable(.{
@@ -58,17 +61,17 @@ pub fn build(b: *Build) void {
     });
     b.installArtifact(exe);
 
-    const version_string = collectVersionStringFromGit(b);
-
     const exe_options = b.addOptions();
     exe.root_module.addOptions("build_options", exe_options);
+
+    const version_string = collectVersionStringFromGit(b);
     exe_options.addOption([]const u8, "version", version_string);
 
     const run_exe = b.addRunArtifact(exe);
     run_exe.addPassthruArgs();
-    serve_step.dependOn(&run_exe.step);
+    b.step("serve", "start the server").dependOn(&run_exe.step);
 
-    if (maybeCompileProto(b)) |step| {
+    if (try maybeCompileProto(b)) |step| {
         exe.step.dependOn(step);
         module_tests.step.dependOn(step);
     }
@@ -83,7 +86,7 @@ fn importFile(b: *Build, module: *Build.Module, path: []const u8) void {
     module.addAnonymousImport(path, .{ .root_source_file = b.path(path) });
 }
 
-fn maybeCompileProto(b: *Build) ?*Build.Step {
+fn maybeCompileProto(b: *Build) !?*Build.Step {
     b.root.access(b.graph.io, "proto", .{}) catch return null;
     b.dependOnDirectoryContents(b.path("proto"));
 
@@ -98,13 +101,13 @@ fn maybeCompileProto(b: *Build) ?*Build.Step {
     const run = b.addRunArtifact(compiler);
     run.expectExitCode(0);
 
-    const proto_dir = b.root.openDir(b.graph.io, "proto", .{ .iterate = true }) catch |err|
-        std.debug.panic("failed to open proto dir: {t}", .{err});
+    const proto_dir = try b.root.openDir(b.graph.io, "proto", .{ .iterate = true });
     defer proto_dir.close(b.graph.io);
 
     var entries = proto_dir.iterateAssumeFirstIteration();
-    while (entries.next(b.graph.io) catch @panic("failed to read dir")) |entry| {
+    while (try entries.next(b.graph.io)) |entry| {
         if (entry.kind != .file) continue;
+
         const path = b.fmt("proto/{s}", .{entry.name});
         run.addFileArg2(b.path(path), .{});
     }
@@ -116,8 +119,6 @@ fn maybeCompileProto(b: *Build) ?*Build.Step {
     );
     return &update.step;
 }
-
-const textmap_raw_path = "assets/TextMap_EnTemplateTb.bin";
 
 fn maybeConvertTextMap(b: *Build) ?*Build.Step {
     b.root.access(b.graph.io, textmap_raw_path, .{ .read = true }) catch return null;
@@ -137,14 +138,12 @@ fn maybeConvertTextMap(b: *Build) ?*Build.Step {
     const update = b.addUpdateSourceFiles();
     update.addCopyFileToSource(
         convert.captureStdOut(.{ .basename = "textmap.bin" }),
-        "assets/textmap.bin",
+        textmap_converted_path,
     );
     return &update.step;
 }
 
-const template_dir_path = "assets/TemplateTb";
-
-fn convertTemplates(b: *Build, kafka_module: *Build.Module) void {
+fn convertTemplates(b: *Build, kafka_module: *Build.Module) !void {
     b.dependOnDirectoryContents(b.path(template_dir_path));
 
     const converter = b.addExecutable(.{
@@ -160,12 +159,11 @@ fn convertTemplates(b: *Build, kafka_module: *Build.Module) void {
     convert.addDirectoryArg2(b.path(template_dir_path), .{});
     const converted_dir_path = convert.addOutputDirectoryArg2("TemplateTb", .{});
 
-    var template_dir = b.root.openDir(b.graph.io, template_dir_path, .{ .iterate = true }) catch |err|
-        std.debug.panic("failed to open {q}: {t}", .{ template_dir_path, err });
+    var template_dir = try b.root.openDir(b.graph.io, template_dir_path, .{ .iterate = true });
     defer template_dir.close(b.graph.io);
 
     var template_dir_entries = template_dir.iterateAssumeFirstIteration();
-    while (template_dir_entries.next(b.graph.io) catch @panic("failed to read dir")) |entry| {
+    while (try template_dir_entries.next(b.graph.io)) |entry| {
         if (entry.kind != .file) continue;
 
         const converted_file_name = Io.Dir.path.stem(entry.name);
@@ -174,7 +172,7 @@ fn convertTemplates(b: *Build, kafka_module: *Build.Module) void {
             .root_source_file = converted_file_path,
         });
 
-        convert.addFileInput(b.path(b.fmt("assets/TemplateTb/{s}", .{entry.name})));
+        convert.addFileInput(b.path(b.fmt("{s}/{s}", .{ template_dir_path, entry.name })));
     }
 }
 
