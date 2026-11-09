@@ -132,10 +132,9 @@ pub fn main(init: process.Init.Minimal) !void {
     defer threaded.deinit();
     const io = threaded.io();
 
-    const args_slice = try init.args.toSlice(arena);
-    var args_i: usize = 1;
+    var args: kafka.cli.Args = try .init(arena, init.args);
 
-    const command_string = nextArg(args_slice, &args_i) orelse "serve";
+    const command_string = args.next() orelse "serve";
     const command_tag = std.meta.stringToEnum(Command, command_string) orelse {
         if (!mem.eql(u8, command_string, "-h") and
             !mem.eql(u8, command_string, "--help"))
@@ -146,8 +145,8 @@ pub fn main(init: process.Init.Minimal) !void {
 
     switch (command_tag) {
         .serve => {},
-        .@"print-player" => return @import("main/print-player.zig").run(io, gpa, args_slice[args_i..]),
-        .@"pack-player" => return @import("main/pack-player.zig").run(io, gpa, args_slice[args_i..]),
+        .@"print-player" => return @import("main/print-player.zig").run(io, gpa, &args),
+        .@"pack-player" => return @import("main/pack-player.zig").run(io, gpa, &args),
         .version => {
             Io.File.stdout().writeStreamingAll(io, build_options.version ++ "\n") catch {};
             process.exit(0);
@@ -160,7 +159,7 @@ pub fn main(init: process.Init.Minimal) !void {
     var storage_path: []const u8 = Storage.default_root_path;
     var public_url_prefix: []const u8 = default_public_url_prefix;
 
-    while (nextArg(args_slice, &args_i)) |arg| {
+    while (args.next()) |arg| {
         if (mem.eql(u8, "-h", arg) or mem.eql(u8, "--help", arg)) {
             serveUsage(io);
         } else if (mem.cutPrefix(u8, arg, "--config-path=")) |path_string| {
@@ -788,9 +787,3 @@ const shutdown = struct {
         return .TRUE;
     }
 };
-
-fn nextArg(args: []const []const u8, i: *usize) ?[]const u8 {
-    if (i.* >= args.len) return null;
-    defer i.* += 1;
-    return args[i.*];
-}

@@ -22,12 +22,11 @@ pub fn usage(io: Io) noreturn {
     process.exit(0);
 }
 
-pub fn run(io: Io, gpa: Allocator, args_slice: []const []const u8) !void {
+pub fn run(io: Io, gpa: Allocator, args: *kafka.cli.Args) !void {
     var input_path_maybe: ?[]const u8 = null;
     var output_path_maybe: ?[]const u8 = null;
 
-    var args_i: usize = 0;
-    while (nextArg(args_slice, &args_i)) |arg| {
+    while (args.next()) |arg| {
         if (!mem.startsWith(u8, arg, "-")) {
             if (input_path_maybe == null) {
                 input_path_maybe = arg;
@@ -108,10 +107,4 @@ pub fn run(io: Io, gpa: Allocator, args_slice: []const []const u8) !void {
     try player.saveToFile(io, .cwd(), output_path);
 
     log.info("created file {q}", .{output_path});
-}
-
-fn nextArg(args: []const []const u8, i: *usize) ?[]const u8 {
-    if (i.* >= args.len) return null;
-    defer i.* += 1;
-    return args[i.*];
 }

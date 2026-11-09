@@ -3,6 +3,27 @@ const is_windows = builtin.target.os.tag == .windows;
 
 const std = @import("std");
 const process = std.process;
+const assert = std.debug.assert;
+const Allocator = std.mem.Allocator;
+
+pub const Args = struct {
+    slice: []const []const u8,
+    index: usize,
+
+    /// Asserts there's at least one argument (program name)
+    pub fn init(arena: Allocator, process_args: process.Args) process.Args.ToSliceError!Args {
+        const slice = try process_args.toSlice(arena);
+        assert(slice.len >= 1);
+
+        return .{ .slice = slice, .index = 1 };
+    }
+
+    pub fn next(args: *Args) ?[]const u8 {
+        if (args.index == args.slice.len) return null;
+        defer args.index += 1;
+        return args.slice[args.index];
+    }
+};
 
 /// Prints the error message to stderr and terminates process with exit code `1`.
 ///
