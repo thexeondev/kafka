@@ -7,13 +7,13 @@ const mem = std.mem;
 const log = std.log;
 const process = std.process;
 const assert = std.debug.assert;
-const fatal = std.process.fatal;
 const Allocator = std.mem.Allocator;
 const IpAddress = std.Io.net.IpAddress;
 
 const kafka = @import("kafka");
 const sdk = kafka.sdk;
 const http = kafka.http;
+const fatal = kafka.cli.fatal;
 const Configuration = kafka.Configuration;
 
 const build_options = @import("build_options");

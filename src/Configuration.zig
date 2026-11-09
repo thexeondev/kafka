@@ -2,8 +2,10 @@ const Configuration = @This();
 
 const std = @import("std");
 const Io = std.Io;
-const fatal = std.process.fatal;
 const Allocator = std.mem.Allocator;
+
+const kafka = @import("kafka.zig");
+const fatal = kafka.cli.fatal;
 
 pub const defaults: Configuration = @import("defaults/kafka.zon");
 

@@ -1,5 +1,6 @@
 const std = @import("std");
 
+pub const cli = @import("cli.zig");
 pub const Configuration = @import("Configuration.zig");
 pub const http = @import("http.zig");
 pub const sdk = @import("sdk.zig");
