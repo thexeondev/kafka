@@ -200,6 +200,7 @@ pub const Avatar = struct {
     show_weapon_status: ShowWeaponStatus,
     weapon: ?Weapon,
     equipment: EquipmentSlots,
+    awake: Awake,
 
     pub const EquipmentSlots = struct {
         @"1": ?Equipment,
@@ -214,6 +215,11 @@ pub const Avatar = struct {
         locked,
         unlocked_disabled,
         unlocked_enabled,
+    };
+
+    pub const Awake = struct {
+        level: u32,
+        enabled: bool,
     };
 };
 
@@ -550,6 +556,10 @@ pub fn init(arena: Allocator, name_map: *const NameMap, player: *Storage) Alloca
             },
             .weapon = weapon_maybe,
             .equipment = equipment,
+            .awake = .{
+                .level = bits.awake.toIndex() orelse 0,
+                .enabled = bits.awake_enabled,
+            },
         };
     }
 
@@ -609,6 +619,13 @@ pub const PackDiagnostics = union(enum) {
         name: []const u8,
         encountered: u32,
     },
+    avatar_awake_level_invalid: struct {
+        avatar_name: []const u8,
+        level: u32,
+    },
+    avatar_awake_enable_invalid: struct {
+        avatar_name: []const u8,
+    },
 
     pub fn format(diag: *const PackDiagnostics, writer: *Io.Writer) Io.Writer.Error!void {
         switch (diag.*) {
@@ -642,6 +659,14 @@ pub const PackDiagnostics = union(enum) {
                     details.name,              details.encountered,
                     Storage.Weapon.Refine.min, Storage.Weapon.Refine.max,
                 },
+            ),
+            .avatar_awake_level_invalid => |details| return writer.print(
+                "avatar {q} has an invalid awake level ({d})",
+                .{ details.avatar_name, details.level },
+            ),
+            .avatar_awake_enable_invalid => |details| return writer.print(
+                "avatar {q} awake cannot be enabled",
+                .{details.avatar_name},
             ),
         }
     }
@@ -737,11 +762,29 @@ pub fn pack(
             }
         }
 
+        const avatar_id = name_map.avatar_id_by_name.get(avatar_zon.name) orelse return diag.fail(
+            .name_invalid,
+            .{ .kind = "avatar", .name = avatar_zon.name },
+        );
+
+        if (avatar_zon.awake.enabled and avatar_zon.awake.level == 0) {
+            return diag.fail(.avatar_awake_enable_invalid, .{ .avatar_name = avatar_zon.name });
+        }
+
+        if (avatar_zon.awake.level != 0 and
+            templates.AvatarSpecialAwaken.getByAvatarIdAndIndex(
+                @backingInt(avatar_id),
+                avatar_zon.awake.level,
+            ) == null)
+        {
+            return diag.fail(.avatar_awake_level_invalid, .{
+                .avatar_name = avatar_zon.name,
+                .level = avatar_zon.awake.level,
+            });
+        }
+
         const avatar: Storage.Avatar = .{
-            .id = name_map.avatar_id_by_name.get(avatar_zon.name) orelse return diag.fail(
-                .name_invalid,
-                .{ .kind = "avatar", .name = avatar_zon.name },
-            ),
+            .id = avatar_id,
             .bits = .{
                 .level_up = Storage.Avatar.LevelUp.fromRankAndLevel(
                     avatar_zon.rank,
@@ -768,6 +811,8 @@ pub fn pack(
                     .unlocked_enabled => .unlocked_enabled,
                 },
                 .flags = .{ .favorite = avatar_zon.favorite },
+                .awake = @fromBackingInt(@intCast(avatar_zon.awake.level)),
+                .awake_enabled = avatar_zon.awake.enabled,
             },
             .weapon_uid_maybe = weapon_uid_maybe,
             .dressed_equipment = dressed_equipment,

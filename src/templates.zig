@@ -90,6 +90,32 @@ pub const AvatarPassiveSkill = struct {
     }
 };
 
+pub const AvatarSpecialAwaken = struct {
+    pub const Table = TemplateTb(AvatarSpecialAwaken, "AvatarSpecialAwakenTemplateTb", .id);
+    pub const table: Table = .init();
+
+    id: u32,
+    avatar_id: u32,
+    index: u32,
+
+    pub fn isAvailableForAvatar(avatar_id: u32) bool {
+        return mem.findScalar(u32, table.items(.avatar_id), avatar_id) != null;
+    }
+
+    pub fn getByAvatarIdAndIndex(avatar_id: u32, index: u32) ?AvatarSpecialAwaken {
+        for (
+            table.items(.avatar_id),
+            table.items(.index),
+            0..,
+        ) |template_avatar_id, template_awake_index, template_index| {
+            if (template_avatar_id == avatar_id and template_awake_index == index)
+                return table.getAtIndex(template_index);
+        }
+
+        return null;
+    }
+};
+
 pub const PropertyValue = extern struct {
     id: u32,
     value: i32,

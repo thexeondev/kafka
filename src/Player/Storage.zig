@@ -59,7 +59,9 @@ pub const Avatar = struct {
         flags: Flags,
         mindscape: Mindscape,
         show_weapon_status: ShowWeapon.Status,
-        _: u13 = 0,
+        awake: Awake,
+        awake_enabled: bool,
+        _: u9 = 0,
 
         comptime {
             assert(hasUniqueRepresentation(@This()));
@@ -211,6 +213,18 @@ pub const Avatar = struct {
                 return @fromBackingInt(@backingInt(status));
             }
         };
+    };
+
+    pub const Awake = enum(u3) {
+        none = 0,
+        _,
+
+        pub fn toIndex(awake: Awake) ?u32 {
+            return switch (awake) {
+                .none => null,
+                _ => @backingInt(awake),
+            };
+        }
     };
 };
 
@@ -689,6 +703,8 @@ pub fn initDefaults(storage: *Storage) void {
             },
         ).?,
         .show_weapon_status = .locked,
+        .awake = .none,
+        .awake_enabled = false,
     };
 
     for (templates.AvatarBase.table.items(.id)) |id_int| {

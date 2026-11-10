@@ -48,6 +48,8 @@ pub const Avatar = struct {
     weapon_show: WeaponShow,
     weapon_uid_maybe: ?u32,
     dressed_equipment: std.EnumMap(Equipment.Type, u32),
+    awake_index_maybe: ?u32,
+    awake_enabled: bool,
 
     pub const Iterator = struct {
         index: u32,
@@ -212,6 +214,8 @@ fn avatarAtIndex(player: *const Player, index: u32) Avatar {
             .@"5" = storage_avatar.dressed_equipment[4].unwrapInt(),
             .@"6" = storage_avatar.dressed_equipment[5].unwrapInt(),
         }),
+        .awake_index_maybe = storage_avatar.bits.awake.toIndex(),
+        .awake_enabled = storage_avatar.bits.awake_enabled,
     };
 }
 
@@ -334,6 +338,8 @@ fn updateAvatarAtIndex(player: *Player, avatar_index: u32, avatar: Avatar) void 
             .unlocked_show => .unlocked_enabled,
             .unlocked_hidden => .unlocked_disabled,
         },
+        .awake = if (avatar.awake_index_maybe) |index| @fromBackingInt(@intCast(index)) else .none,
+        .awake_enabled = avatar.awake_enabled,
     };
 
     storage_avatar.weapon_uid_maybe.* =

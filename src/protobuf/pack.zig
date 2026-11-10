@@ -71,6 +71,15 @@ pub fn avatarInfo(out: AvatarInfoList.Ptr, avatar: Player.Avatar) void {
             .unlocked_show => .SHOW,
             .unlocked_hidden => .HIDE,
         },
+        .is_awake_available = templates.AvatarSpecialAwaken.isAvailableForAvatar(avatar.id),
+        .is_awake_enabled = avatar.awake_enabled,
+        .awake_id = if (avatar.awake_index_maybe) |awake_index| awake_id: {
+            const template = templates.AvatarSpecialAwaken.getByAvatarIdAndIndex(
+                avatar.id,
+                awake_index,
+            ).?;
+            break :awake_id template.id;
+        } else 0,
     };
 }
 

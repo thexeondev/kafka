@@ -39,6 +39,7 @@ const template_tb_list: []const struct { []const u8, type } = &.{
     .{ "AvatarBattleTemplateTb", AvatarBattleTemplate },
     .{ "AvatarLevelAdvanceTemplateTb", AvatarLevelAdvanceTemplate },
     .{ "AvatarPassiveSkillTemplateTb", AvatarPassiveSkillTemplate },
+    .{ "AvatarSpecialAwakenTemplateTb", AvatarSpecialAwakenTemplate },
     .{ "UnlockConfigTemplateTb", UnlockConfigTemplate },
     .{ "WeaponTemplateTb", WeaponTemplate },
     .{ "WeaponLevelTemplateTb", WeaponLevelTemplate },
@@ -139,6 +140,25 @@ const AvatarPassiveSkillTemplate = struct {
 const Property = extern struct {
     id: u32,
     value: i32,
+};
+
+const AvatarSpecialAwakenTemplate = struct {
+    id: u32,
+    avatar_id: u32,
+    index: u32,
+
+    const Fbs = struct {
+        id: fbs.Int(u32),
+        skill_ids: fbs.Discard,
+        avatar_id: fbs.Int(u32),
+        unk_3: fbs.Discard,
+        index: fbs.Int(u32),
+        unk_5: fbs.Discard,
+        upgrade_item_ids: fbs.IntArray(u32),
+        ability_desc: fbs.String,
+        ability_name: fbs.String,
+        level_show_name: fbs.String,
+    };
 };
 
 const AvatarBattleTemplate = struct {
