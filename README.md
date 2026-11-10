@@ -31,9 +31,12 @@ Some options can be customized through a configuration file. Default settings ar
 Before trying to connect to server, make sure you have the compatible client version (`CNBetaWin3.4.3` at the time of writing) and [kafka-patch](https://git.xeondev.com/kafka/kafka-patch) installed.
 
 ## Features
-Eldreda is in early state of development and has the following features available:
+Kafka is in early state of development and has the following features available:
 - Logging in
 - Training room
+- Shiyu Defense and Deadly Assault
+- W-Engines and Disc Drives
+- Overworld with basic (very) NPC spawn
 
 For the implementation roadmap, see [the issue tracker](https://git.xeondev.com/kafka/kafka/issues).
 
