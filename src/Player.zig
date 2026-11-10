@@ -11,6 +11,7 @@ pub const Storage = @import("Player/Storage.zig");
 const kafka = @import("kafka.zig");
 const gen = kafka.protobuf.gen;
 const pack = kafka.protobuf.pack;
+const battle = kafka.battle;
 
 pub const Sync = struct {
     needs_player_sync_notify: bool,
@@ -146,6 +147,8 @@ pub const Equipment = struct {
         @"4" = 4,
         @"5" = 5,
         @"6" = 6,
+
+        pub const count = 6;
     };
 
     pub const KeyValue = struct {
@@ -308,6 +311,13 @@ pub fn hasEquipmentWithUid(player: *Player, uid_int: u32) bool {
     return player.storage.getEquipmentIndexByUid(uid) != null;
 }
 
+pub fn getEquipmentByUid(player: *Player, uid_int: u32) ?Equipment {
+    const uid: Storage.Equipment.Uid = @fromBackingInt(uid_int);
+    const equipment_index = player.storage.getEquipmentIndexByUid(uid) orelse return null;
+
+    return player.equipmentAtIndex(equipment_index).equipment;
+}
+
 fn updateAvatarAtIndex(player: *Player, avatar_index: u32, avatar: Avatar) void {
     player.needs_save = true;
 
@@ -373,6 +383,27 @@ pub fn updateTimePeriod(player: *Player, change: TimePeriod.Change) void {
 fn appendAvatarToSync(player: *Player, avatar: Avatar) void {
     player.sync.needs_player_sync_notify = true;
     pack.avatarInfo(player.sync.avatar_list.addOneAssumeCapacity(), avatar);
+}
+
+pub fn getBattleAvatarInitById(player: *Player, avatar_id: u32) ?battle.AvatarInit {
+    var avatar = player.getAvatarById(avatar_id) orelse return null;
+
+    var equipment_list: [6]?Player.Equipment = @splat(null);
+    var equipment_list_i: usize = 0;
+    var dressed_equipment = avatar.dressed_equipment.iterator();
+    while (dressed_equipment.next()) |kv| {
+        defer equipment_list_i += 1;
+        equipment_list[equipment_list_i] = player.getEquipmentByUid(kv.value.*).?;
+    }
+
+    return .{
+        .avatar = avatar,
+        .weapon_maybe = if (avatar.weapon_uid_maybe) |weapon_uid|
+            player.getWeaponByUid(weapon_uid)
+        else
+            null,
+        .equipment = equipment_list,
+    };
 }
 
 pub fn buildPlayerSyncScNotify(player: *Player) ?gen.PlayerSyncScNotify {

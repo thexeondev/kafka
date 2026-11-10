@@ -129,7 +129,7 @@ const UiPage = struct {
         .{ 15000302, .{ .store_id = 1062, .name = "UINewsStandPageController" } },
         .{ 15000401, .{ .store_id = 1071, .name = "UITrendyStorePageController" } },
         .{ 15001103, .{ .store_id = 2002, .name = "UIBattlePortal_HadalZonePageController" } },
-        .{ 15001111, .{ .store_id = 2002, .name = "UIBattlePortal_HadalZoneV2PageController" } },
+        .{ 15001111, .{ .store_id = 2016, .name = "UIBattlePortal_HadalZoneV2PageController" } },
         .{ 15001106, .{ .store_id = 2010, .name = "UIMainCityTelescopePageController" } },
     });
 };

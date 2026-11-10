@@ -21,6 +21,7 @@ pub fn Typed(comptime message_name_literal: @EnumLiteral()) type {
         player: *Player,
         time: *const Time,
         command: *const Command,
+        conf: *const kafka.Configuration,
 
         comptime {
             assert(@sizeOf(TypedSession) == @sizeOf(TypeErased));
@@ -85,6 +86,7 @@ pub const TypeErased = extern struct {
     player: *Player,
     time: *const Time,
     command: *const Command,
+    conf: *const kafka.Configuration,
 
     comptime {
         assert(std.meta.hasUniqueRepresentation(@This()));

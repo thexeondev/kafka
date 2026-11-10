@@ -14,6 +14,8 @@ pub const templates = @import("templates.zig");
 pub const Player = @import("Player.zig");
 pub const BoundedMultiArray = @import("bounded_multi_array.zig").BoundedMultiArray;
 pub const StaticIntMap = @import("static_int_map.zig").StaticIntMap;
+pub const IntMultiSet = @import("int_multi_set.zig").IntMultiSet;
+pub const battle = @import("battle.zig");
 
 pub const session = @import("session.zig");
 pub const Session = session.Typed;

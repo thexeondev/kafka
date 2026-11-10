@@ -13,6 +13,99 @@ pub const AvatarBase = struct {
     unlockable: bool,
 };
 
+pub const AvatarBattle = struct {
+    pub const Table = TemplateTb(AvatarBattle, "AvatarBattleTemplateTb", .id);
+    pub const table: Table = .init();
+
+    id: u32,
+    hp_max: i32,
+    health_growth: i32,
+    attack: i32,
+    attack_growth: i32,
+    defence: i32,
+    defence_growth: i32,
+    crit: i32,
+    crit_damage: i32,
+    crit_res: i32,
+    crit_damage_res: i32,
+    pen_rate: i32,
+    pen_delta: i32,
+    luck: i32,
+    stun: i32,
+    break_stun: i32,
+    element_abnormal_power: i32,
+    sp_bar_point: i32,
+    sp_recover: i32,
+    element_mystery: i32,
+    rbl: i32,
+    rbl_correction_factor: i32,
+    rbl_probability: i32,
+    weapon_type: i32,
+    base_avatar_id: i32,
+    rp_recover: i32,
+    rp_max: i32,
+    ep_recover: i32,
+    ep_max: i32,
+    sharp_critical_damage: i32,
+};
+
+pub const AvatarLevelAdvance = struct {
+    pub const Table = TemplateTb(AvatarLevelAdvance, "AvatarLevelAdvanceTemplateTb", .id);
+    pub const table: Table = .init();
+
+    avatar_id: u32,
+    id: u32,
+    hp_max: i32,
+    attack: i32,
+    defence: i32,
+
+    pub fn getByIdAndRank(avatar_id: u32, rank: u32) ?AvatarLevelAdvance {
+        for (
+            table.items(.avatar_id),
+            table.items(.id),
+            0..,
+        ) |template_avatar_id, template_rank, template_index| {
+            if (avatar_id == template_avatar_id and
+                rank == template_rank)
+                return table.getAtIndex(template_index);
+        }
+
+        return null;
+    }
+};
+
+pub const AvatarPassiveSkill = struct {
+    pub const Table = TemplateTb(AvatarPassiveSkill, "AvatarPassiveSkillTemplateTb", .id);
+    pub const table: Table = .init();
+
+    id: u32,
+    avatar_id: u32,
+    min_passive_skill_level: u32,
+    unlock_passive_skill_level: u32,
+    properties: [2]PropertyValue.Optional,
+
+    pub fn getByAvatarIdAndLevel(avatar_id: u32, level: u32) ?AvatarPassiveSkill {
+        const skill_id = avatar_id * 1000 + level;
+        return table.getByKey(skill_id);
+    }
+};
+
+pub const PropertyValue = extern struct {
+    id: u32,
+    value: i32,
+
+    pub const Optional = extern struct {
+        id: u32,
+        value: i32,
+
+        pub fn unwrap(optional: Optional) ?PropertyValue {
+            if (optional.id == 0) return null;
+
+            return .{ .id = optional.id, .value = optional.value };
+        }
+    };
+};
+
 pub const UnlockConfig = struct {
     pub const Table = TemplateTb(UnlockConfig, "UnlockConfigTemplateTb", .id);
     pub const table: Table = .init();
@@ -27,6 +120,62 @@ pub const Weapon = struct {
     id: u32,
     weapon_name: String,
     avatar_id: u32,
+    base_property: PropertyValue,
+    rand_property: PropertyValue,
+};
+
+pub const WeaponLevel = struct {
+    pub const Table = TemplateTb(WeaponLevel, "WeaponLevelTemplateTb", .rarity);
+    pub const table: Table = .init();
+
+    rarity: u32,
+    level: u32,
+    rate: u32,
+    exp: u32,
+
+    pub fn getByWeaponIdAndLevel(id: u32, level: u32) ?WeaponLevel {
+        const rarity = @divFloor(id, 1000) % 10;
+
+        for (
+            table.items(.rarity),
+            table.items(.level),
+            0..,
+        ) |template_rarity, template_level, template_index| {
+            if (rarity == template_rarity and
+                level == template_level)
+                return table.getAtIndex(template_index);
+        }
+
+        return null;
+    }
+};
+
+pub const WeaponStar = struct {
+    pub const Table = TemplateTb(WeaponStar, "WeaponStarTemplateTb", .rarity);
+    pub const table: Table = .init();
+
+    rarity: u32,
+    star: u32,
+    min_level: u32,
+    max_level: u32,
+    base_rate: u32,
+    rand_rate: u32,
+
+    pub fn getByWeaponIdAndStar(id: u32, star: u32) ?WeaponStar {
+        const rarity = @divFloor(id, 1000) % 10;
+
+        for (
+            table.items(.rarity),
+            table.items(.star),
+            0..,
+        ) |template_rarity, template_star, template_index| {
+            if (rarity == template_rarity and
+                star == template_star)
+                return table.getAtIndex(template_index);
+        }
+
+        return null;
+    }
 };
 
 pub const Equipment = struct {
@@ -36,11 +185,38 @@ pub const Equipment = struct {
     id: u32,
 };
 
+pub const EquipmentLevel = struct {
+    pub const Table = TemplateTb(EquipmentLevel, "EquipmentLevelTemplateTb", .rarity);
+    pub const table: Table = .init();
+
+    rarity: u32,
+    level: u32,
+    enhance_rate: i32,
+
+    pub fn getByEquipmentIdAndLevel(id: u32, level: u32) ?EquipmentLevel {
+        const rarity = (id / 10) % 10;
+
+        for (
+            table.items(.rarity),
+            table.items(.level),
+            0..,
+        ) |template_rarity, template_level, template_index| {
+            if (rarity == template_rarity and
+                level == template_level)
+                return table.getAtIndex(template_index);
+        }
+
+        return null;
+    }
+};
+
 pub const EquipmentSuit = struct {
     pub const Table = TemplateTb(EquipmentSuit, "EquipmentSuitTemplateTb", .id);
     pub const table: Table = .init();
 
     id: u32,
+    primary_condition: u32,
+    primary_suit_properties: [2]PropertyValue.Optional,
 };
 
 pub const TeleportConfig = struct {
@@ -119,6 +295,68 @@ pub const NpcTransform = struct {
         const hash = XxHash64.hash(0, utf16_bytes);
 
         return table.getIndexByKey(hash);
+    }
+};
+
+pub const ZoneInfo = struct {
+    pub const Table = TemplateTb(ZoneInfo, "ZoneInfoTemplateTb", .id);
+    pub const table: Table = .init();
+
+    id: u32,
+    layer_id: u32,
+    layer_index: u32,
+    group_id: u32,
+    entrance_id: u32,
+
+    pub fn getByZoneIdAndLayerIndex(zone_id: u32, layer_index: u32) ?ZoneInfo {
+        for (
+            table.items(.id),
+            table.items(.layer_index),
+            0..,
+        ) |template_zone_id, template_layer_index, template_index| {
+            if (template_zone_id == zone_id and template_layer_index == layer_index)
+                return table.getAtIndex(template_index);
+        }
+
+        return null;
+    }
+
+    pub fn isFreeTraining(zone_info: *const ZoneInfo) bool {
+        return zone_info.entrance_id == 901;
+    }
+};
+
+pub const BattleEventConfig = struct {
+    pub const Table = TemplateTb(BattleEventConfig, "BattleEventConfigTemplateTb", .id);
+    pub const table: Table = .init();
+
+    id: u32,
+    local_play_type: u32,
+};
+
+pub const PlayTypeMapping = struct {
+    pub const Table = TemplateTb(PlayTypeMapping, "PlayTypeMappingTemplateTb", .id);
+    pub const table: Table = .init();
+
+    id: u32,
+    local_play_type: u32,
+
+    pub fn getByLocalPlayType(lpt: u32) ?PlayTypeMapping {
+        const index = mem.findScalar(u32, table.items(.local_play_type), lpt) orelse return null;
+        return table.getAtIndex(index);
+    }
+};
+
+pub const HadalZoneQuest = struct {
+    pub const Table = TemplateTb(HadalZoneQuest, "HadalZoneQuestTemplateTb", .id);
+    pub const table: Table = .init();
+
+    id: u32,
+    layer_id: u32,
+
+    pub fn getByLayerId(layer_id: u32) ?HadalZoneQuest {
+        const index = mem.findScalar(u32, table.items(.layer_id), layer_id) orelse return null;
+        return table.getAtIndex(index);
     }
 };
 
@@ -264,6 +502,20 @@ fn TemplateTb(
 
         pub fn items(tb: *const Tb, comptime which: Field) @FieldType(Arrays, @tagName(which)) {
             return @field(tb.arrays, @tagName(which));
+        }
+
+        pub fn getAtIndex(tb: *const Tb, index: usize) Template {
+            var template: Template = undefined;
+            inline for (@typeInfo(Template).@"struct".field_names) |field_name| {
+                @field(template, field_name) = @field(tb.arrays, field_name)[index];
+            }
+
+            return template;
+        }
+
+        pub fn getByKey(tb: *const Tb, key: Key) ?Template {
+            const index = tb.getIndexByKey(key) orelse return null;
+            return tb.getAtIndex(index);
         }
 
         pub fn getString(tb: *const Tb, string: String) [:0]const u8 {

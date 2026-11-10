@@ -10,6 +10,7 @@ const fatal = kafka.cli.fatal;
 pub const defaults: Configuration = @import("defaults/kafka.zon");
 
 version: Version,
+hadal: Hadal,
 client_secret_key: []const u8,
 gateway_initial_decrypt_vector: *const [4096]u8,
 
@@ -52,6 +53,34 @@ pub const Version = struct {
             audio_version_size: u64,
             audio_version_md5: []const u8,
         };
+    };
+};
+
+pub const Hadal = struct {
+    zones: []const Zone,
+
+    pub const Zone = struct {
+        entrance: EntranceId,
+        id: u32,
+    };
+
+    pub const EntranceId = enum(u32) {
+        hadal_zone_scheduled_1 = 1,
+        hadal_zone_stable = 2,
+        hadal_zone_defensive = 3,
+        hadal_zone_ambush = 4,
+        boss_challenge_trial_1 = 9,
+        boss_challenge_trial_2 = 10,
+        boss_challenge_trial_3 = 11,
+        hadal_zone_scheduled_2 = 13,
+        hadal_zone_scheduled_3 = 14,
+        boss_challenge_adversity_1 = 16,
+        boss_challenge_adversity_2 = 17,
+        boss_challenge_adversity_3 = 18,
+        boss_challenge_adversity_4 = 19,
+        free_training = 901,
+
+        pub const count = @typeInfo(EntranceId).@"enum".field_names.len;
     };
 };
 

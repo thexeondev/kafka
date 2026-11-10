@@ -164,6 +164,7 @@ fn serveConnection(
                 &client.packet_id_counter,
                 head.packet_id,
             ),
+            .conf = server.conf,
         };
 
         try kafka.commands.execute(&session);

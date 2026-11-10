@@ -3,9 +3,11 @@ const ArrayList = std.ArrayList;
 
 const kafka = @import("../kafka.zig");
 const Player = kafka.Player;
+const battle = kafka.battle;
 const protobuf = kafka.protobuf;
 const gen = kafka.protobuf.gen;
 const templates = kafka.templates;
+const Configuration = kafka.Configuration;
 const BoundedMultiArray = kafka.BoundedMultiArray;
 
 const Skill = enum(u8) {
@@ -210,5 +212,115 @@ pub fn selfBasicInfo(role: *const Player.Storage.Role) gen.SelfBasicInfo {
         .avatar_id = @backingInt(role.avatar),
         .control_avatar_id = @backingInt(role.control_avatar),
         .control_guise_avatar_id = @backingInt(role.control_guise_avatar),
+    };
+}
+
+pub const AvatarUnitInfoList = BoundedMultiArray(struct {
+    info: gen.AvatarUnitInfo,
+    properties_buffer: [battle.Property.count]protobuf.KeyValue(u32, i32),
+}, Player.Storage.Avatar.count_max);
+
+pub fn avatarUnitInfo(
+    out: AvatarUnitInfoList.Ptr,
+    id: u32,
+    property_map: *const battle.Property.Map,
+) void {
+    var properties: ArrayList(protobuf.KeyValue(u32, i32)) = .initBuffer(out.properties_buffer);
+    for (&property_map.values, 0..) |property_value, property_index_int| {
+        const property: battle.Property = .fromIndex(@fromBackingInt(@intCast(property_index_int)));
+        properties.appendAssumeCapacity(.{
+            .key = @backingInt(property),
+            .value = property_value,
+        });
+    }
+
+    out.info.* = .{
+        .avatar_id = id,
+        .properties = properties.items,
+    };
+}
+
+pub const HadalEntranceList = BoundedMultiArray(struct {
+    info: gen.HadalEntranceInfo,
+    layers_buffer: [10]gen.LayerRecord,
+}, Configuration.Hadal.EntranceId.count);
+
+pub const HadalEntranceOptions = struct {
+    entrance_id: u32,
+    entrance_type: i32,
+    zone_id: u32,
+    begin_timestamp: i64,
+    end_timestamp: i64,
+};
+
+pub fn hadalEntrance(
+    out: HadalEntranceList.Ptr,
+    options: HadalEntranceOptions,
+) void {
+    var layers: ArrayList(protobuf.gen.LayerRecord) = .initBuffer(out.layers_buffer);
+
+    for (
+        templates.ZoneInfo.table.items(.id),
+        templates.ZoneInfo.table.items(.layer_index),
+    ) |template_id, layer_index| {
+        if (template_id == options.zone_id) layers.appendAssumeCapacity(.{
+            .layer_index = layer_index,
+            .status = @fromBackingInt(4),
+        });
+    }
+
+    out.info.* = .{
+        .entrance_type = @fromBackingInt(options.entrance_type),
+        .entrance_id = options.entrance_id,
+        .state = @fromBackingInt(3),
+        .cur_zone_record = .{
+            .zone_id = options.zone_id,
+            .begin_timestamp = options.begin_timestamp,
+            .end_timestamp = options.end_timestamp,
+            .layer_record_list = layers.items,
+        },
+    };
+}
+
+pub const DungeonPackageBuffer = struct {
+    avatars: AvatarInfoList,
+    weapons: [Player.Storage.Weapon.count_max]gen.WeaponInfo,
+    equips: EquipInfoList,
+
+    pub const init: DungeonPackageBuffer = .{
+        .avatars = .empty,
+        .weapons = undefined,
+        .equips = .empty,
+    };
+};
+
+pub fn dungeonPackage(
+    buffer: *DungeonPackageBuffer,
+    avatars: *Player.Avatar.Iterator,
+    weapons: *Player.Weapon.KeyValue.Iterator,
+    equipment: *Player.Equipment.KeyValue.Iterator,
+) gen.DungeonPackageInfo {
+    while (avatars.next()) |avatar|
+        protobuf.pack.avatarInfo(buffer.avatars.addOneAssumeCapacity(), avatar);
+
+    var weapon_list: ArrayList(gen.WeaponInfo) = .initBuffer(&buffer.weapons);
+    while (weapons.next()) |weapon_kv| {
+        protobuf.pack.weaponInfo(
+            weapon_list.addOneAssumeCapacity(),
+            weapon_kv,
+        );
+    }
+
+    while (equipment.next()) |equipment_kv| {
+        protobuf.pack.equipInfo(
+            buffer.equips.addOneAssumeCapacity(),
+            equipment_kv,
+        );
+    }
+
+    return .{
+        .avatar_list = buffer.avatars.items(.avatar_info),
+        .weapon_list = weapon_list.items,
+        .equip_list = buffer.equips.items(.equip_info),
     };
 }

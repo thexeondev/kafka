@@ -36,9 +36,15 @@ pub fn main(init: process.Init) !void {
 
 const template_tb_list: []const struct { []const u8, type } = &.{
     .{ "AvatarBaseTemplateTb", AvatarBaseTemplate },
+    .{ "AvatarBattleTemplateTb", AvatarBattleTemplate },
+    .{ "AvatarLevelAdvanceTemplateTb", AvatarLevelAdvanceTemplate },
+    .{ "AvatarPassiveSkillTemplateTb", AvatarPassiveSkillTemplate },
     .{ "UnlockConfigTemplateTb", UnlockConfigTemplate },
     .{ "WeaponTemplateTb", WeaponTemplate },
+    .{ "WeaponLevelTemplateTb", WeaponLevelTemplate },
+    .{ "WeaponStarTemplateTb", WeaponStarTemplate },
     .{ "EquipmentTemplateTb", EquipmentTemplate },
+    .{ "EquipmentLevelTemplateTb", EquipmentLevelTemplate },
     .{ "EquipmentSuitTemplateTb", EquipmentSuitTemplate },
     .{ "TeleportConfigTemplateTb", TeleportConfigTemplate },
     .{ "UrbanAreaMapTemplateTb", UrbanAreaMapTemplate },
@@ -47,6 +53,10 @@ const template_tb_list: []const struct { []const u8, type } = &.{
     .{ "MainCityObjectTemplateTb", MainCityObjectTemplate },
     .{ "MainCityDefaultObjectTemplateTb", MainCityDefaultObjectTemplate },
     .{ "NPCTransformSplitTb", NpcTransform },
+    .{ "ZoneInfoTemplateTb", ZoneInfoTemplate },
+    .{ "BattleEventConfigTemplateTb", BattleEventConfigTemplate },
+    .{ "PlayTypeMappingTemplateTb", PlayTypeMappingTemplate },
+    .{ "HadalZoneQuestTemplateTb", HadalZoneQuestTemplate },
 };
 
 const AvatarBaseTemplate = struct {
@@ -79,6 +89,185 @@ const AvatarBaseTemplate = struct {
     };
 };
 
+const AvatarLevelAdvanceTemplate = struct {
+    avatar_id: u32,
+    id: u32,
+    hp_max: i32,
+    attack: i32,
+    defence: i32,
+
+    const Fbs = struct {
+        avatar_id: fbs.Int(u32),
+        id: fbs.Int(u32),
+        min_level: fbs.Int(i32),
+        max_level: fbs.Int(i32),
+        hp_max: fbs.Int(i32),
+        unk_5: fbs.Discard,
+        unk_6: fbs.Discard,
+        attack: fbs.Int(i32),
+        defence: fbs.Int(i32),
+    };
+};
+
+const AvatarPassiveSkillTemplate = struct {
+    skill_id: u32,
+    avatar_id: u32,
+    min_passive_skill_level: u32,
+    unlock_passive_skill_level: u32,
+    properties: [2]Property,
+
+    const array_defaults = struct {
+        pub const properties: Property = .{ .id = 0, .value = 0 };
+    };
+
+    const Fbs = struct {
+        skill_id: fbs.Int(u32),
+        avatar_id: fbs.Int(u32),
+        min_avatar_level: fbs.Int(u32),
+        min_passive_skill_level: fbs.Int(u32),
+        unlock_passive_skill_level: fbs.Int(u32),
+        unk_5: fbs.Discard,
+        unk_levelup: fbs.Discard,
+        unk_7: fbs.Discard,
+        unk_8: fbs.Discard,
+        unk_9: fbs.Discard,
+        unk_10: fbs.Discard,
+        properties: fbs.StructArray(Property),
+    };
+};
+
+const Property = extern struct {
+    id: u32,
+    value: i32,
+};
+
+const AvatarBattleTemplate = struct {
+    id: u32,
+    hp_max: i32,
+    health_growth: i32,
+    attack: i32,
+    attack_growth: i32,
+    defence: i32,
+    defence_growth: i32,
+    crit: i32,
+    crit_damage: i32,
+    crit_res: i32,
+    crit_damage_res: i32,
+    pen_rate: i32,
+    pen_delta: i32,
+    luck: i32,
+    stun: i32,
+    break_stun: i32,
+    element_abnormal_power: i32,
+    sp_bar_point: i32,
+    sp_recover: i32,
+    element_mystery: i32,
+    rbl: i32,
+    rbl_correction_factor: i32,
+    rbl_probability: i32,
+    weapon_type: i32,
+    base_avatar_id: i32,
+    rp_recover: i32,
+    rp_max: i32,
+    ep_recover: i32,
+    ep_max: i32,
+    sharp_critical_damage: i32,
+
+    const Fbs = struct {
+        id: fbs.Int(u32),
+        unk_1: fbs.Discard,
+        unk_2: fbs.Discard,
+        unk_3: fbs.Discard,
+        unk_4: fbs.Discard,
+        unk_5: fbs.Discard,
+        unk_6: fbs.Discard,
+        unk_7: fbs.Discard,
+        unk_8: fbs.Discard,
+        unk_9: fbs.Discard,
+        unk_10: fbs.Discard,
+        avatar_piece_id: fbs.Discard,
+        unk_12: fbs.Discard,
+        unk_13: fbs.Discard,
+        hp_max: fbs.Int(i32),
+        health_growth: fbs.Int(i32),
+        unk_16: fbs.Discard,
+        unk_17: fbs.Discard,
+        unk_18: fbs.Discard,
+        unk_19: fbs.Discard,
+        unk_20: fbs.Discard,
+        attack: fbs.Int(i32),
+        attack_growth: fbs.Int(i32),
+        defence: fbs.Int(i32),
+        defence_growth: fbs.Int(i32),
+        crit: fbs.Int(i32),
+        crit_damage: fbs.Int(i32),
+        crit_res: fbs.Int(i32),
+        crit_damage_res: fbs.Int(i32),
+        pen_rate: fbs.Int(i32),
+        pen_delta: fbs.Int(i32),
+        luck: fbs.Int(i32),
+        stun: fbs.Int(i32),
+        break_stun: fbs.Int(i32),
+        element_abnormal_power: fbs.Int(i32),
+        sp_bar_point: fbs.Int(i32),
+        sp_recover: fbs.Int(i32),
+        element_mystery: fbs.Int(i32),
+        rbl: fbs.Int(i32),
+        rbl_correction_factor: fbs.Int(i32),
+        rbl_probability: fbs.Int(i32),
+        unk_41: fbs.Discard,
+        unk_42: fbs.Discard,
+        unk_43: fbs.Discard,
+        unk_44: fbs.Discard,
+        unk_45: fbs.Discard,
+        unk_46: fbs.Discard,
+        unk_47: fbs.Discard,
+        unk_48: fbs.Discard,
+        unk_49: fbs.Discard,
+        unk_50: fbs.Discard,
+        unk_51: fbs.Discard,
+        unk_52: fbs.Discard,
+        unk_53: fbs.Discard,
+        unk_54: fbs.Discard,
+        unk_55: fbs.Discard,
+        unk_56: fbs.Discard,
+        unk_57: fbs.Discard,
+        unk_58: fbs.Discard,
+        unk_59: fbs.Discard,
+        unk_60: fbs.Discard,
+        unk_61: fbs.Discard,
+        unk_62: fbs.Discard,
+        unk_63: fbs.Discard,
+        unk_64: fbs.Discard,
+        unk_65: fbs.Discard,
+        unk_66: fbs.Discard,
+        tags: fbs.Discard,
+        unk_68: fbs.Discard,
+        unk_69: fbs.Discard,
+        unk_70: fbs.Discard,
+        weapon_type: fbs.Int(i32),
+        element: fbs.Discard,
+        hit_type: fbs.Discard,
+        unk_element_camp: fbs.Discard,
+        unk_75: fbs.Discard,
+        unk_76: fbs.Discard,
+        unk_77: fbs.Discard,
+        unk_78: fbs.Discard,
+        base_avatar_id: fbs.Int(i32),
+        unk_80: fbs.Discard,
+        rp_max: fbs.Int(i32),
+        rp_recover: fbs.Int(i32),
+        unk_83: fbs.Discard,
+        unk_84: fbs.Discard,
+        awake_ids: fbs.Discard,
+        root_bone: fbs.Discard,
+        unk_87: fbs.Discard,
+        ep_recover: fbs.Int(i32),
+        ep_max: fbs.Int(i32),
+        sharp_critical_damage: fbs.Int(i32),
+    };
+};
+
 const UnlockConfigTemplate = struct {
     id: i32,
 
@@ -91,13 +280,15 @@ const WeaponTemplate = struct {
     id: u32,
     weapon_name: String,
     avatar_id: u32,
+    base_property: Property,
+    rand_property: Property,
 
     const Fbs = struct {
         id: fbs.Int(u32),
         weapon_name: fbs.String,
         unk_missing_field: fbs.Discard,
-        base_property: fbs.Discard,
-        rand_property: fbs.Discard,
+        base_property: fbs.Struct(Property),
+        rand_property: fbs.Struct(Property),
         star_limit: fbs.Discard,
         exp_recycle: fbs.Discard,
         weapon_script_config: fbs.Discard,
@@ -120,6 +311,38 @@ const WeaponTemplate = struct {
     };
 };
 
+const WeaponLevelTemplate = struct {
+    rarity: u32,
+    level: u32,
+    rate: u32,
+    exp: u32,
+
+    const Fbs = struct {
+        rarity: fbs.Int(u32),
+        level: fbs.Int(u32),
+        rate: fbs.Int(u32),
+        exp: fbs.Int(u32),
+    };
+};
+
+const WeaponStarTemplate = struct {
+    rarity: u32,
+    star: u32,
+    min_level: u32,
+    max_level: u32,
+    base_rate: u32,
+    rand_rate: u32,
+
+    const Fbs = struct {
+        rarity: fbs.Int(u32),
+        star: fbs.Int(u32),
+        min_level: fbs.Int(u32),
+        max_level: fbs.Int(u32),
+        base_rate: fbs.Int(u32),
+        rand_rate: fbs.Int(u32),
+    };
+};
+
 const EquipmentTemplate = struct {
     id: u32,
 
@@ -128,11 +351,51 @@ const EquipmentTemplate = struct {
     };
 };
 
+const EquipmentLevelTemplate = struct {
+    rarity: u32,
+    level: u32,
+    enhance_rate: i32,
+
+    const Fbs = struct {
+        rarity: fbs.Int(u32),
+        level: fbs.Int(u32),
+        enhance_rate: fbs.Int(i32),
+    };
+};
+
 const EquipmentSuitTemplate = struct {
     id: u32,
+    primary_condition: u32,
+    primary_suit_properties: [2]Property,
+
+    const array_defaults = struct {
+        const primary_suit_properties: Property = .{ .id = 0, .value = 0 };
+    };
 
     const Fbs = struct {
         id: fbs.Int(u32),
+        name: fbs.String,
+        primary_condition: fbs.Int(u32),
+        unk_3: fbs.Discard,
+        primary_suit_ability: fbs.Int(u32),
+        primary_description: fbs.String,
+        secondary_condition: fbs.Int(u32),
+        unk_7: fbs.Discard,
+        secondary_suit_ability: fbs.Int(u32),
+        secondary_description: fbs.String,
+        suit_icon: fbs.String,
+        suit_story: fbs.String,
+        suit_filter_option: fbs.String,
+        suit_item_icon: fbs.String,
+        unk_14: fbs.Discard,
+        order: fbs.Discard,
+        unk_16: fbs.Discard,
+        unk_17: fbs.Discard,
+        unk_18: fbs.Discard,
+        unk_19: fbs.Discard,
+        unk_20: fbs.Discard,
+        unk_21: fbs.Discard,
+        primary_suit_properties: fbs.StructArray(Property),
     };
 };
 
@@ -255,6 +518,63 @@ const NpcTransform = struct {
     };
 };
 
+const ZoneInfoTemplate = struct {
+    id: u32,
+    layer_id: u32,
+    layer_index: u32,
+    group_id: u32,
+    entrance_id: u32,
+
+    const Fbs = struct {
+        id: fbs.Int(u32),
+        friendly_name: fbs.String,
+        on_schedule: fbs.Bool,
+        name: fbs.String,
+        layer_id: fbs.Int(u32),
+        layer_index: fbs.Int(u32),
+        unk_6: fbs.Discard,
+        unk_7: fbs.Discard,
+        unk_8: fbs.Discard,
+        group_id: fbs.Int(u32),
+        base_zone_id: fbs.Int(u32),
+        entrance_id: fbs.Int(u32),
+    };
+};
+
+const BattleEventConfigTemplate = struct {
+    id: u32,
+    local_play_type: u32,
+
+    const Fbs = struct {
+        id: fbs.Int(u32),
+        level_design_id: fbs.Int(u32),
+        unk_1: fbs.Discard,
+        unk_2: fbs.Discard,
+        unk_3: fbs.Discard,
+        local_play_type: fbs.Int(u32),
+    };
+};
+
+const PlayTypeMappingTemplate = struct {
+    id: u32,
+    local_play_type: u32,
+
+    const Fbs = struct {
+        id: fbs.Int(u32),
+        local_play_type: fbs.Int(u32),
+    };
+};
+
+const HadalZoneQuestTemplate = struct {
+    id: u32,
+    layer_id: u32,
+
+    const Fbs = struct {
+        id: fbs.Int(u32),
+        layer_id: fbs.Int(u32),
+    };
+};
+
 fn fieldsOrderedByAlignment(comptime T: type) bool {
     const field_types = @typeInfo(T).@"struct".field_types;
     comptime var prev_alignment = @alignOf(BackingType(field_types[0]));
@@ -307,7 +627,7 @@ const fbs = struct {
     pub fn Table(comptime S: type) type {
         return struct {
             base: usize,
-            fields: Struct,
+            fields: S,
 
             pub const Struct = S;
         };
@@ -386,6 +706,83 @@ const fbs = struct {
             return buffer[table_base + @"bool".offset] != 0;
         }
     };
+
+    pub fn Struct(comptime T: type) type {
+        return struct {
+            offset: u16,
+
+            pub fn read(
+                @"struct": *const @This(),
+                buffer: []const u8,
+                table_base: usize,
+            ) T {
+                var cursor = buffer[table_base + @"struct".offset ..];
+                var result: T = undefined;
+
+                inline for (
+                    @typeInfo(T).@"struct".field_names,
+                    @typeInfo(T).@"struct".field_types,
+                ) |field_name, FieldType| {
+                    assert(@typeInfo(FieldType) == .int); // TODO
+
+                    defer cursor = cursor[@sizeOf(FieldType)..];
+                    @field(result, field_name) = mem.readInt(
+                        FieldType,
+                        cursor[0..@sizeOf(FieldType)],
+                        .little,
+                    );
+                }
+
+                return result;
+            }
+        };
+    }
+
+    pub fn StructArray(comptime T: type) type {
+        return struct {
+            offset: u16,
+
+            pub fn copyInto(
+                @"struct": *const @This(),
+                buffer: []const u8,
+                table_base: usize,
+                into: []T,
+            ) void {
+                if (@"struct".offset == 0) return;
+
+                const payload_offset_ptr = buffer[table_base + @"struct".offset ..][0..4];
+                const payload_offset = mem.readInt(i32, payload_offset_ptr, .little);
+                const payload_pos: usize = @intCast(@as(
+                    isize,
+                    @intCast(table_base + @"struct".offset),
+                ) + payload_offset);
+
+                const count_ptr = buffer[payload_pos..][0..@sizeOf(u32)];
+                const count = mem.readInt(u32, count_ptr, .little);
+
+                assert(count <= into.len);
+
+                const items_base = buffer[payload_pos + @sizeOf(u32) ..];
+                for (into[0..count], 0..count) |*dest, index| {
+                    var cursor = items_base[@sizeOf(T) * index ..];
+
+                    inline for (
+                        @typeInfo(T).@"struct".field_names,
+                        @typeInfo(T).@"struct".field_types,
+                    ) |field_name, FieldType| {
+                        assert(@typeInfo(FieldType) == .int); // TODO
+
+                        defer cursor = cursor[@sizeOf(FieldType)..];
+                        @field(dest, field_name) = mem.readInt(
+                            FieldType,
+                            cursor[0..@sizeOf(FieldType)],
+                            .little,
+                        );
+                    }
+                }
+            }
+        };
+    }
 };
 
 fn parseFlatbuffer(comptime Root: type, arena: Allocator, bytes: []const u8) Allocator.Error!Root {
@@ -424,7 +821,7 @@ fn parseFlatbuffer(comptime Root: type, arena: Allocator, bytes: []const u8) All
         inline for (@typeInfo(Struct).@"struct".field_names, 0..) |field_name, field_index| {
             const offset_pos = 4 + field_index * @sizeOf(u16);
 
-            if (offset_pos > item_vtable_size) {
+            if (offset_pos + @sizeOf(u16) > item_vtable_size) {
                 @field(item.fields, field_name) = .{ .offset = 0 };
             } else {
                 const field_offset =
@@ -526,7 +923,7 @@ fn convertTemplateList(
                     field_value.* = try string_table.put(arena, slice);
                 },
                 else => switch (@typeInfo(FieldType)) {
-                    .int, .bool, .float => {
+                    .int, .bool, .float, .@"struct" => {
                         field_value.* = fbs_field.read(buffer_fbs, template_fbs.base);
                     },
                     .array => {
