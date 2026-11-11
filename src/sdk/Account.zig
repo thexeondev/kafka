@@ -14,16 +14,18 @@ token: Token,
 const field_count = @typeInfo(Account).@"struct".field_names.len;
 
 pub const Username = extern struct {
+    /// All the inactive bytes are zeroes.
+    bytes: Bytes,
+
     pub const length_max = 15;
 
     const Bytes = [length_max:0]u8;
 
-    /// All the inactive bytes are zeroes.
-    bytes: Bytes,
-
     comptime {
         assert(@sizeOf(Bytes) == @sizeOf(u128));
     }
+
+    const empty: Username = .{ .bytes = @splat(0) };
 
     fn toU128(username: *const Username) u128 {
         return @bitCast(username.bytes);
@@ -33,7 +35,7 @@ pub const Username = extern struct {
         if (slice.len == 0) return null;
         if (Account.Username.length_max < slice.len) return null;
 
-        var result: Username = undefined;
+        var result: Username = .empty;
         defer assert(result.bytes[length_max] == 0);
 
         for (slice) |char|
@@ -41,9 +43,6 @@ pub const Username = extern struct {
                 return null;
 
         @memcpy(result.bytes[0..slice.len], slice);
-        @memset(result.bytes[slice.len..], 0);
-        result.bytes[length_max] = 0;
-
         return result;
     }
 
