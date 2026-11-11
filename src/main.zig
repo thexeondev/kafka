@@ -636,9 +636,9 @@ fn getAndVerifyAccountByPassword(
     defer scope.server.sdk_account_storage_mutex.unlock(io);
     const storage = scope.server.sdk_account_storage;
 
-    const result = try storage.getOrInsertByUsername(gpa, account_input);
+    const result = try storage.getOrPut(gpa, account_input);
 
-    if (!result.found) try sdk.saveAccountStorage(
+    if (!result.found_existing) try sdk.saveAccountStorage(
         io,
         scope.server.storage.root,
         sdk_account_storage_filename,

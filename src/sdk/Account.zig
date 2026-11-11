@@ -1,3 +1,7 @@
+username: Username,
+password: Password,
+token: Token,
+
 const Account = @This();
 
 const std = @import("std");
@@ -5,13 +9,16 @@ const mem = std.mem;
 const assert = std.debug.assert;
 const Allocator = std.mem.Allocator;
 const bcrypt = std.crypto.pwhash.bcrypt;
-const MultiArrayList = std.MultiArrayList;
+const hasUniqueRepresentation = std.meta.hasUniqueRepresentation;
 
-username: Username,
-password: Password,
-token: Token,
+const Authentication = extern struct {
+    password: Password,
+    token: Token,
 
-const field_count = @typeInfo(Account).@"struct".field_names.len;
+    comptime {
+        assert(hasUniqueRepresentation(@This()));
+    }
+};
 
 pub const Username = extern struct {
     /// All the inactive bytes are zeroes.
@@ -23,6 +30,7 @@ pub const Username = extern struct {
 
     comptime {
         assert(@sizeOf(Bytes) == @sizeOf(u128));
+        assert(hasUniqueRepresentation(@This()));
     }
 
     const empty: Username = .{ .bytes = @splat(0) };
@@ -50,28 +58,16 @@ pub const Username = extern struct {
         assert(username.bytes[length_max] == 0);
         return mem.span(@as([*:0]const u8, &username.bytes));
     }
-
-    const Map = std.array_hash_map.Auto(void, void);
-
-    const Adapter = struct {
-        usernames: []const Username,
-
-        pub fn eql(context: Adapter, a: Username, b_void: void, b_map_index: usize) bool {
-            _ = b_void;
-            return a.toU128() == context.usernames[b_map_index].toU128();
-        }
-
-        pub fn hash(context: Adapter, a: Username) u32 {
-            _ = context;
-            return std.array_hash_map.hashString(&a.bytes);
-        }
-    };
 };
 
 pub const Password = extern struct {
+    hash: [hash_size]u8,
+
     const hash_size = 67;
 
-    hash: [hash_size]u8,
+    comptime {
+        assert(hasUniqueRepresentation(@This()));
+    }
 
     pub fn init(csprng: std.Random, string: []const u8) Password {
         var salt: [bcrypt.salt_length]u8 = undefined;
@@ -90,14 +86,14 @@ pub const Password = extern struct {
     }
 
     pub fn verify(pw: *const Password, string: []const u8) bool {
-        return if (bcrypt.strVerify(&pw.hash, string, .{
+        if (bcrypt.strVerify(&pw.hash, string, .{
             .silently_truncate_password = false,
-        }))
-            true
-        else |err| switch (err) {
+        })) {
+            return true;
+        } else |err| switch (err) {
             error.Canceled => unreachable, // No `Io` involved.
-            else => false,
-        };
+            else => return false,
+        }
     }
 };
 
@@ -133,126 +129,88 @@ pub const Index = enum(u32) {
 };
 
 pub const Storage = struct {
-    list: MultiArrayList(Account),
-    username_map: Account.Username.Map,
+    map: std.array_hash_map.Auto(Username, Authentication),
 
-    pub const empty: Storage = .{
-        .list = .empty,
-        .username_map = .empty,
-    };
+    pub const empty: Storage = .{ .map = .empty };
 
     pub fn count(storage: *const Storage) usize {
-        return storage.list.len;
+        return storage.map.count();
     }
 
-    pub fn countFromByteCount(byte_count: usize) usize {
-        const bytes_per_account = comptime bytes_per_account: {
-            var n: usize = 0;
-            for (@typeInfo(Account).@"struct".field_types) |Field| {
-                assert(std.meta.hasUniqueRepresentation(Field));
-                n += @sizeOf(Field);
-            }
+    pub fn countFromSizeInBytes(size_in_bytes: usize) usize {
+        const bytes_per_account = @sizeOf(Username) + @sizeOf(Authentication);
+        return @divExact(size_in_bytes, bytes_per_account);
+    }
 
-            break :bytes_per_account n;
+    pub fn setLength(storage: *Storage, len: usize) void {
+        assert(storage.map.capacity() >= len);
+        storage.map.entries.len = len;
+    }
+
+    pub fn vector(storage: *const Storage) [2][]u8 {
+        return .{
+            @ptrCast(storage.map.keys()),
+            @ptrCast(storage.map.values()),
         };
-
-        return @divExact(byte_count, bytes_per_account);
-    }
-
-    pub fn writableVector(storage: *Storage) [Account.field_count][]u8 {
-        var vector: [Account.field_count][]u8 = undefined;
-        const accounts_slice = storage.list.slice();
-
-        inline for (
-            &vector,
-            std.enums.values(MultiArrayList(Account).Field),
-        ) |*buffer, field| {
-            buffer.* = @ptrCast(accounts_slice.items(field));
-        }
-
-        return vector;
-    }
-
-    pub fn readableVector(storage: *const Storage) [Account.field_count][]const u8 {
-        return writableVector(@constCast(storage));
     }
 
     pub fn initCapacity(gpa: Allocator, capacity: usize) Allocator.Error!Storage {
         var storage: Storage = .empty;
-        try storage.list.ensureTotalCapacity(gpa, capacity);
-        errdefer storage.list.deinit(gpa);
-
-        try storage.username_map.ensureTotalCapacity(gpa, capacity);
-        errdefer comptime unreachable;
+        try storage.map.ensureTotalCapacity(gpa, capacity);
 
         return storage;
     }
 
     pub fn deinit(storage: *Account.Storage, gpa: Allocator) void {
-        storage.list.deinit(gpa);
-        storage.username_map.deinit(gpa);
+        storage.map.deinit(gpa);
     }
 
-    pub fn reIndexAssumeFirstIndexing(storage: *Account.Storage) void {
-        assert(storage.username_map.entries.len == 0);
+    /// Set the storage to an empty state, making deinitialization a no-op,
+    /// and returning a copy of the original.
+    pub fn move(storage: *Account.Storage) Account.Storage {
+        return .{ .map = storage.map.move() };
+    }
 
-        const username_slice = storage.list.items(.username);
-        const username_adapter: Username.Adapter = .{ .usernames = username_slice };
-
-        for (username_slice, 0..) |username, index| {
-            const gop = storage.username_map.getOrPutAssumeCapacityAdapted(
-                username,
-                username_adapter,
-            );
-
-            assert(!gop.found_existing);
-            assert(gop.index == index);
-        }
+    pub fn reIndex(storage: *Account.Storage, gpa: Allocator) Allocator.Error!void {
+        return storage.map.reIndex(gpa);
     }
 
     pub fn getByIndex(storage: *const Account.Storage, index: Account.Index) ?Account {
         const index_int = @backingInt(index);
-        if (storage.list.len <= index_int) return null;
+        if (storage.map.count() <= index_int) return null;
 
-        return storage.list.get(index_int);
+        const username = storage.map.keys()[index_int];
+        const authentication = storage.map.values()[index_int];
+
+        return .{
+            .username = username,
+            .password = authentication.password,
+            .token = authentication.token,
+        };
     }
 
-    pub const GetOrInsertResult = struct {
-        found: bool,
+    pub const GetOrPut = struct {
         index: Account.Index,
+        found_existing: bool,
     };
 
-    pub fn getOrInsertByUsername(
+    pub fn getOrPut(
         storage: *Account.Storage,
         gpa: Allocator,
         account: Account,
-    ) Allocator.Error!GetOrInsertResult {
-        assert(storage.list.len == storage.username_map.entries.len);
-
-        const username_adapter: Username.Adapter = .{
-            .usernames = storage.list.items(.username),
-        };
-
-        const gop = try storage.username_map.getOrPutAdapted(
-            gpa,
-            account.username,
-            username_adapter,
-        );
-        errdefer assert(storage.username_map.swapRemoveAdapted(
-            account.username,
-            username_adapter,
-        ));
+    ) Allocator.Error!GetOrPut {
+        const gop = try storage.map.getOrPut(gpa, account.username);
 
         if (!gop.found_existing) {
-            // New account, we must append it to the list.
-            try storage.list.append(gpa, account);
-            const list_index = storage.list.len - 1;
-            assert(gop.index == list_index);
+            gop.value_ptr.* = .{
+                .token = account.token,
+                .password = account.password,
+            };
         }
 
         return .{
-            .found = gop.found_existing,
             .index = @fromBackingInt(@intCast(gop.index)),
+            .found_existing = gop.found_existing,
         };
     }
 };
