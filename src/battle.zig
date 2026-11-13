@@ -1,9 +1,9 @@
 const std = @import("std");
 
-const kafka = @import("kafka.zig");
-const Player = kafka.Player;
-const templates = kafka.templates;
-const IntMultiSet = kafka.IntMultiSet;
+const remielle = @import("remielle.zig");
+const Player = remielle.Player;
+const templates = remielle.templates;
+const IntMultiSet = remielle.IntMultiSet;
 
 const rate_div = 10_000;
 const rupture_weapon_type = 6;

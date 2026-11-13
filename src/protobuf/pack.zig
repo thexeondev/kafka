@@ -1,14 +1,14 @@
 const std = @import("std");
 const ArrayList = std.ArrayList;
 
-const kafka = @import("../kafka.zig");
-const Player = kafka.Player;
-const battle = kafka.battle;
-const protobuf = kafka.protobuf;
-const gen = kafka.protobuf.gen;
-const templates = kafka.templates;
-const Configuration = kafka.Configuration;
-const BoundedMultiArray = kafka.BoundedMultiArray;
+const remielle = @import("../remielle.zig");
+const Player = remielle.Player;
+const battle = remielle.battle;
+const protobuf = remielle.protobuf;
+const gen = remielle.protobuf.gen;
+const templates = remielle.templates;
+const Configuration = remielle.Configuration;
+const BoundedMultiArray = remielle.BoundedMultiArray;
 
 const Skill = enum(u8) {
     common_attack = 0,

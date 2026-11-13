@@ -6,10 +6,10 @@ const std = @import("std");
 const Io = std.Io;
 const Allocator = std.mem.Allocator;
 
-const kafka = @import("../kafka.zig");
-const Player = kafka.Player;
-const templates = kafka.templates;
-const Storage = kafka.Player.Storage;
+const remielle = @import("../remielle.zig");
+const Player = remielle.Player;
+const templates = remielle.templates;
+const Storage = remielle.Player.Storage;
 
 role: Role,
 main_city: MainCity,

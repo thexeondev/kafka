@@ -1,11 +1,11 @@
 const std = @import("std");
 const assert = std.debug.assert;
 
-const kafka = @import("kafka.zig");
-const Session = kafka.Session;
-const protobuf = kafka.protobuf;
+const remielle = @import("remielle.zig");
+const Session = remielle.Session;
+const protobuf = remielle.protobuf;
 
-const log = std.log.scoped(.@"kafka::commands");
+const log = std.log.scoped(.@"remielle::commands");
 
 const namespaces: []const type = &.{
     @import("commands/player.zig"),
@@ -18,7 +18,7 @@ const namespaces: []const type = &.{
     @import("commands/hadal_zone.zig"),
 };
 
-const HandlerFn = *const fn (*kafka.session.TypeErased) kafka.session.Error!void;
+const HandlerFn = *const fn (*remielle.session.TypeErased) remielle.session.Error!void;
 
 const cmd_count: usize = 10_000;
 const handlers: *const [cmd_count]?HandlerFn = handlers: {
@@ -43,9 +43,9 @@ const handlers: *const [cmd_count]?HandlerFn = handlers: {
     break :handlers &final;
 };
 
-pub const ExecuteError = kafka.session.Error || error{CommandIdIllegal};
+pub const ExecuteError = remielle.session.Error || error{CommandIdIllegal};
 
-pub fn execute(session: *kafka.session.TypeErased) ExecuteError!void {
+pub fn execute(session: *remielle.session.TypeErased) ExecuteError!void {
     if (session.command.id >= cmd_count) return error.CommandIdIllegal;
 
     if (handlers[session.command.id]) |handlerFn| {

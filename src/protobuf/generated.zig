@@ -1,4 +1,4 @@
-//! Generated with kafka-compile-proto. 2026, ReversedRooms. All bytes reversed.
+//! Generated with remielle-compile-proto. 2026, ReversedRooms. All bytes reversed.
 
 pub const ProtobufOptions = struct {
     Encoding: type,

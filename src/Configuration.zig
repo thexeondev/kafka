@@ -4,10 +4,10 @@ const std = @import("std");
 const Io = std.Io;
 const Allocator = std.mem.Allocator;
 
-const kafka = @import("kafka.zig");
-const fatal = kafka.cli.fatal;
+const remielle = @import("remielle.zig");
+const fatal = remielle.cli.fatal;
 
-pub const defaults: Configuration = @import("defaults/kafka.zon");
+pub const defaults: Configuration = @import("defaults/remielle.zon");
 
 version: Version,
 hadal: Hadal,

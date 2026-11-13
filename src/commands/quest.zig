@@ -1,12 +1,12 @@
 const std = @import("std");
 
-const kafka = @import("../kafka.zig");
-const Player = kafka.Player;
-const battle = kafka.battle;
-const Session = kafka.Session;
-const protobuf = kafka.protobuf;
-const templates = kafka.templates;
-const StaticIntMap = kafka.StaticIntMap;
+const remielle = @import("../remielle.zig");
+const Player = remielle.Player;
+const battle = remielle.battle;
+const Session = remielle.Session;
+const protobuf = remielle.protobuf;
+const templates = remielle.templates;
+const StaticIntMap = remielle.StaticIntMap;
 
 pub fn GetQuestDataCsReq(session: Session(.GetQuestDataCsReq)) !void {
     const request = try session.decodeBody();

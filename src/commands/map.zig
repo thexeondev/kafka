@@ -1,10 +1,10 @@
 const std = @import("std");
 const ArrayList = std.ArrayList;
 
-const kafka = @import("../kafka.zig");
-const Session = kafka.Session;
-const protobuf = kafka.protobuf;
-const templates = kafka.templates;
+const remielle = @import("../remielle.zig");
+const Session = remielle.Session;
+const protobuf = remielle.protobuf;
+const templates = remielle.templates;
 
 pub fn GetAreaMapDataCsReq(session: Session(.GetAreaMapDataCsReq)) !void {
     var groups_buffer: [templates.UrbanAreaMapGroup.table.count]protobuf.gen.AreaGroupInfo =

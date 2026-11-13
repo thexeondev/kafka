@@ -8,7 +8,7 @@ const Allocator = std.mem.Allocator;
 fn usage(io: Io) noreturn {
     Io.File.stdout().writeStreamingAll(
         io,
-        "usage: kafka-convert-textmap [input_file_path]\n",
+        "usage: remielle-convert-textmap [input_file_path]\n",
     ) catch {};
     process.exit(1);
 }

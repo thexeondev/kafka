@@ -8,7 +8,7 @@ const Allocator = std.mem.Allocator;
 fn usage(io: Io) noreturn {
     Io.File.stdout().writeStreamingAll(
         io,
-        "usage: kafka-convert-templatetb [input_dir] [output_dir]\n",
+        "usage: remielle-convert-templatetb [input_dir] [output_dir]\n",
     ) catch {};
     process.exit(1);
 }

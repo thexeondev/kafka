@@ -5,9 +5,9 @@ const Io = std.Io;
 const mem = std.mem;
 const assert = std.debug.assert;
 
-const kafka = @import("kafka.zig");
-const protobuf = kafka.protobuf;
-const PacketHead = kafka.protobuf.gen.PacketHead;
+const remielle = @import("remielle.zig");
+const protobuf = remielle.protobuf;
+const PacketHead = remielle.protobuf.gen.PacketHead;
 
 id: u16,
 head: []u8,

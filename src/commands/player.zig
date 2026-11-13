@@ -1,7 +1,7 @@
-const kafka = @import("../kafka.zig");
-const Player = kafka.Player;
-const Session = kafka.Session;
-const protobuf = kafka.protobuf;
+const remielle = @import("../remielle.zig");
+const Player = remielle.Player;
+const Session = remielle.Session;
+const protobuf = remielle.protobuf;
 
 pub fn PlayerLoginCsReq(session: Session(.PlayerLoginCsReq)) !void {
     return session.respond(.{});

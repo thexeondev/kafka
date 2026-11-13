@@ -4,17 +4,17 @@ const mem = std.mem;
 const Allocator = std.mem.Allocator;
 const IpAddress = std.Io.net.IpAddress;
 
-const kafka = @import("kafka");
-const rsa = kafka.rsa;
-const sdk = kafka.sdk;
-const Player = kafka.Player;
-const Command = kafka.Command;
-const protobuf = kafka.protobuf;
+const remielle = @import("remielle");
+const rsa = remielle.rsa;
+const sdk = remielle.sdk;
+const Player = remielle.Player;
+const Command = remielle.Command;
+const protobuf = remielle.protobuf;
 const PacketHead = protobuf.gen.PacketHead;
 const PlayerGetTokenCsReq = protobuf.gen.PlayerGetTokenCsReq;
 const PlayerGetTokenScRsp = protobuf.gen.PlayerGetTokenScRsp;
 
-const log = std.log.scoped(.@"kafka::gateway");
+const log = std.log.scoped(.@"remielle::gateway");
 
 const Server = @import("root").Server;
 
@@ -152,7 +152,7 @@ fn serveConnection(
             .needs_save = false,
         };
 
-        var session: kafka.session.TypeErased = .{
+        var session: remielle.session.TypeErased = .{
             .command = &command,
             .player = &player,
             .time = &.{
@@ -167,7 +167,7 @@ fn serveConnection(
             .conf = server.conf,
         };
 
-        try kafka.commands.execute(&session);
+        try remielle.commands.execute(&session);
 
         if (session.player.needs_save) {
             try player_storage.saveToFile(io, server.storage.player_dir, player_storage_file_path);
@@ -191,7 +191,7 @@ const Client = struct {
         client.player_uid = token.player_uid;
         client.packet_id_counter = 0;
 
-        kafka.random.getDecryptVector(&client.decrypt_vector, token.rand_key);
+        remielle.random.getDecryptVector(&client.decrypt_vector, token.rand_key);
     }
 };
 

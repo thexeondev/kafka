@@ -1,10 +1,10 @@
 const std = @import("std");
 
-const kafka = @import("../kafka.zig");
-const Player = kafka.Player;
-const Session = kafka.Session;
-const protobuf = kafka.protobuf;
-const Configuration = kafka.Configuration;
+const remielle = @import("../remielle.zig");
+const Player = remielle.Player;
+const Session = remielle.Session;
+const protobuf = remielle.protobuf;
+const Configuration = remielle.Configuration;
 
 pub fn GetHadalZoneDataCsReq(session: Session(.GetHadalZoneDataCsReq)) !void {
     var hadal_entrance_list: protobuf.pack.HadalEntranceList = .empty;

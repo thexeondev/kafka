@@ -4,15 +4,15 @@ const mem = std.mem;
 const process = std.process;
 const Allocator = std.mem.Allocator;
 
-const kafka = @import("kafka");
-const Player = kafka.Player;
-const templates = kafka.templates;
+const remielle = @import("remielle");
+const Player = remielle.Player;
+const templates = remielle.templates;
 
-const log = std.log.scoped(.@"kafka-pack-player");
+const log = std.log.scoped(.@"remielle-pack-player");
 
 pub fn usage(io: Io) noreturn {
     Io.File.stdout().writeStreamingAll(io,
-        \\Usage: kafka pack-player [input] [options]
+        \\Usage: remielle pack-player [input] [options]
         \\
         \\Options:
         \\  --help, -h  Print this help and exit
@@ -22,7 +22,7 @@ pub fn usage(io: Io) noreturn {
     process.exit(0);
 }
 
-pub fn run(io: Io, gpa: Allocator, args: *kafka.cli.Args) !void {
+pub fn run(io: Io, gpa: Allocator, args: *remielle.cli.Args) !void {
     var input_path_maybe: ?[]const u8 = null;
     var output_path_maybe: ?[]const u8 = null;
 

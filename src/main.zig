@@ -10,11 +10,11 @@ const assert = std.debug.assert;
 const Allocator = std.mem.Allocator;
 const IpAddress = std.Io.net.IpAddress;
 
-const kafka = @import("kafka");
-const sdk = kafka.sdk;
-const http = kafka.http;
-const fatal = kafka.cli.fatal;
-const Configuration = kafka.Configuration;
+const remielle = @import("remielle");
+const sdk = remielle.sdk;
+const http = remielle.http;
+const fatal = remielle.cli.fatal;
+const Configuration = remielle.Configuration;
 
 const build_options = @import("build_options");
 
@@ -30,10 +30,10 @@ const default_http_address = "127.0.0.1:12401";
 const default_gate_address = "127.0.0.1:20501";
 const default_public_url_prefix = "http://127.0.0.1:12401";
 const sdk_account_storage_filename = "sdk_accounts.bin";
-const default_config_path = "kafka.zon";
+const default_config_path = "remielle.zon";
 
 pub const Storage = struct {
-    const default_root_path = "kafka-storage";
+    const default_root_path = "remielle-storage";
     const player_dir_sub_path = "players";
 
     root: Io.Dir,
@@ -73,7 +73,7 @@ pub const Server = struct {
 
 fn generalUsage(io: Io) noreturn {
     Io.File.stdout().writeStreamingAll(io,
-        \\Usage: kafka [command] [options]
+        \\Usage: remielle [command] [options]
         \\
         \\Commands:
         \\  serve         (default) Start the game server
@@ -90,7 +90,7 @@ fn generalUsage(io: Io) noreturn {
 
 fn serveUsage(io: Io) noreturn {
     Io.File.stdout().writeStreamingAll(io, std.fmt.comptimePrint(
-        \\Usage: kafka serve [options]
+        \\Usage: remielle serve [options]
         \\
         \\Options:
         \\  --help, -h             Print this help and exit
@@ -132,7 +132,7 @@ pub fn main(init: process.Init.Minimal) !void {
     defer threaded.deinit();
     const io = threaded.io();
 
-    var args: kafka.cli.Args = try .init(arena, init.args);
+    var args: remielle.cli.Args = try .init(arena, init.args);
 
     const command_string = args.next() orelse "serve";
     const command_tag = std.meta.stringToEnum(Command, command_string) orelse {
@@ -188,20 +188,20 @@ pub fn main(init: process.Init.Minimal) !void {
         .exit_if_not_found = config_path_maybe != null,
     });
 
-    const query_dispatch_response = try kafka.dispatch.buildQueryDispatchResponse(.{
+    const query_dispatch_response = try remielle.dispatch.buildQueryDispatchResponse(.{
         .gpa = gpa,
         .arena = arena,
-        .region_name = "kafka",
-        .region_title = "Kafka",
+        .region_name = "remielle",
+        .region_title = "Remielle",
         .public_url_prefix = public_url_prefix,
     });
 
     var ip4_string_buffer: ["255.255.255.255".len]u8 = undefined;
-    const query_gateway_response = try kafka.dispatch.buildQueryGatewayResponse(.{
+    const query_gateway_response = try remielle.dispatch.buildQueryGatewayResponse(.{
         .gpa = gpa,
         .arena = arena,
-        .region_name = "kafka",
-        .region_title = "Kafka",
+        .region_name = "remielle",
+        .region_title = "Remielle",
         .client_secret_key = conf.client_secret_key,
         .cdn = &conf.version.cdn,
         .public_url_prefix = public_url_prefix,
@@ -225,7 +225,7 @@ pub fn main(init: process.Init.Minimal) !void {
         },
     });
 
-    const fallback_dispatch_response = try kafka.dispatch.buildFallbackResponse(.{
+    const fallback_dispatch_response = try remielle.dispatch.buildFallbackResponse(.{
         .gpa = gpa,
         .arena = arena,
         .supported_version = conf.version.tag,
@@ -297,7 +297,7 @@ fn startHttp(io: Io, gpa: Allocator, server: *Server, options: HttpServerOptions
     var group: Io.Group = .init;
     defer group.cancel(io);
 
-    const scoped_log = std.log.scoped(.@"kafka::http");
+    const scoped_log = std.log.scoped(.@"remielle::http");
     scoped_log.info(
         "waiting for dispatch and sdk requests at http://{f}",
         .{net_server.socket.address},
@@ -569,10 +569,10 @@ fn loginByPassword(io: Io, gpa: Allocator, scope: *const HttpRequestScope) !void
         else => return try scope.fail(.bad_request),
     };
 
-    const username = kafka.rsa.decryptString(request.account) orelse
+    const username = remielle.rsa.decryptString(request.account) orelse
         return try scope.fail(.bad_request);
 
-    const password = kafka.rsa.decryptString(request.password) orelse
+    const password = remielle.rsa.decryptString(request.password) orelse
         return try scope.fail(.bad_request);
 
     const account_index, const account = try getAndVerifyAccountByPassword(

@@ -2,10 +2,10 @@ const std = @import("std");
 const Io = std.Io;
 const assert = std.debug.assert;
 
-const kafka = @import("kafka.zig");
-const Command = kafka.Command;
-const protobuf = kafka.protobuf;
-const Player = kafka.Player;
+const remielle = @import("remielle.zig");
+const Command = remielle.Command;
+const protobuf = remielle.protobuf;
+const Player = remielle.Player;
 
 pub const Error = protobuf.DecodeError || Command.EncodeError;
 
@@ -21,7 +21,7 @@ pub fn Typed(comptime message_name_literal: @EnumLiteral()) type {
         player: *Player,
         time: *const Time,
         command: *const Command,
-        conf: *const kafka.Configuration,
+        conf: *const remielle.Configuration,
 
         comptime {
             assert(@sizeOf(TypedSession) == @sizeOf(TypeErased));
@@ -86,7 +86,7 @@ pub const TypeErased = extern struct {
     player: *Player,
     time: *const Time,
     command: *const Command,
-    conf: *const kafka.Configuration,
+    conf: *const remielle.Configuration,
 
     comptime {
         assert(std.meta.hasUniqueRepresentation(@This()));

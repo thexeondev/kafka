@@ -1,10 +1,10 @@
 const std = @import("std");
 
-const kafka = @import("../kafka.zig");
-const Player = kafka.Player;
-const Session = kafka.Session;
-const protobuf = kafka.protobuf;
-const StaticIntMap = kafka.StaticIntMap;
+const remielle = @import("../remielle.zig");
+const Player = remielle.Player;
+const Session = remielle.Session;
+const protobuf = remielle.protobuf;
+const StaticIntMap = remielle.StaticIntMap;
 
 pub fn EnterWorldCsReq(session: Session(.EnterWorldCsReq)) !void {
     session.player.enterMainCity();

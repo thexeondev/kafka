@@ -1,10 +1,10 @@
 const std = @import("std");
 
-const kafka = @import("../kafka.zig");
-const Player = kafka.Player;
-const Session = kafka.Session;
-const protobuf = kafka.protobuf;
-const templates = kafka.templates;
+const remielle = @import("../remielle.zig");
+const Player = remielle.Player;
+const Session = remielle.Session;
+const protobuf = remielle.protobuf;
+const templates = remielle.templates;
 
 pub fn GetAvatarDataCsReq(session: Session(.GetAvatarDataCsReq)) !void {
     var avatar_info_list: protobuf.pack.AvatarInfoList = .empty;

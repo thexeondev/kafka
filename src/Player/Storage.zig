@@ -20,9 +20,9 @@ const mem = std.mem;
 const assert = std.debug.assert;
 const hasUniqueRepresentation = std.meta.hasUniqueRepresentation;
 
-const kafka = @import("../kafka.zig");
-const templates = kafka.templates;
-const BoundedMultiArray = kafka.BoundedMultiArray;
+const remielle = @import("../remielle.zig");
+const templates = remielle.templates;
+const BoundedMultiArray = remielle.BoundedMultiArray;
 
 comptime {
     if (builtin.target.cpu.arch.endian() != .little)
@@ -684,7 +684,7 @@ pub fn initDefaults(storage: *Storage) void {
         .role = .{
             .avatar = .wise,
             .control_avatar = .wise,
-            .control_guise_avatar = Role.Guise.fromInt(1651).?,
+            .control_guise_avatar = Role.Guise.fromInt(1581).?,
         },
         .time = .{
             .day = .friday,

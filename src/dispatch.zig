@@ -2,9 +2,9 @@ const std = @import("std");
 const mem = std.mem;
 const Allocator = std.mem.Allocator;
 
-const kafka = @import("kafka.zig");
-const Configuration = kafka.Configuration;
-const rsa = kafka.rsa;
+const remielle = @import("remielle.zig");
+const Configuration = remielle.Configuration;
+const rsa = remielle.rsa;
 
 pub const QueryDispatchResponseOptions = struct {
     /// Used for scratch allocations.

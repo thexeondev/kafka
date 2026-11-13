@@ -1,9 +1,9 @@
 const std = @import("std");
 
-const kafka = @import("../kafka.zig");
-const Player = kafka.Player;
-const Session = kafka.Session;
-const protobuf = kafka.protobuf;
+const remielle = @import("../remielle.zig");
+const Player = remielle.Player;
+const Session = remielle.Session;
+const protobuf = remielle.protobuf;
 
 pub fn GetWeaponDataCsReq(session: Session(.GetWeaponDataCsReq)) !void {
     var weapon_buffer: [Player.Storage.Weapon.count_max]protobuf.gen.WeaponInfo = undefined;

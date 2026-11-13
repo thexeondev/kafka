@@ -8,10 +8,10 @@ const std = @import("std");
 pub const Zon = @import("Player/Zon.zig");
 pub const Storage = @import("Player/Storage.zig");
 
-const kafka = @import("kafka.zig");
-const gen = kafka.protobuf.gen;
-const pack = kafka.protobuf.pack;
-const battle = kafka.battle;
+const remielle = @import("remielle.zig");
+const gen = remielle.protobuf.gen;
+const pack = remielle.protobuf.pack;
+const battle = remielle.battle;
 
 pub const Sync = struct {
     needs_player_sync_notify: bool,
