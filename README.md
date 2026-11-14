@@ -28,7 +28,7 @@ To see the available commands and their options, run `remielle --help`.
 
 Some options can be customized through a configuration file. Default settings are declared in [defaults/remielle.zon](defaults/remielle.zon).
 
-Before trying to connect to server, make sure you have the compatible client version (`CNBetaWin3.4.3` at the time of writing) and [thaumiel](https://git.xeondev.com/CovenantOfDayat/thaumiel) installed.
+Before trying to connect to server, make sure you have the compatible client version (`CNBetaWin3.4.4` at the time of writing) and [thaumiel](https://git.xeondev.com/CovenantOfDayat/thaumiel) installed.
 
 ## Features
 Remielle is in active development. At present, it has the following features available:
