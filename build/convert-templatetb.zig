@@ -58,6 +58,7 @@ const template_tb_list: []const struct { []const u8, type } = &.{
     .{ "BattleEventConfigTemplateTb", BattleEventConfigTemplate },
     .{ "PlayTypeMappingTemplateTb", PlayTypeMappingTemplate },
     .{ "HadalZoneQuestTemplateTb", HadalZoneQuestTemplate },
+    .{ "BuddyBaseTemplateTb", BuddyBaseTemplate },
 };
 
 const AvatarBaseTemplate = struct {
@@ -285,6 +286,26 @@ const AvatarBattleTemplate = struct {
         ep_recover: fbs.Int(i32),
         ep_max: fbs.Int(i32),
         sharp_critical_damage: fbs.Int(i32),
+    };
+};
+
+const BuddyBaseTemplate = struct {
+    id: u32,
+    team_type: u32,
+    ability_id: u32,
+
+    const Fbs = struct {
+        id: fbs.Int(u32),
+        team_type: fbs.Int(u32),
+        unk_2: fbs.Discard,
+        unk_3: fbs.Discard,
+        unk_4: fbs.Discard,
+        unk_5: fbs.Discard,
+        unk_6: fbs.Discard,
+        unk_7: fbs.Discard,
+        unk_8: fbs.Discard,
+        unk_9: fbs.Discard,
+        ability_id: fbs.Int(u32),
     };
 };
 

@@ -1,5 +1,6 @@
 const std = @import("std");
 const mem = std.mem;
+const assert = std.debug.assert;
 const Allocator = std.mem.Allocator;
 const XxHash64 = std.hash.XxHash64;
 
@@ -130,6 +131,26 @@ pub const PropertyValue = extern struct {
             return .{ .id = optional.id, .value = optional.value };
         }
     };
+};
+
+pub const BuddyBase = struct {
+    pub const Table = TemplateTb(BuddyBase, "BuddyBaseTemplateTb", .id);
+    pub const table: Table = .init();
+
+    id: u32,
+    team_type: TeamType,
+    ability_id: u32,
+
+    pub const TeamType = enum(u32) {
+        assisting = 1,
+        fighting = 2,
+    };
+
+    pub const assisting_buddy_id = 50_001;
+
+    comptime {
+        assert(table.items(.id)[0] == assisting_buddy_id);
+    }
 };
 
 pub const UnlockConfig = struct {

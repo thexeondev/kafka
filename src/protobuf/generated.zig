@@ -36312,7 +36312,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
         };
         pub const PKEIMILPOGK = struct {
             pub const message_name = "PKEIMILPOGK";
-            @"OMDLMHNOHID": ?JHBNMIFPPJM = null,
+            @"OMDLMHNOHID": ?BuddyTeamType = null,
             @"buddy_id": u32 = 0,
             pub const xor_by_field = struct {
                 pub const @"buddy_id": u31 = 15206;
@@ -36327,7 +36327,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const Decoded = struct {
                 pub const Parent = PKEIMILPOGK;
                 pub const init: @This() = .{};
-                @"OMDLMHNOHID": ?JHBNMIFPPJM.Decoded = null,
+                @"OMDLMHNOHID": ?BuddyTeamType.Decoded = null,
                 @"buddy_id": u32 = 0,
             };
             pub const encoding_by_field = struct {
@@ -85079,13 +85079,13 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"KCCOAMDKGLB": Encoding = .normal;
             };
         };
-        pub const JHBNMIFPPJM = enum(i32) {
+        pub const BuddyTeamType = enum(i32) {
             pub const init: @This() = @fromBackingInt(0);
             pub const Decoded = @This();
-            JHBNMIFPPJM_JADMFIDJEEE = 0,
-            JHBNMIFPPJM_FCKPAFLFPOI = 1,
-            JHBNMIFPPJM_LDMDHCLIGAJ = 2,
-            JHBNMIFPPJM_PKOFMAAIDIN = 3,
+            JADMFIDJEEE = 0,
+            FCKPAFLFPOI = 1,
+            FIGHTING = 2,
+            ASSISTING = 3,
         };
         pub const EHJPCKDACHA = struct {
             pub const message_name = "EHJPCKDACHA";
@@ -98758,7 +98758,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const message_name = "BuddyUnitInfo";
             @"buddy_id": u32 = 0,
             @"properties": []const KeyValue(u32, i32) = &.{},
-            @"type": ?JHBNMIFPPJM = null,
+            @"type": ?BuddyTeamType = null,
             pub const xor_by_field = struct {
             };
             pub const oneof_by_field = struct {
@@ -98774,7 +98774,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const init: @This() = .{};
                 @"buddy_id": u32 = 0,
                 @"properties": Iterator(KeyValue(u32, i32).Decoded) = .empty,
-                @"type": ?JHBNMIFPPJM.Decoded = null,
+                @"type": ?BuddyTeamType.Decoded = null,
             };
             pub const encoding_by_field = struct {
                 pub const @"buddy_id": Encoding = .normal;

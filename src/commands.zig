@@ -16,6 +16,7 @@ const namespaces: []const type = &.{
     @import("commands/world.zig"),
     @import("commands/map.zig"),
     @import("commands/hadal_zone.zig"),
+    @import("commands/buddy.zig"),
 };
 
 const HandlerFn = *const fn (*remielle.session.TypeErased) remielle.session.Error!void;

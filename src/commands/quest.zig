@@ -127,6 +127,23 @@ pub fn BeginHadalBattleCsReq(session: Session(.BeginHadalBattleCsReq)) !void {
         }
     }
 
+    var buddy_unit_buffer: [3]protobuf.gen.BuddyUnitInfo = undefined;
+    var buddy_unit_list: std.ArrayList(protobuf.gen.BuddyUnitInfo) = .initBuffer(&buddy_unit_buffer);
+    buddy_unit_list.appendAssumeCapacity(.{
+        .buddy_id = templates.BuddyBase.assisting_buddy_id,
+        .type = .ASSISTING,
+    });
+
+    for (@as([]const u32, &.{
+        request.first_room_buddy_id,
+        request.second_room_buddy_id,
+    })) |buddy_id| {
+        if (buddy_id != 0) buddy_unit_list.appendAssumeCapacity(.{
+            .buddy_id = buddy_id,
+            .type = .FIGHTING,
+        });
+    }
+
     const zone_info = templates.ZoneInfo.getByZoneIdAndLayerIndex(
         request.zone_id,
         request.layer_index,
@@ -171,6 +188,8 @@ pub fn BeginHadalBattleCsReq(session: Session(.BeginHadalBattleCsReq)) !void {
                 .room_index = request.room_index,
                 .first_room_avatar_id_list = first_room_avatar_id_list.items,
                 .second_room_avatar_id_list = second_room_avatar_id_list.items,
+                .first_room_buddy_id = request.first_room_buddy_id,
+                .second_room_buddy_id = request.second_room_buddy_id,
             },
         },
         .dungeon = .{
@@ -178,6 +197,7 @@ pub fn BeginHadalBattleCsReq(session: Session(.BeginHadalBattleCsReq)) !void {
             .quest_type = 13, // HadalZone
             .dungeon_package_info = dungeon_package,
             .avatar_list = avatar_unit_list.items(.info),
+            .buddy_list = buddy_unit_list.items,
         },
     });
 

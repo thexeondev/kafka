@@ -291,14 +291,45 @@ pub fn hadalEntrance(
     };
 }
 
+const buddy_skills: []const gen.BuddySkillLevel = &.{
+    .{ .skill_type = 2, .level = 8 },
+    .{ .skill_type = 3, .level = 5 },
+    .{ .skill_type = 4, .level = 8 },
+    .{ .skill_type = 5, .level = 8 },
+};
+
+pub fn buddyList(buffer: *[templates.BuddyBase.table.count]gen.BuddyInfo) []const gen.BuddyInfo {
+    var buddy_list: std.ArrayList(gen.BuddyInfo) = .initBuffer(buffer);
+
+    for (
+        templates.BuddyBase.table.items(.id),
+        templates.BuddyBase.table.items(.team_type),
+        templates.BuddyBase.table.items(.ability_id),
+    ) |id, team_type, ability_id| {
+        if (team_type != .assisting and ability_id == 0) continue;
+
+        buddy_list.appendAssumeCapacity(.{
+            .id = id,
+            .level = 60,
+            .rank = 6,
+            .star = 5,
+            .skill_type_level = buddy_skills,
+        });
+    }
+
+    return buddy_list.items;
+}
+
 pub const DungeonPackageBuffer = struct {
     avatars: AvatarInfoList,
     weapons: [Player.Storage.Weapon.count_max]gen.WeaponInfo,
+    buddies: [templates.BuddyBase.table.count]gen.BuddyInfo,
     equips: EquipInfoList,
 
     pub const init: DungeonPackageBuffer = .{
         .avatars = .empty,
         .weapons = undefined,
+        .buddies = undefined,
         .equips = .empty,
     };
 };
@@ -331,5 +362,6 @@ pub fn dungeonPackage(
         .avatar_list = buffer.avatars.items(.avatar_info),
         .weapon_list = weapon_list.items,
         .equip_list = buffer.equips.items(.equip_info),
+        .buddy_list = buddyList(&buffer.buddies),
     };
 }
