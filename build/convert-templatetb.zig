@@ -41,6 +41,7 @@ const template_tb_list: []const struct { []const u8, type } = &.{
     .{ "AvatarPassiveSkillTemplateTb", AvatarPassiveSkillTemplate },
     .{ "AvatarSpecialAwakenTemplateTb", AvatarSpecialAwakenTemplate },
     .{ "AvatarSkinBaseTemplateTb", AvatarSkinBaseTemplate },
+    .{ "AvatarFormTemplateTb", AvatarFormTemplate },
     .{ "UnlockConfigTemplateTb", UnlockConfigTemplate },
     .{ "WeaponTemplateTb", WeaponTemplate },
     .{ "WeaponLevelTemplateTb", WeaponLevelTemplate },
@@ -305,6 +306,20 @@ const AvatarSkinBaseTemplate = struct {
         unk_5: fbs.Discard,
         unk_6: fbs.Discard,
         name: fbs.String,
+    };
+};
+
+const AvatarFormTemplate = struct {
+    id: u32,
+    name: String,
+    avatar_id: u32,
+
+    const Fbs = struct {
+        id: fbs.Int(u32),
+        unk_1: fbs.Discard,
+        name: fbs.String,
+        index: fbs.Int(u32),
+        avatar_id: fbs.Int(u32),
     };
 };
 

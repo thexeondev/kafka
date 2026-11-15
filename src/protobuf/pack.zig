@@ -80,6 +80,8 @@ pub fn avatarInfo(out: AvatarInfoList.Ptr, avatar: Player.Avatar) void {
             ).?;
             break :awake_id template.id;
         } else 0,
+        .avatar_skin_id = avatar.skin_id_maybe orelse 0,
+        .cur_form_id = avatar.form_id_maybe orelse 0,
     };
 }
 
@@ -213,14 +215,14 @@ pub fn hall(comptime Root: type, options: HallOptions, buffer: *HallBuffer) Root
     };
 }
 
-pub fn selfBasicInfo(role: *const Player.Storage.Role) gen.SelfBasicInfo {
+pub fn selfBasicInfo(player: *Player) gen.SelfBasicInfo {
     return .{
         .nick_name = "xeondev",
         .level = 1,
         .name_change_times = 1,
-        .avatar_id = @backingInt(role.avatar),
-        .control_avatar_id = @backingInt(role.control_avatar),
-        .control_guise_avatar_id = @backingInt(role.control_guise_avatar),
+        .avatar_id = @backingInt(player.storage.role.avatar),
+        .control_avatar_id = @backingInt(player.storage.role.control_avatar),
+        .control_guise_avatar_id = player.getControlGuiseAvatarId(),
     };
 }
 

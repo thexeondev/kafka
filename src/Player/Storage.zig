@@ -62,7 +62,8 @@ pub const Avatar = struct {
         awake: Awake,
         awake_enabled: bool,
         dressed_skin_id: u32,
-        _: u9 = 0,
+        form_index: u2,
+        _: u7 = 0,
 
         comptime {
             assert(hasUniqueRepresentation(@This()));
@@ -707,6 +708,7 @@ pub fn initDefaults(storage: *Storage) void {
         .awake = .none,
         .awake_enabled = false,
         .dressed_skin_id = 0,
+        .form_index = 0,
     };
 
     for (templates.AvatarBase.table.items(.id)) |id_int| {

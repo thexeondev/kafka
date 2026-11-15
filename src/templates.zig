@@ -126,6 +126,15 @@ pub const AvatarSkinBase = struct {
     name: String,
 };
 
+pub const AvatarForm = struct {
+    pub const Table = TemplateTb(AvatarForm, "AvatarFormTemplateTb", .id);
+    pub const table: Table = .init();
+
+    id: u32,
+    name: String,
+    avatar_id: u32,
+};
+
 pub const PropertyValue = extern struct {
     id: u32,
     value: i32,

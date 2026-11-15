@@ -9,8 +9,9 @@ pub fn VideoGetInfoCsReq(session: Session(.VideoGetInfoCsReq)) !void {
 }
 
 pub fn GetMiscDataCsReq(session: Session(.GetMiscDataCsReq)) !void {
-    const control_guise_avatar = session.player.storage.role.control_guise_avatar;
-    const guise_skin_id = if (control_guise_avatar.toAvatarId()) |avatar_id| skin: {
+    const control_guise_avatar_base = session.player.storage.role.control_guise_avatar;
+
+    const guise_skin_id = if (control_guise_avatar_base.toAvatarId()) |avatar_id| skin: {
         const avatar = session.player.getAvatarById(@backingInt(avatar_id)).?;
         break :skin avatar.skin_id_maybe orelse 0;
     } else 0;
@@ -29,7 +30,7 @@ pub fn GetMiscDataCsReq(session: Session(.GetMiscDataCsReq)) !void {
             },
             .business_card = .{},
             .player_accessory = .{
-                .control_guise_avatar_id = @backingInt(control_guise_avatar),
+                .control_guise_avatar_id = session.player.getControlGuiseAvatarId(),
                 .control_guise_avatar_skin_id = guise_skin_id,
             },
         },

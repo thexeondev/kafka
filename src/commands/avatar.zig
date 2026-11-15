@@ -167,3 +167,20 @@ pub fn AvatarSkinUnDressCsReq(session: Session(.AvatarSkinUnDressCsReq)) !void {
     session.player.updateAvatar(avatar_to_undress);
     return session.success();
 }
+
+pub fn AvatarSetFormCsReq(session: Session(.AvatarSetFormCsReq)) !void {
+    const request = try session.decodeBody();
+
+    var avatar = session.player.getAvatarById(request.avatar_id) orelse
+        return session.fail(.RET_AVATAR_PARAM_ERROR);
+
+    const form_template = templates.AvatarForm.table.getByKey(request.form_id) orelse
+        return session.fail(.RET_AVATAR_PARAM_ERROR);
+
+    if (form_template.avatar_id != request.avatar_id)
+        return session.fail(.RET_AVATAR_PARAM_ERROR);
+
+    avatar.form_id_maybe = request.form_id;
+    session.player.updateAvatar(avatar);
+    return session.success();
+}

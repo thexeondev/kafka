@@ -52,6 +52,7 @@ pub const Avatar = struct {
     awake_index_maybe: ?u32,
     awake_enabled: bool,
     skin_id_maybe: ?u32,
+    form_id_maybe: ?u32,
 
     pub const Iterator = struct {
         index: u32,
@@ -177,13 +178,6 @@ pub const ControlGuiseAvatar = enum(u32) {
     wise = 2011,
     belle = 2021,
     _,
-
-    pub fn requiresUnlock(guise: ControlGuiseAvatar) bool {
-        return switch (guise) {
-            .wise, .belle => false,
-            _ => true,
-        };
-    }
 };
 
 pub const MainCitySection = Storage.MainCity.Section; // TODO: maybe move the definition here?
@@ -222,6 +216,10 @@ fn avatarAtIndex(player: *const Player, index: u32) Avatar {
             0 => null,
             else => |id| id,
         },
+        .form_id_maybe = switch (storage_avatar.bits.form_index) {
+            0 => null,
+            else => |form_index| @backingInt(storage_avatar.id.*) + form_index,
+        },
     };
 }
 
@@ -252,6 +250,13 @@ fn equipmentAtIndex(player: *const Player, index: u32) Equipment.KeyValue {
             .sub_properties = sub_properties,
         },
     };
+}
+
+const main_avatar_male: u32 = 2011;
+const main_avatar_female: u32 = 2021;
+
+pub fn isMainAvatar(avatar_id: u32) bool {
+    return avatar_id == main_avatar_male or avatar_id == main_avatar_female;
 }
 
 pub fn avatars(player: *const Player) Avatar.Iterator {
@@ -350,6 +355,9 @@ fn updateAvatarAtIndex(player: *Player, avatar_index: u32, avatar: Avatar) void 
             assert(skin_id != 0); // use `null` instead
             break :skin_id skin_id;
         } else 0,
+        .form_index = if (avatar.form_id_maybe) |form_id| form_index: {
+            break :form_index @intCast(form_id - avatar.id);
+        } else 0,
     };
 
     storage_avatar.weapon_uid_maybe.* =
@@ -396,6 +404,14 @@ pub fn updateTimePeriod(player: *Player, change: TimePeriod.Change) void {
     if (change.day_advanced) player.storage.time.day = player.storage.time.day.increment();
 }
 
+pub fn getControlGuiseAvatarId(player: *Player) u32 {
+    const guise = player.storage.role.control_guise_avatar;
+    const avatar_id = @backingInt(guise.toAvatarId() orelse return @backingInt(guise));
+    const avatar = player.getAvatarById(avatar_id) orelse return avatar_id;
+
+    return avatar.form_id_maybe orelse avatar_id;
+}
+
 fn appendAvatarToSync(player: *Player, avatar: Avatar) void {
     player.sync.needs_player_sync_notify = true;
     pack.avatarInfo(player.sync.avatar_list.addOneAssumeCapacity(), avatar);
@@ -433,19 +449,20 @@ pub fn buildPlayerSyncScNotify(player: *Player) ?gen.PlayerSyncScNotify {
 
     const self_basic_info_needs_sync = player.sync.control_guise_avatar_changed;
     if (self_basic_info_needs_sync) {
-        notify.self_basic_info = pack.selfBasicInfo(&player.storage.role);
+        notify.self_basic_info = pack.selfBasicInfo(player);
     }
 
     const accessory_data_needs_sync = player.sync.control_guise_avatar_changed;
     if (accessory_data_needs_sync) {
-        const control_guise_avatar = player.storage.role.control_guise_avatar;
-        const guise_skin_id = if (control_guise_avatar.toAvatarId()) |avatar_id| skin: {
-            const avatar_index = player.storage.getAvatarIndexById(avatar_id).?;
-            break :skin player.storage.avatars.items(.bits)[avatar_index].dressed_skin_id;
+        const control_guise_avatar_base = player.storage.role.control_guise_avatar;
+
+        const guise_skin_id = if (control_guise_avatar_base.toAvatarId()) |avatar_id| skin: {
+            const avatar = player.getAvatarById(@backingInt(avatar_id)).?;
+            break :skin avatar.skin_id_maybe orelse 0;
         } else 0;
 
         notify.misc.?.player_accessory = .{
-            .control_guise_avatar_id = @backingInt(control_guise_avatar),
+            .control_guise_avatar_id = player.getControlGuiseAvatarId(),
             .control_guise_avatar_skin_id = guise_skin_id,
         };
     }

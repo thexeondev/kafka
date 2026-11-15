@@ -4,6 +4,7 @@ const Zon = @This();
 
 const std = @import("std");
 const Io = std.Io;
+const assert = std.debug.assert;
 const Allocator = std.mem.Allocator;
 
 const remielle = @import("../remielle.zig");
@@ -27,6 +28,8 @@ pub const NameMap = struct {
     equipment_name_by_id_rarity_s: std.array_hash_map.Auto(u32, []const u8),
     section_id_by_name: std.array_hash_map.String(u32),
     section_name_by_id: std.array_hash_map.Auto(u32, []const u8),
+    avatar_form_id_by_name: std.array_hash_map.String(u32),
+    avatar_form_name_by_id: std.array_hash_map.Auto(u32, []const u8),
 
     pub fn init(arena: Allocator, text_map: *const templates.Text.Map) Allocator.Error!NameMap {
         var avatar_id_by_name: std.array_hash_map.String(Storage.Avatar.Id) = .empty;
@@ -106,6 +109,21 @@ pub const NameMap = struct {
             section_name_by_id.putAssumeCapacityNoClobber(id, display_name_text);
         }
 
+        var avatar_form_id_by_name: std.array_hash_map.String(u32) = .empty;
+        try avatar_form_id_by_name.ensureTotalCapacity(arena, templates.AvatarForm.table.count);
+        var avatar_form_name_by_id: std.array_hash_map.Auto(u32, []const u8) = .empty;
+        try avatar_form_name_by_id.ensureTotalCapacity(arena, templates.AvatarForm.table.count);
+
+        for (
+            templates.AvatarForm.table.items(.id),
+            templates.AvatarForm.table.items(.name),
+        ) |id, name| {
+            const name_slice = templates.AvatarForm.table.getString(name);
+            const name_text = text_map.get(name_slice) orelse name_slice;
+            avatar_form_id_by_name.putAssumeCapacityNoClobber(name_text, id);
+            avatar_form_name_by_id.putAssumeCapacityNoClobber(id, name_text);
+        }
+
         return .{
             .avatar_id_by_name = avatar_id_by_name,
             .avatar_name_by_id = avatar_name_by_id,
@@ -115,6 +133,8 @@ pub const NameMap = struct {
             .equipment_id_by_name_rarity_s = equipment_id_by_name_rarity_s,
             .section_id_by_name = section_id_by_name,
             .section_name_by_id = section_name_by_id,
+            .avatar_form_id_by_name = avatar_form_id_by_name,
+            .avatar_form_name_by_id = avatar_form_name_by_id,
         };
     }
 
@@ -184,6 +204,7 @@ pub const Avatar = struct {
     equipment: EquipmentSlots,
     awake: Awake,
     skin_id: u32,
+    form: ?[]const u8,
 
     pub const EquipmentSlots = struct {
         @"1": ?Equipment,
@@ -544,6 +565,10 @@ pub fn init(arena: Allocator, name_map: *const NameMap, player: *Storage) Alloca
                 .enabled = bits.awake_enabled,
             },
             .skin_id = bits.dressed_skin_id,
+            .form = name_map.avatar_form_name_by_id.get(@backingInt(id) + bits.form_index) orelse none: {
+                assert(bits.form_index == 0);
+                break :none null;
+            },
         };
     }
 
@@ -701,10 +726,11 @@ pub fn pack(
             .control_guise_avatar = if (player_role_avatar_by_name.get(zon.role.control_guise_avatar)) |role|
                 @fromBackingInt(@backingInt(role))
             else
-                @fromBackingInt(@backingInt(name_map.avatar_id_by_name.get(zon.role.control_guise_avatar) orelse return diag.fail(
-                    .name_invalid,
-                    .{ .kind = "role control guise avatar", .name = zon.role.control_guise_avatar },
-                ))),
+                @fromBackingInt(@backingInt(name_map.avatar_id_by_name.get(zon.role.control_guise_avatar) orelse
+                    return diag.fail(
+                        .name_invalid,
+                        .{ .kind = "role control guise avatar", .name = zon.role.control_guise_avatar },
+                    ))),
         },
         .time = .{
             .day = zon.time.day,
@@ -767,6 +793,18 @@ pub fn pack(
             });
         }
 
+        const form_index: u2 = form_index: {
+            const form_name = avatar_zon.form orelse break :form_index 0;
+            const form_id = name_map.avatar_form_id_by_name.get(form_name) orelse
+                return diag.fail(.name_invalid, .{ .name = form_name, .kind = "avatar form" });
+
+            const form_template = templates.AvatarForm.table.getByKey(form_id).?;
+            if (form_template.avatar_id != @backingInt(avatar_id))
+                return diag.fail(.name_invalid, .{ .name = form_name, .kind = "avatar form" });
+
+            break :form_index @intCast(form_id - form_template.avatar_id);
+        };
+
         const avatar: Storage.Avatar = .{
             .id = avatar_id,
             .bits = .{
@@ -798,6 +836,7 @@ pub fn pack(
                 .awake = @fromBackingInt(@intCast(avatar_zon.awake.level)),
                 .awake_enabled = avatar_zon.awake.enabled,
                 .dressed_skin_id = avatar_zon.skin_id,
+                .form_index = form_index,
             },
             .weapon_uid_maybe = weapon_uid_maybe,
             .dressed_equipment = dressed_equipment,
