@@ -60,9 +60,7 @@ pub fn run(io: Io, gpa: Allocator, args: *remielle.cli.Args) !void {
 
     var text_map: templates.Text.Map = try .init(gpa);
     defer text_map.deinit(gpa);
-
-    var name_map: Player.Zon.NameMap = try .init(gpa, &text_map);
-    defer name_map.deinit(gpa);
+    var name_map: Player.Zon.NameMap = try .init(arena, &text_map);
 
     const player_zon_contents = Io.Dir.cwd().readFileAllocOptions(
         io,
