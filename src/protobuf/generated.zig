@@ -14112,8 +14112,8 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"OPGBFBKLELF": Encoding = .normal;
             };
         };
-        pub const RestartHadalZoneBattleCsReq = struct {
-            pub const message_name = "RestartHadalZoneBattleCsReq";
+        pub const RebeginHadalBattleCsReq = struct {
+            pub const message_name = "RebeginHadalBattleCsReq";
             pub const cmd_id: u16 = 7917;
             @"IDFKGCONFAD": bool = false,
             @"KPDEGJKOABJ": bool = false,
@@ -14127,7 +14127,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 _,
             };
             pub const Decoded = struct {
-                pub const Parent = RestartHadalZoneBattleCsReq;
+                pub const Parent = RebeginHadalBattleCsReq;
                 pub const init: @This() = .{};
                 @"IDFKGCONFAD": bool = false,
                 @"KPDEGJKOABJ": bool = false,
@@ -62358,8 +62358,8 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"MMLLFHDDCGM": Encoding = .normal;
             };
         };
-        pub const RestartHadalZoneBattleScRsp = struct {
-            pub const message_name = "RestartHadalZoneBattleScRsp";
+        pub const RebeginHadalBattleScRsp = struct {
+            pub const message_name = "RebeginHadalBattleScRsp";
             pub const cmd_id: u16 = 1060;
             @"retcode": i32 = 0,
             @"MGPMHEIHMKK": u32 = 0,
@@ -62375,7 +62375,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 _,
             };
             pub const Decoded = struct {
-                pub const Parent = RestartHadalZoneBattleScRsp;
+                pub const Parent = RebeginHadalBattleScRsp;
                 pub const init: @This() = .{};
                 @"retcode": i32 = 0,
                 @"MGPMHEIHMKK": u32 = 0,

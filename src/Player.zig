@@ -1,4 +1,5 @@
 storage: *Storage,
+temp: *Temporaries,
 needs_save: bool,
 sync: Sync,
 
@@ -8,6 +9,7 @@ const assert = std.debug.assert;
 
 pub const Zon = @import("Player/Zon.zig");
 pub const Storage = @import("Player/Storage.zig");
+pub const Temporaries = @import("Player/Temporaries.zig");
 
 const remielle = @import("remielle.zig");
 const gen = remielle.protobuf.gen;

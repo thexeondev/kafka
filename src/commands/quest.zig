@@ -85,51 +85,6 @@ pub fn BeginHadalBattleCsReq(session: Session(.BeginHadalBattleCsReq)) !void {
         second_room_avatar_id_list.len == 0)
         return session.fail(.RET_AVATAR_PARAM_ERROR);
 
-    var dungeon_package_buffer: protobuf.pack.DungeonPackageBuffer = .init;
-    var avatars = session.player.avatars();
-    var weapons = session.player.weapons();
-    var equipment = session.player.equipment();
-
-    const dungeon_package =
-        protobuf.pack.dungeonPackage(&dungeon_package_buffer, &avatars, &weapons, &equipment);
-
-    var avatar_unit_list: protobuf.pack.AvatarUnitInfoList = .empty;
-    for (@as([]const []const u32, &.{
-        first_room_avatar_id_list,
-        second_room_avatar_id_list,
-    })) |avatar_id_list| {
-        for (avatar_id_list) |avatar_id| {
-            const avatar_init = session.player.getBattleAvatarInitById(avatar_id) orelse
-                return session.fail(.RET_AVATAR_PARAM_ERROR);
-
-            var property_map: battle.Property.Map = .init;
-            battle.makeAvatarProperties(&property_map, avatar_init);
-
-            protobuf.pack.avatarUnitInfo(
-                avatar_unit_list.addOneAssumeCapacity(),
-                avatar_id,
-                &property_map,
-            );
-        }
-    }
-
-    var buddy_unit_buffer: [3]protobuf.gen.BuddyUnitInfo = undefined;
-    var buddy_unit_list: std.ArrayList(protobuf.gen.BuddyUnitInfo) = .initBuffer(&buddy_unit_buffer);
-    buddy_unit_list.appendAssumeCapacity(.{
-        .buddy_id = templates.BuddyBase.assisting_buddy_id,
-        .type = .ASSISTING,
-    });
-
-    for (@as([]const u32, &.{
-        request.first_room_buddy_id,
-        request.second_room_buddy_id,
-    })) |buddy_id| {
-        if (buddy_id != 0) buddy_unit_list.appendAssumeCapacity(.{
-            .buddy_id = buddy_id,
-            .type = .FIGHTING,
-        });
-    }
-
     const zone_info = templates.ZoneInfo.getByZoneIdAndLayerIndex(
         request.zone_id,
         request.layer_index,
@@ -161,31 +116,126 @@ pub fn BeginHadalBattleCsReq(session: Session(.BeginHadalBattleCsReq)) !void {
     const hadal_zone_quest = templates.HadalZoneQuest.getByLayerId(scene_id) orelse
         return session.fail(.RET_SCENE_NOT_RIGHT);
 
-    try session.notify(protobuf.gen.EnterSceneScNotify, .{
+    const battle_options: Player.Temporaries.HadalBattleOptions = .{
+        .zone_id = request.zone_id,
+        .layer_index = request.layer_index,
+        .layer_item_id = request.layer_item_id,
+        .room_index = request.room_index,
+        .first_room_avatar_id_list = .fromSlice(first_room_avatar_id_list),
+        .second_room_avatar_id_list = .fromSlice(second_room_avatar_id_list),
+        .first_room_buddy_id = request.first_room_buddy_id,
+        .second_room_buddy_id = request.second_room_buddy_id,
+        .scene_id = scene_id,
+        .quest_id = hadal_zone_quest.id,
+        .play_type_id = play_type.id,
+    };
+
+    var avatar_unit_buffer: protobuf.pack.AvatarUnitInfoList = .empty;
+    const avatar_unit_list = buildAvatarUnitList(session.player, &avatar_unit_buffer, &.{
+        first_room_avatar_id_list,
+        second_room_avatar_id_list,
+    }) orelse return session.fail(.RET_AVATAR_PARAM_ERROR);
+
+    try notifyEnterHadalScene(session.typeErased(), avatar_unit_list, &battle_options);
+
+    session.player.temp.last_hadal_battle_options = battle_options;
+    return session.respond(.{});
+}
+
+pub fn RebeginHadalBattleCsReq(session: Session(.RebeginHadalBattleCsReq)) !void {
+    const options = session.player.temp.last_hadal_battle_options orelse
+        return session.fail(.RET_DUNGEON_NO_RETRY);
+
+    var avatar_unit_buffer: protobuf.pack.AvatarUnitInfoList = .empty;
+    const avatar_unit_list = buildAvatarUnitList(session.player, &avatar_unit_buffer, &.{
+        options.first_room_avatar_id_list.toSlice(),
+        options.second_room_avatar_id_list.toSlice(),
+    }) orelse return session.fail(.RET_AVATAR_PARAM_ERROR);
+
+    try notifyEnterHadalScene(session.typeErased(), avatar_unit_list, &options);
+
+    return session.respond(.{});
+}
+
+fn buildAvatarUnitList(
+    player: *Player,
+    pack_buffer: *protobuf.pack.AvatarUnitInfoList,
+    avatar_id_vec: []const []const u32,
+) ?[]const protobuf.gen.AvatarUnitInfo {
+    for (avatar_id_vec) |avatar_id_list| {
+        for (avatar_id_list) |avatar_id| {
+            const avatar_init = player.getBattleAvatarInitById(avatar_id) orelse
+                return null;
+
+            var property_map: battle.Property.Map = .init;
+            battle.makeAvatarProperties(&property_map, avatar_init);
+
+            protobuf.pack.avatarUnitInfo(
+                pack_buffer.addOneAssumeCapacity(),
+                avatar_id,
+                &property_map,
+            );
+        }
+    }
+
+    return pack_buffer.items(.info);
+}
+
+fn notifyEnterHadalScene(
+    session: *remielle.session.TypeErased,
+    avatar_unit_list: []const protobuf.gen.AvatarUnitInfo,
+    options: *const Player.Temporaries.HadalBattleOptions,
+) !void {
+    var dungeon_package_buffer: protobuf.pack.DungeonPackageBuffer = .init;
+    var avatars = session.player.avatars();
+    var weapons = session.player.weapons();
+    var equipment = session.player.equipment();
+
+    const dungeon_package =
+        protobuf.pack.dungeonPackage(&dungeon_package_buffer, &avatars, &weapons, &equipment);
+
+    var buddy_unit_buffer: [3]protobuf.gen.BuddyUnitInfo = undefined;
+    var buddy_unit_list: std.ArrayList(protobuf.gen.BuddyUnitInfo) = .initBuffer(&buddy_unit_buffer);
+    buddy_unit_list.appendAssumeCapacity(.{
+        .buddy_id = templates.BuddyBase.assisting_buddy_id,
+        .type = .ASSISTING,
+    });
+
+    for (@as([]const u32, &.{
+        options.first_room_buddy_id,
+        options.second_room_buddy_id,
+    })) |buddy_id| {
+        if (buddy_id != 0) buddy_unit_list.appendAssumeCapacity(.{
+            .buddy_id = buddy_id,
+            .type = .FIGHTING,
+        });
+    }
+
+    const play_type = templates.PlayTypeMapping.table.getByKey(options.play_type_id).?;
+
+    try session.sink.notify(protobuf.gen.EnterSceneScNotify, &.{
         .scene = .{
             .scene_type = 9, // Hadal
             .scene_id = 0,
-            .local_play_type = battle_event.local_play_type,
+            .local_play_type = play_type.local_play_type,
             .play_type_id = play_type.id,
             .hadal_zone_scene_data = .{
-                .zone_id = request.zone_id,
-                .layer_index = request.layer_index,
-                .layer_item_id = request.layer_item_id,
-                .room_index = request.room_index,
-                .first_room_avatar_id_list = first_room_avatar_id_list,
-                .second_room_avatar_id_list = second_room_avatar_id_list,
-                .first_room_buddy_id = request.first_room_buddy_id,
-                .second_room_buddy_id = request.second_room_buddy_id,
+                .zone_id = options.zone_id,
+                .layer_index = options.layer_index,
+                .layer_item_id = options.layer_item_id,
+                .room_index = options.room_index,
+                .first_room_avatar_id_list = options.first_room_avatar_id_list.toSlice(),
+                .second_room_avatar_id_list = options.second_room_avatar_id_list.toSlice(),
+                .first_room_buddy_id = options.first_room_buddy_id,
+                .second_room_buddy_id = options.second_room_buddy_id,
             },
         },
         .dungeon = .{
-            .quest_id = hadal_zone_quest.id,
+            .quest_id = options.quest_id,
             .quest_type = 13, // HadalZone
             .dungeon_package_info = dungeon_package,
-            .avatar_list = avatar_unit_list.items(.info),
+            .avatar_list = avatar_unit_list,
             .buddy_list = buddy_unit_list.items,
         },
     });
-
-    return session.respond(.{});
 }

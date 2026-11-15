@@ -140,6 +140,7 @@ fn serveConnection(
     };
 
     var send_buffer: [64 * 1024]u8 = undefined;
+    var player_temporaries: Player.Temporaries = .init;
 
     while (true) {
         const command: Command = try .receive(connection.reader);
@@ -148,6 +149,7 @@ fn serveConnection(
 
         var player: Player = .{
             .storage = &player_storage,
+            .temp = &player_temporaries,
             .sync = .init,
             .needs_save = false,
         };

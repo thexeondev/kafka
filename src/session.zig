@@ -72,7 +72,7 @@ pub fn Typed(comptime message_name_literal: @EnumLiteral()) type {
             return session.sink.respondMinimal(response_name, .{ .retcode = .RET_SUCC });
         }
 
-        fn typeErased(session: *TypedSession) *TypeErased {
+        pub fn typeErased(session: *TypedSession) *TypeErased {
             return @ptrCast(session);
         }
     };
