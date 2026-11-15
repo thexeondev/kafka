@@ -216,7 +216,7 @@ fn notifyEnterHadalScene(
     try session.sink.notify(protobuf.gen.EnterSceneScNotify, &.{
         .scene = .{
             .scene_type = 9, // Hadal
-            .scene_id = 0,
+            .scene_id = options.scene_id,
             .local_play_type = play_type.local_play_type,
             .play_type_id = play_type.id,
             .hadal_zone_scene_data = .{
