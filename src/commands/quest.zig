@@ -50,10 +50,6 @@ pub fn StartTrainingQuestCsReq(session: Session(.StartTrainingQuestCsReq)) !void
     return session.success();
 }
 
-pub fn EndBattleCsReq(session: Session(.EndBattleCsReq)) !void {
-    return session.respond(.{ .fight_settle = .{} });
-}
-
 const hadal_scene_by_group: StaticIntMap(u32, u32) = .initComptime(&.{
     .{ 101, 6100100 },
     .{ 102, 6100200 },
@@ -85,16 +81,17 @@ pub fn BeginHadalBattleCsReq(session: Session(.BeginHadalBattleCsReq)) !void {
         second_room_avatar_id_list.len == 0)
         return session.fail(.RET_AVATAR_PARAM_ERROR);
 
-    const zone_info = templates.ZoneInfo.getByZoneIdAndLayerIndex(
-        request.zone_id,
-        request.layer_index,
-    ) orelse
+    const zone_info = templates.ZoneInfo.get(.{
+        .zone_id = request.zone_id,
+        .layer_index = request.layer_index,
+        .sub_layer_index = request.sub_layer_index,
+    }) orelse
         return session.fail(.RET_QUEST_NOT_FOUND);
 
     const scene_id = if (zone_info.isFreeTraining()) free_training: {
         break :free_training hadal_zone_free_training_scene_id;
-    } else if (request.room_index != 0) impact: {
-        break :impact hadal_zone_impact_scene_id +| request.room_index;
+    } else if (request.sub_layer_index != 0) impact: {
+        break :impact hadal_zone_impact_scene_id +| request.sub_layer_index;
     } else if (hadal_scene_by_group.get(zone_info.group_id)) |scene_id_base| from_base: {
         break :from_base scene_id_base +| request.layer_index;
     } else {
@@ -116,11 +113,12 @@ pub fn BeginHadalBattleCsReq(session: Session(.BeginHadalBattleCsReq)) !void {
     const hadal_zone_quest = templates.HadalZoneQuest.getByLayerId(scene_id) orelse
         return session.fail(.RET_SCENE_NOT_RIGHT);
 
-    const battle_options: Player.Temporaries.HadalBattleOptions = .{
+    const battle_options: Player.Temporaries.Battle.Hadal.Options = .{
         .zone_id = request.zone_id,
+        .layer_id = zone_info.layer_id,
         .layer_index = request.layer_index,
         .layer_item_id = request.layer_item_id,
-        .room_index = request.room_index,
+        .sub_layer_index = request.sub_layer_index,
         .first_room_avatar_id_list = .fromSlice(first_room_avatar_id_list),
         .second_room_avatar_id_list = .fromSlice(second_room_avatar_id_list),
         .first_room_buddy_id = request.first_room_buddy_id,
@@ -138,23 +136,120 @@ pub fn BeginHadalBattleCsReq(session: Session(.BeginHadalBattleCsReq)) !void {
 
     try notifyEnterHadalScene(session.typeErased(), avatar_unit_list, &battle_options);
 
-    session.player.temp.last_hadal_battle_options = battle_options;
+    session.player.temp.cur_battle = .{ .hadal = .init(battle_options) };
     return session.respond(.{});
 }
 
 pub fn RebeginHadalBattleCsReq(session: Session(.RebeginHadalBattleCsReq)) !void {
-    const options = session.player.temp.last_hadal_battle_options orelse
+    const cur_battle = session.player.temp.cur_battle orelse
         return session.fail(.RET_DUNGEON_NO_RETRY);
 
-    var avatar_unit_buffer: protobuf.pack.AvatarUnitInfoList = .empty;
-    const avatar_unit_list = buildAvatarUnitList(session.player, &avatar_unit_buffer, &.{
-        options.first_room_avatar_id_list.toSlice(),
-        options.second_room_avatar_id_list.toSlice(),
-    }) orelse return session.fail(.RET_AVATAR_PARAM_ERROR);
+    switch (cur_battle) {
+        .hadal => |hadal| {
+            var avatar_unit_buffer: protobuf.pack.AvatarUnitInfoList = .empty;
+            const avatar_unit_list = buildAvatarUnitList(session.player, &avatar_unit_buffer, &.{
+                hadal.options.first_room_avatar_id_list.toSlice(),
+                hadal.options.second_room_avatar_id_list.toSlice(),
+            }) orelse return session.fail(.RET_AVATAR_PARAM_ERROR);
 
-    try notifyEnterHadalScene(session.typeErased(), avatar_unit_list, &options);
+            try notifyEnterHadalScene(session.typeErased(), avatar_unit_list, &hadal.options);
+            session.player.temp.cur_battle = .{ .hadal = .init(hadal.options) };
+        },
+    }
 
     return session.respond(.{});
+}
+
+pub fn HadalStatEndRoomCsReq(session: Session(.HadalStatEndRoomCsReq)) !void {
+    const request = try session.decodeBody();
+    const result = request.result orelse return session.fail(.RET_INVALID_REQUEST_DATA);
+    var record = result.battle_data_record orelse return session.fail(.RET_INVALID_REQUEST_DATA);
+
+    const cur_battle = &(session.player.temp.cur_battle orelse return session.fail(.RET_DUNGEON_NOT_FOUND));
+    if (cur_battle.kind() != .hadal) return session.fail(.RET_SCENE_NOT_RIGHT);
+
+    var summary: Player.Temporaries.Battle.Summary = .init;
+    if (record.buddy_member_data) |member| if (member.buddy_id != 0) {
+        summary.buddy_maybe = .{
+            .template_id = member.buddy_id,
+            .damage = member.damage,
+            .stun = member.stun,
+            .element_abnormal_accumulation = member.element_abnormal_accumulation,
+            .recover = member.recover,
+            .shield = member.shield,
+        };
+    };
+
+    while (try record.avatar_member_list.next()) |member| {
+        summary.appendAvatar(.{
+            .template_id = member.avatar_id,
+            .damage = member.damage,
+            .stun = member.stun,
+            .element_abnormal_accumulation = member.element_abnormal_accumulation,
+            .recover = member.recover,
+            .shield = member.shield,
+        }) catch |err| switch (err) {
+            error.NoSpaceLeft => return session.fail(.RET_AVATAR_PARAM_ERROR),
+        };
+    }
+
+    cur_battle.hadal.appendRoomSummary(summary) catch |err| switch (err) {
+        error.NoSpaceLeft => return session.fail(.RET_SCENE_NOT_RIGHT),
+    };
+
+    return session.success();
+}
+
+pub fn EndBattleCsReq(session: Session(.EndBattleCsReq)) !void {
+    const request = try session.decodeBody();
+    const result = request.fight_result orelse return session.fail(.RET_INVALID_REQUEST_DATA);
+
+    if (session.player.temp.cur_battle) |cur_battle| switch (cur_battle) {
+        .hadal => |hadal| {
+            const layer_info = templates.LayerInfo.table.getByKey(hadal.options.layer_id) orelse
+                return session.fail(.RET_SCENE_NOT_RIGHT);
+
+            var record_pack_buffer: protobuf.pack.BattleDataRecordMap = .empty;
+
+            for (hadal.roomSummaries(), 0..) |*summary, room_index| {
+                const room_id = layer_info.room_ids[room_index].unwrap() orelse
+                    return session.fail(.RET_SCENE_NOT_RIGHT);
+
+                protobuf.pack.battleDataRecord(
+                    record_pack_buffer.addOneAssumeCapacity(),
+                    room_id,
+                    summary,
+                );
+            }
+
+            var contrib_buffer: [6]protobuf.gen.AvatarContributionInfo = undefined;
+            var contrib_list: std.ArrayList(protobuf.gen.AvatarContributionInfo) =
+                .initBuffer(&contrib_buffer);
+
+            const avatar_vec: [2][]const u32 = .{
+                hadal.options.first_room_avatar_id_list.toSlice(),
+                hadal.options.second_room_avatar_id_list.toSlice(),
+            };
+            for (avatar_vec) |list| for (list) |avatar_id| {
+                contrib_list.appendAssumeCapacity(.{
+                    .avatar_id = avatar_id,
+                    .contribution = 1337,
+                });
+            };
+
+            try session.notify(protobuf.gen.DungeonQuestFinishedScNotify, .{
+                .quest_id = hadal.options.quest_id,
+                .rank = if (result.result > 0) 4 else 0,
+                .result = @bitCast(result.result),
+                .avatar_contribution_list = contrib_list.items,
+                .dungeon_summary = .{ .hadal_summary = .{
+                    .battle_data_record_map = record_pack_buffer.items(.record_key_value),
+                } },
+            });
+        },
+    };
+
+    return session.respond(.{ .fight_settle = .{} });
 }
 
 fn buildAvatarUnitList(
@@ -184,7 +279,7 @@ fn buildAvatarUnitList(
 fn notifyEnterHadalScene(
     session: *remielle.session.TypeErased,
     avatar_unit_list: []const protobuf.gen.AvatarUnitInfo,
-    options: *const Player.Temporaries.HadalBattleOptions,
+    options: *const Player.Temporaries.Battle.Hadal.Options,
 ) !void {
     var dungeon_package_buffer: protobuf.pack.DungeonPackageBuffer = .init;
     var avatars = session.player.avatars();
@@ -223,7 +318,7 @@ fn notifyEnterHadalScene(
                 .zone_id = options.zone_id,
                 .layer_index = options.layer_index,
                 .layer_item_id = options.layer_item_id,
-                .room_index = options.room_index,
+                .sub_layer_index = options.sub_layer_index,
                 .first_room_avatar_id_list = options.first_room_avatar_id_list.toSlice(),
                 .second_room_avatar_id_list = options.second_room_avatar_id_list.toSlice(),
                 .first_room_buddy_id = options.first_room_buddy_id,

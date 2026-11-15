@@ -57,6 +57,7 @@ const template_tb_list: []const struct { []const u8, type } = &.{
     .{ "MainCityDefaultObjectTemplateTb", MainCityDefaultObjectTemplate },
     .{ "NPCTransformSplitTb", NpcTransform },
     .{ "ZoneInfoTemplateTb", ZoneInfoTemplate },
+    .{ "LayerInfoTemplateTb", LayerInfoTemplate },
     .{ "BattleEventConfigTemplateTb", BattleEventConfigTemplate },
     .{ "PlayTypeMappingTemplateTb", PlayTypeMappingTemplate },
     .{ "HadalZoneQuestTemplateTb", HadalZoneQuestTemplate },
@@ -599,6 +600,7 @@ const ZoneInfoTemplate = struct {
     layer_index: u32,
     group_id: u32,
     entrance_id: u32,
+    sub_layer_index: u32,
 
     const Fbs = struct {
         id: fbs.Int(u32),
@@ -613,6 +615,40 @@ const ZoneInfoTemplate = struct {
         group_id: fbs.Int(u32),
         base_zone_id: fbs.Int(u32),
         entrance_id: fbs.Int(u32),
+        unk_12: fbs.Discard,
+        time_period_list: fbs.Discard,
+        unk_13: fbs.Discard,
+        sub_layer_index: fbs.Int(u32),
+        unk_15: fbs.Discard,
+    };
+};
+
+const LayerInfoTemplate = struct {
+    id: u32,
+    room_ids: [2]u32,
+
+    const array_defaults = struct {
+        pub const room_ids: u32 = 0;
+    };
+
+    const Fbs = struct {
+        id: fbs.Int(u32),
+        unk_1: fbs.Discard,
+        unk_2: fbs.Discard,
+        unk_3: fbs.Discard,
+        unk_4: fbs.Discard,
+        unk_5: fbs.Discard,
+        unk_6: fbs.Discard,
+        unk_7: fbs.Discard,
+        monster_level: fbs.Discard,
+        unk_9: fbs.Discard,
+        unk_10: fbs.Discard,
+        battle_failed_text: fbs.Discard,
+        goal_type: fbs.Discard,
+        unk_11: fbs.Discard,
+        unk_12: fbs.Discard,
+        unk_13: fbs.Discard,
+        room_ids: fbs.IntArray(u32),
     };
 };
 

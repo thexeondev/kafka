@@ -1,27 +1,110 @@
 //! Data that lives throughout requests but gets reset after a relogin.
 
-last_hadal_battle_options: ?HadalBattleOptions,
+cur_battle: ?Battle,
 
 const Temporaries = @This();
 const std = @import("std");
 const assert = std.debug.assert;
 
 pub const init: Temporaries = .{
-    .last_hadal_battle_options = null,
+    .cur_battle = null,
 };
 
-pub const HadalBattleOptions = struct {
-    zone_id: u32,
-    layer_index: u32,
-    layer_item_id: u32,
-    room_index: u32,
-    first_room_avatar_id_list: OptionalAvatarId.List,
-    second_room_avatar_id_list: OptionalAvatarId.List,
-    first_room_buddy_id: u32,
-    second_room_buddy_id: u32,
-    scene_id: u32,
-    quest_id: u32,
-    play_type_id: u32,
+pub const Battle = union(enum) {
+    hadal: Hadal,
+
+    pub const Kind = @typeInfo(Battle).@"union".tag_type.?;
+
+    pub fn kind(battle: *const Battle) Kind {
+        return battle.*;
+    }
+
+    pub const Hadal = struct {
+        options: Options,
+        room_count: u32,
+        room_summary_buffer: [room_count_max]Summary,
+
+        const room_count_max = 2;
+
+        pub const Options = struct {
+            zone_id: u32,
+            layer_index: u32,
+            sub_layer_index: u32,
+            layer_id: u32,
+            layer_item_id: u32,
+            first_room_avatar_id_list: OptionalAvatarId.List,
+            second_room_avatar_id_list: OptionalAvatarId.List,
+            first_room_buddy_id: u32,
+            second_room_buddy_id: u32,
+            scene_id: u32,
+            quest_id: u32,
+            play_type_id: u32,
+        };
+
+        pub fn init(options: Options) Hadal {
+            return .{
+                .options = options,
+                .room_count = 0,
+                .room_summary_buffer = undefined,
+            };
+        }
+
+        pub fn roomSummaries(hadal: *const Hadal) []const Summary {
+            return hadal.room_summary_buffer[0..hadal.room_count];
+        }
+
+        pub fn appendRoomSummary(hadal: *Hadal, summary: Summary) error{NoSpaceLeft}!void {
+            if (hadal.room_count == room_count_max) return error.NoSpaceLeft;
+            defer hadal.room_count += 1;
+            hadal.room_summary_buffer[hadal.room_count] = summary;
+        }
+    };
+
+    pub const Summary = struct {
+        avatar_count: u32,
+        avatar_buffer: [avatar_count_max]Member,
+        buddy_maybe: Member,
+
+        const avatar_count_max = 3;
+
+        pub const Member = struct {
+            /// Either avatar_id or buddy_id, depending on array it was accessed from.
+            template_id: u32,
+            damage: u32,
+            stun: u32,
+            element_abnormal_accumulation: u32,
+            recover: u32,
+            shield: u32,
+        };
+
+        pub const init: Summary = .{
+            .avatar_count = 0,
+            .avatar_buffer = undefined,
+            .buddy_maybe = .{
+                .template_id = 0,
+                .damage = 0,
+                .stun = 0,
+                .element_abnormal_accumulation = 0,
+                .recover = 0,
+                .shield = 0,
+            },
+        };
+
+        pub fn buddy(summary: *const Summary) ?*const Member {
+            if (summary.buddy_maybe.template_id == 0) return null;
+            return &summary.buddy_maybe;
+        }
+
+        pub fn avatars(summary: *const Summary) []const Member {
+            return summary.avatar_buffer[0..summary.avatar_count];
+        }
+
+        pub fn appendAvatar(summary: *Summary, member: Member) error{NoSpaceLeft}!void {
+            if (summary.avatar_count == avatar_count_max) return error.NoSpaceLeft;
+            defer summary.avatar_count += 1;
+            summary.avatar_buffer[summary.avatar_count] = member;
+        }
+    };
 
     pub const OptionalAvatarId = enum(u32) {
         none = 0,

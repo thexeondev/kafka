@@ -372,14 +372,24 @@ pub const ZoneInfo = struct {
     layer_index: u32,
     group_id: u32,
     entrance_id: u32,
+    sub_layer_index: u32,
 
-    pub fn getByZoneIdAndLayerIndex(zone_id: u32, layer_index: u32) ?ZoneInfo {
+    pub const GetOptions = struct {
+        zone_id: u32,
+        layer_index: u32,
+        sub_layer_index: u32,
+    };
+
+    pub fn get(options: GetOptions) ?ZoneInfo {
         for (
             table.items(.id),
             table.items(.layer_index),
+            table.items(.sub_layer_index),
             0..,
-        ) |template_zone_id, template_layer_index, template_index| {
-            if (template_zone_id == zone_id and template_layer_index == layer_index)
+        ) |zone_id, layer_index, sub_layer_index, template_index| {
+            if (options.zone_id == zone_id and
+                options.layer_index == layer_index and
+                options.sub_layer_index == sub_layer_index)
                 return table.getAtIndex(template_index);
         }
 
@@ -389,6 +399,26 @@ pub const ZoneInfo = struct {
     pub fn isFreeTraining(zone_info: *const ZoneInfo) bool {
         return zone_info.entrance_id == 901;
     }
+};
+
+pub const LayerInfo = struct {
+    pub const Table = TemplateTb(LayerInfo, "LayerInfoTemplateTb", .id);
+    pub const table: Table = .init();
+
+    id: u32,
+    room_ids: [2]OptionalRoomId,
+
+    pub const OptionalRoomId = enum(u32) {
+        none = 0,
+        _,
+
+        pub fn unwrap(id: OptionalRoomId) ?u32 {
+            return switch (id) {
+                .none => null,
+                _ => @backingInt(id),
+            };
+        }
+    };
 };
 
 pub const BattleEventConfig = struct {

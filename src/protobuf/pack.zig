@@ -367,3 +367,43 @@ pub fn dungeonPackage(
         .buddy_list = buddyList(&buffer.buddies),
     };
 }
+
+pub const BattleDataRecordMap = BoundedMultiArray(struct {
+    record_key_value: protobuf.KeyValue(u32, protobuf.gen.BattleDataRecord),
+    avatar_member_buffer: [3]protobuf.gen.BattleRecordMemberData,
+}, 2);
+
+pub fn battleDataRecord(
+    ptr: BattleDataRecordMap.Ptr,
+    key: u32,
+    summary: *const Player.Temporaries.Battle.Summary,
+) void {
+    var avatar_member_list: std.ArrayList(protobuf.gen.BattleRecordMemberData) =
+        .initBuffer(ptr.avatar_member_buffer);
+
+    for (summary.avatars()) |member| {
+        avatar_member_list.appendAssumeCapacity(.{
+            .avatar_id = member.template_id,
+            .damage = member.damage,
+            .stun = member.stun,
+            .element_abnormal_accumulation = member.element_abnormal_accumulation,
+            .recover = member.recover,
+            .shield = member.shield,
+        });
+    }
+
+    ptr.record_key_value.* = .{
+        .key = key,
+        .value = .{
+            .avatar_member_list = avatar_member_list.items,
+            .buddy_member_data = if (summary.buddy()) |member| .{
+                .buddy_id = member.template_id,
+                .damage = member.damage,
+                .stun = member.stun,
+                .element_abnormal_accumulation = member.element_abnormal_accumulation,
+                .recover = member.recover,
+                .shield = member.shield,
+            } else null,
+        },
+    };
+}
