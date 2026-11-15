@@ -26,17 +26,7 @@ pub fn GetArchiveDataCsReq(session: Session(.GetArchiveDataCsReq)) !void {
 }
 
 pub fn StartTrainingQuestCsReq(session: Session(.StartTrainingQuestCsReq)) !void {
-    var request = try session.decodeBody();
-
-    var avatar_id_buffer: [3]u32 = undefined;
-    var avatar_id_list: std.ArrayList(u32) = .initBuffer(&avatar_id_buffer);
-
-    while (try request.avatar_id_list.next()) |avatar_id|
-        avatar_id_list.appendBounded(avatar_id) catch
-            return session.fail(.RET_AVATAR_PARAM_ERROR);
-
-    if (avatar_id_list.items.len == 0)
-        return session.fail(.RET_AVATAR_PARAM_ERROR);
+    const request = try session.decodeBody();
 
     var avatar_info_list: protobuf.pack.AvatarInfoList = .empty;
     var avatars = session.player.avatars();
@@ -82,22 +72,18 @@ pub fn BeginHadalBattleCsReq(session: Session(.BeginHadalBattleCsReq)) !void {
     var request = try session.decodeBody();
 
     var first_room_avatar_id_list_buffer: [3]u32 = undefined;
-    var first_room_avatar_id_list: std.ArrayList(u32) =
-        .initBuffer(&first_room_avatar_id_list_buffer);
-
-    while (try request.first_room_avatar_id_list.next()) |id| {
-        first_room_avatar_id_list.appendBounded(id) catch
-            return session.fail(.RET_AVATAR_PARAM_ERROR);
-    }
+    const first_room_avatar_id_list =
+        try request.first_room_avatar_id_list.toSlice(&first_room_avatar_id_list_buffer) orelse
+        return session.fail(.RET_AVATAR_PARAM_ERROR);
 
     var second_room_avatar_id_list_buffer: [3]u32 = undefined;
-    var second_room_avatar_id_list: std.ArrayList(u32) =
-        .initBuffer(&second_room_avatar_id_list_buffer);
+    const second_room_avatar_id_list =
+        try request.second_room_avatar_id_list.toSlice(&second_room_avatar_id_list_buffer) orelse
+        return session.fail(.RET_AVATAR_PARAM_ERROR);
 
-    while (try request.second_room_avatar_id_list.next()) |id| {
-        second_room_avatar_id_list.appendBounded(id) catch
-            return session.fail(.RET_AVATAR_PARAM_ERROR);
-    }
+    if (first_room_avatar_id_list.len == 0 and
+        second_room_avatar_id_list.len == 0)
+        return session.fail(.RET_AVATAR_PARAM_ERROR);
 
     var dungeon_package_buffer: protobuf.pack.DungeonPackageBuffer = .init;
     var avatars = session.player.avatars();
@@ -109,8 +95,8 @@ pub fn BeginHadalBattleCsReq(session: Session(.BeginHadalBattleCsReq)) !void {
 
     var avatar_unit_list: protobuf.pack.AvatarUnitInfoList = .empty;
     for (@as([]const []const u32, &.{
-        first_room_avatar_id_list.items,
-        second_room_avatar_id_list.items,
+        first_room_avatar_id_list,
+        second_room_avatar_id_list,
     })) |avatar_id_list| {
         for (avatar_id_list) |avatar_id| {
             const avatar_init = session.player.getBattleAvatarInitById(avatar_id) orelse
@@ -186,8 +172,8 @@ pub fn BeginHadalBattleCsReq(session: Session(.BeginHadalBattleCsReq)) !void {
                 .layer_index = request.layer_index,
                 .layer_item_id = request.layer_item_id,
                 .room_index = request.room_index,
-                .first_room_avatar_id_list = first_room_avatar_id_list.items,
-                .second_room_avatar_id_list = second_room_avatar_id_list.items,
+                .first_room_avatar_id_list = first_room_avatar_id_list,
+                .second_room_avatar_id_list = second_room_avatar_id_list,
                 .first_room_buddy_id = request.first_room_buddy_id,
                 .second_room_buddy_id = request.second_room_buddy_id,
             },

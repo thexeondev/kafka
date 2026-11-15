@@ -594,6 +594,21 @@ pub fn Iterator(comptime T: type) type {
             it.data = reader.buffer[reader.seek..];
             return item;
         }
+
+        /// Copies elements from this `Iterator` to `buffer`.
+        /// If `buffer.len` is exceeded, `null` is returned.
+        ///
+        /// Modifies iterator state.
+        pub fn toSlice(it: *It, buffer: []T) DecodeError!?[]T {
+            var list: std.ArrayList(T) = .initBuffer(buffer);
+            while (try it.next()) |elem| {
+                list.appendBounded(elem) catch |err| switch (err) {
+                    error.OutOfMemory => return null,
+                };
+            }
+
+            return list.items;
+        }
     };
 }
 
