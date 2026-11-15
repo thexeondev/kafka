@@ -4,6 +4,7 @@ sync: Sync,
 
 const Player = @This();
 const std = @import("std");
+const assert = std.debug.assert;
 
 pub const Zon = @import("Player/Zon.zig");
 pub const Storage = @import("Player/Storage.zig");
@@ -50,6 +51,7 @@ pub const Avatar = struct {
     dressed_equipment: std.EnumMap(Equipment.Type, u32),
     awake_index_maybe: ?u32,
     awake_enabled: bool,
+    skin_id_maybe: ?u32,
 
     pub const Iterator = struct {
         index: u32,
@@ -216,6 +218,10 @@ fn avatarAtIndex(player: *const Player, index: u32) Avatar {
         }),
         .awake_index_maybe = storage_avatar.bits.awake.toIndex(),
         .awake_enabled = storage_avatar.bits.awake_enabled,
+        .skin_id_maybe = switch (storage_avatar.bits.dressed_skin_id) {
+            0 => null,
+            else => |id| id,
+        },
     };
 }
 
@@ -340,6 +346,10 @@ fn updateAvatarAtIndex(player: *Player, avatar_index: u32, avatar: Avatar) void 
         },
         .awake = if (avatar.awake_index_maybe) |index| @fromBackingInt(@intCast(index)) else .none,
         .awake_enabled = avatar.awake_enabled,
+        .dressed_skin_id = if (avatar.skin_id_maybe) |skin_id| skin_id: {
+            assert(skin_id != 0); // use `null` instead
+            break :skin_id skin_id;
+        } else 0,
     };
 
     storage_avatar.weapon_uid_maybe.* =
@@ -389,6 +399,9 @@ pub fn updateTimePeriod(player: *Player, change: TimePeriod.Change) void {
 fn appendAvatarToSync(player: *Player, avatar: Avatar) void {
     player.sync.needs_player_sync_notify = true;
     pack.avatarInfo(player.sync.avatar_list.addOneAssumeCapacity(), avatar);
+
+    if (avatar.id == @backingInt(player.storage.role.control_guise_avatar))
+        player.sync.control_guise_avatar_changed = true;
 }
 
 pub fn getBattleAvatarInitById(player: *Player, avatar_id: u32) ?battle.AvatarInit {
@@ -425,8 +438,15 @@ pub fn buildPlayerSyncScNotify(player: *Player) ?gen.PlayerSyncScNotify {
 
     const accessory_data_needs_sync = player.sync.control_guise_avatar_changed;
     if (accessory_data_needs_sync) {
+        const control_guise_avatar = player.storage.role.control_guise_avatar;
+        const guise_skin_id = if (control_guise_avatar.toAvatarId()) |avatar_id| skin: {
+            const avatar_index = player.storage.getAvatarIndexById(avatar_id).?;
+            break :skin player.storage.avatars.items(.bits)[avatar_index].dressed_skin_id;
+        } else 0;
+
         notify.misc.?.player_accessory = .{
-            .control_guise_avatar_id = @backingInt(player.storage.role.control_guise_avatar),
+            .control_guise_avatar_id = @backingInt(control_guise_avatar),
+            .control_guise_avatar_skin_id = guise_skin_id,
         };
     }
 

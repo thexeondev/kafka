@@ -117,6 +117,15 @@ pub const AvatarSpecialAwaken = struct {
     }
 };
 
+pub const AvatarSkinBase = struct {
+    pub const Table = TemplateTb(AvatarSkinBase, "AvatarSkinBaseTemplateTb", .id);
+    pub const table: Table = .init();
+
+    id: u32,
+    avatar_id: u32,
+    name: String,
+};
+
 pub const PropertyValue = extern struct {
     id: u32,
     value: i32,

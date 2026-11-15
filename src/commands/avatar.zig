@@ -139,3 +139,31 @@ pub fn EquipmentSuitDressCsReq(session: Session(.EquipmentSuitDressCsReq)) !void
 
     return session.success();
 }
+
+pub fn AvatarSkinDressCsReq(session: Session(.AvatarSkinDressCsReq)) !void {
+    const request = try session.decodeBody();
+
+    var avatar_to_dress = session.player.getAvatarById(request.avatar_id) orelse
+        return session.fail(.RET_AVATAR_PARAM_ERROR);
+
+    const skin_template = templates.AvatarSkinBase.table.getByKey(request.avatar_skin_id) orelse
+        return session.fail(.RET_ITEM_NOT_FOUND);
+
+    if (skin_template.avatar_id != request.avatar_id)
+        return session.fail(.RET_AVATAR_PARAM_ERROR);
+
+    avatar_to_dress.skin_id_maybe = request.avatar_skin_id;
+    session.player.updateAvatar(avatar_to_dress);
+    return session.success();
+}
+
+pub fn AvatarSkinUnDressCsReq(session: Session(.AvatarSkinUnDressCsReq)) !void {
+    const request = try session.decodeBody();
+
+    var avatar_to_undress = session.player.getAvatarById(request.avatar_id) orelse
+        return session.fail(.RET_AVATAR_PARAM_ERROR);
+
+    avatar_to_undress.skin_id_maybe = null;
+    session.player.updateAvatar(avatar_to_undress);
+    return session.success();
+}

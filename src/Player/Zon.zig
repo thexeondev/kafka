@@ -201,6 +201,7 @@ pub const Avatar = struct {
     weapon: ?Weapon,
     equipment: EquipmentSlots,
     awake: Awake,
+    skin_id: u32,
 
     pub const EquipmentSlots = struct {
         @"1": ?Equipment,
@@ -560,6 +561,7 @@ pub fn init(arena: Allocator, name_map: *const NameMap, player: *Storage) Alloca
                 .level = bits.awake.toIndex() orelse 0,
                 .enabled = bits.awake_enabled,
             },
+            .skin_id = bits.dressed_skin_id,
         };
     }
 
@@ -813,6 +815,7 @@ pub fn pack(
                 .flags = .{ .favorite = avatar_zon.favorite },
                 .awake = @fromBackingInt(@intCast(avatar_zon.awake.level)),
                 .awake_enabled = avatar_zon.awake.enabled,
+                .dressed_skin_id = avatar_zon.skin_id,
             },
             .weapon_uid_maybe = weapon_uid_maybe,
             .dressed_equipment = dressed_equipment,

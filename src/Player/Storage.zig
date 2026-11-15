@@ -41,7 +41,7 @@ pub const Header = extern struct {
         assert(hasUniqueRepresentation(@This()));
     }
 
-    pub const current_version: u32 = 10;
+    pub const current_version: u32 = 11;
 };
 
 pub const Avatar = struct {
@@ -54,13 +54,14 @@ pub const Avatar = struct {
 
     pub const equipment_count = 6;
 
-    pub const Bits = packed struct(u32) {
+    pub const Bits = packed struct(u64) {
         level_up: LevelUp,
         flags: Flags,
         mindscape: Mindscape,
         show_weapon_status: ShowWeapon.Status,
         awake: Awake,
         awake_enabled: bool,
+        dressed_skin_id: u32,
         _: u9 = 0,
 
         comptime {
@@ -705,6 +706,7 @@ pub fn initDefaults(storage: *Storage) void {
         .show_weapon_status = .locked,
         .awake = .none,
         .awake_enabled = false,
+        .dressed_skin_id = 0,
     };
 
     for (templates.AvatarBase.table.items(.id)) |id_int| {

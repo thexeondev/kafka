@@ -4,6 +4,7 @@ const remielle = @import("../remielle.zig");
 const Player = remielle.Player;
 const Session = remielle.Session;
 const protobuf = remielle.protobuf;
+const templates = remielle.templates;
 
 pub fn GetWeaponDataCsReq(session: Session(.GetWeaponDataCsReq)) !void {
     var weapon_buffer: [Player.Storage.Weapon.count_max]protobuf.gen.WeaponInfo = undefined;
@@ -37,7 +38,20 @@ pub fn GetEquipDataCsReq(session: Session(.GetEquipDataCsReq)) !void {
 }
 
 pub fn GetItemDataCsReq(session: Session(.GetItemDataCsReq)) !void {
-    return session.respond(.{});
+    const materials_count_max = templates.AvatarSkinBase.table.count;
+    var materials_buffer: [materials_count_max]protobuf.gen.MaterialInfo = undefined;
+    var material_list: std.ArrayList(protobuf.gen.MaterialInfo) = .initBuffer(&materials_buffer);
+
+    for (templates.AvatarSkinBase.table.items(.id)) |id| {
+        material_list.appendAssumeCapacity(.{
+            .id = id,
+            .count = 1,
+        });
+    }
+
+    return session.respond(.{
+        .material_list = material_list.items,
+    });
 }
 
 pub fn GetWishlistDataCsReq(session: Session(.GetWishlistDataCsReq)) !void {
