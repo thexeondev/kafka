@@ -62,6 +62,7 @@ const template_tb_list: []const struct { []const u8, type } = &.{
     .{ "PlayTypeMappingTemplateTb", PlayTypeMappingTemplate },
     .{ "HadalZoneQuestTemplateTb", HadalZoneQuestTemplate },
     .{ "BuddyBaseTemplateTb", BuddyBaseTemplate },
+    .{ "BigScenePortalTemplateTb", BigScenePortalTemplate },
 };
 
 const AvatarBaseTemplate = struct {
@@ -683,6 +684,23 @@ const HadalZoneQuestTemplate = struct {
     const Fbs = struct {
         id: fbs.Int(u32),
         layer_id: fbs.Int(u32),
+    };
+};
+
+const BigScenePortalTemplate = struct {
+    id: u32,
+    area_id: u32,
+
+    const Fbs = struct {
+        id: fbs.Int(u32),
+        unk_2: fbs.Discard,
+        unk_3: fbs.Discard,
+        unk_4: fbs.Discard,
+        unk_5: fbs.Discard,
+        unk_6: fbs.Discard,
+        unk_7: fbs.Discard,
+        unk_8: fbs.Discard,
+        area_id: fbs.Int(u32),
     };
 };
 

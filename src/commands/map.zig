@@ -7,7 +7,10 @@ const protobuf = remielle.protobuf;
 const templates = remielle.templates;
 
 pub fn GetAreaMapDataCsReq(session: Session(.GetAreaMapDataCsReq)) !void {
-    var groups_buffer: [templates.UrbanAreaMapGroup.table.count]protobuf.gen.AreaGroupInfo =
+    var groups_buffer: [
+        templates.UrbanAreaMapGroup.table.count +
+            templates.BigScenePortal.table.count
+    ]protobuf.gen.AreaGroupInfo =
         undefined;
     var groups: ArrayList(protobuf.gen.AreaGroupInfo) = .initBuffer(&groups_buffer);
 
@@ -19,11 +22,33 @@ pub fn GetAreaMapDataCsReq(session: Session(.GetAreaMapDataCsReq)) !void {
         });
     }
 
-    var streets_buffer: [templates.UrbanAreaMap.table.count]protobuf.gen.AreaStreetInfo =
+    for (templates.BigScenePortal.table.items(.area_id)) |id| {
+        groups.appendAssumeCapacity(.{
+            .group_id = id,
+            .area_progress = 99,
+            .is_unlocked = true,
+        });
+    }
+
+    var streets_buffer: [
+        templates.UrbanAreaMap.table.count +
+            templates.BigScenePortal.table.count
+    ]protobuf.gen.AreaStreetInfo =
         undefined;
     var streets: ArrayList(protobuf.gen.AreaStreetInfo) = .initBuffer(&streets_buffer);
 
     for (templates.UrbanAreaMap.table.items(.id)) |id| {
+        streets.appendAssumeCapacity(.{
+            .area_id = id,
+            .area_progress = 99,
+            .is_unlocked = true,
+            .is_area_pop_show = true,
+            .is_urban_area_show = true,
+            .is_3d_area_show = true,
+        });
+    }
+
+    for (templates.BigScenePortal.table.items(.area_id)) |id| {
         streets.appendAssumeCapacity(.{
             .area_id = id,
             .area_progress = 99,

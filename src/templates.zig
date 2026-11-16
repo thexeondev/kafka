@@ -455,6 +455,14 @@ pub const HadalZoneQuest = struct {
     }
 };
 
+pub const BigScenePortal = struct {
+    pub const Table = TemplateTb(BigScenePortal, "BigScenePortalTemplateTb", .id);
+    pub const table: Table = .init();
+
+    id: u32,
+    area_id: u32,
+};
+
 pub const Text = struct {
     pub const Table = TemplateTb(Text, "assets/textmap.bin", .key);
     pub const table: Table = .init();
