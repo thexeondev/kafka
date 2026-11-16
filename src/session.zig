@@ -16,7 +16,7 @@ pub fn Typed(comptime message_name_literal: @EnumLiteral()) type {
         message_name[0 .. message_name.len - request_suffix.len] ++
         response_suffix;
 
-    return *extern struct {
+    return extern struct {
         sink: Sink,
         player: *Player,
         time: *const Time,

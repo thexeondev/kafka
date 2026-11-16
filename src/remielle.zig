@@ -18,7 +18,10 @@ pub const IntMultiSet = @import("int_multi_set.zig").IntMultiSet;
 pub const battle = @import("battle.zig");
 
 pub const session = @import("session.zig");
-pub const Session = session.Typed;
+
+pub fn Session(comptime message_name_literal: @EnumLiteral()) type {
+    return *session.Typed(message_name_literal);
+}
 
 test {
     std.testing.refAllDecls(@This());
