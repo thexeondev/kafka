@@ -47,3 +47,7 @@ pub fn GetNewAreaPortalListCsReq(session: Session(.GetNewAreaPortalListCsReq)) !
 pub fn GetFloorActiveGroupListCsReq(session: Session(.GetFloorActiveGroupListCsReq)) !void {
     return session.respond(.{});
 }
+
+pub fn GetFloorActiveGroupSuiteListCsReq(session: Session(.GetFloorActiveGroupSuiteListCsReq)) !void {
+    return session.respond(.{});
+}
