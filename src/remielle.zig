@@ -16,6 +16,7 @@ pub const BoundedMultiArray = @import("bounded_multi_array.zig").BoundedMultiArr
 pub const StaticIntMap = @import("static_int_map.zig").StaticIntMap;
 pub const IntMultiSet = @import("int_multi_set.zig").IntMultiSet;
 pub const battle = @import("battle.zig");
+pub const assets = @import("assets.zig");
 
 pub const session = @import("session.zig");
 

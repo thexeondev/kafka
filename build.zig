@@ -32,6 +32,8 @@ const build_version: std.SemanticVersion = .{
 const template_dir_path = "assets/TemplateTb"; // Required asset.
 const textmap_raw_path = "assets/TextMap_EnTemplateTb.bin"; // Optional asset.
 const textmap_converted_path = "assets/textmap.bin"; // Required if `textmap_raw_path` is missing.
+const levelworld_json_path = "assets/LevelWorld/json"; // Optional asset directory.
+const levelworld_bin_path = "assets/LevelWorld/bin"; // Required if `levelworld_json_path` is missing.
 
 pub fn build(b: *Build) !void {
     const target = b.standardTargetOptions(.{});
@@ -45,6 +47,8 @@ pub fn build(b: *Build) !void {
     try convertTemplates(b, module);
     importFile(b, module, "defaults/remielle.zon");
     importFile(b, module, textmap_converted_path);
+    importFile(b, module, levelworld_bin_path ++ "/ConfigFloor.bin");
+    importFile(b, module, levelworld_bin_path ++ "/ConfigGroup.bin");
 
     const module_tests = b.addTest(.{ .root_module = module });
     const test_step = b.step("test", "run the tests");
@@ -77,6 +81,11 @@ pub fn build(b: *Build) !void {
     }
 
     if (maybeConvertTextMap(b)) |step| {
+        exe.step.dependOn(step);
+        module_tests.step.dependOn(step);
+    }
+
+    if (try maybeConvertLevelWorld(b)) |step| {
         exe.step.dependOn(step);
         module_tests.step.dependOn(step);
     }
@@ -141,6 +150,29 @@ fn maybeConvertTextMap(b: *Build) ?*Build.Step {
         textmap_converted_path,
     );
     return &update.step;
+}
+
+fn maybeConvertLevelWorld(b: *Build) !?*Build.Step {
+    b.root.access(b.graph.io, levelworld_json_path, .{}) catch return null;
+    try b.root.createDirPath(b.graph.io, levelworld_bin_path);
+
+    const converter = b.addExecutable(.{
+        .name = "remielle-convert-levelworld",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("build/convert-levelworld.zig"),
+            .target = b.graph.host,
+            // `debug` mode impacts performance way too much for this one,
+            // meanwhile `safe` compiles for a while.
+            // `small` compiles relatively fast and is magnitudes faster than `debug`.
+            .optimize = .small,
+        }),
+    });
+    const convert = b.addRunArtifact(converter);
+    convert.expectExitCode(0);
+    convert.addDirectoryArg2(b.path(levelworld_json_path), .{});
+    convert.addDirectoryArg2(b.path(levelworld_bin_path), .{});
+
+    return &convert.step;
 }
 
 fn convertTemplates(b: *Build, remielle_module: *Build.Module) !void {
