@@ -139,7 +139,7 @@ fn serveConnection(
         ),
     };
 
-    var send_buffer: [64 * 1024]u8 = undefined;
+    var send_buffer: [256 * 1024]u8 = undefined;
     var player_temporaries: Player.Temporaries = .init;
 
     while (true) {
