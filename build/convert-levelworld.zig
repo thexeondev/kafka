@@ -35,6 +35,7 @@ const ConfigFloorJson = struct {
         floor_id: u32,
         floor_md5: []const u8,
         group_id_list: []const u32,
+        scene_config_id: u32,
     };
 };
 
@@ -76,6 +77,7 @@ const Slice = extern struct {
 };
 
 const FloorMetadata = extern struct {
+    scene_config_id: u32,
     group_id_list: Slice,
     floor_md5: Slice,
 
@@ -139,6 +141,7 @@ fn convertConfigFloor(io: Io, gpa: Allocator, dirs: Dirs) !void {
     for (config_floor.value.data) |floor| {
         _ = try floor_ids.put(gpa, &.{floor.floor_id});
         _ = try metadata.put(gpa, &.{.{
+            .scene_config_id = floor.scene_config_id,
             .group_id_list = try group_ids.put(gpa, floor.group_id_list),
             .floor_md5 = try strings.put(gpa, floor.floor_md5),
         }});

@@ -19,6 +19,7 @@ const ConfigFloorHeader = extern struct {
 };
 
 const FloorMetadata = extern struct {
+    scene_config_id: u32,
     group_id_list: Slice,
     floor_md5: Slice,
 };
@@ -29,6 +30,7 @@ inline fn ptrCast(comptime T: type, bytes: [*]const u8) [*]const T {
 
 pub const Floor = struct {
     id: u32,
+    scene_config_id: u32,
     group_id_list: []const u32,
     md5: []const u8,
 
@@ -52,6 +54,7 @@ pub const Floor = struct {
 
             return .{
                 .id = floor_id,
+                .scene_config_id = metadata.scene_config_id,
                 .group_id_list = metadata.group_id_list.take(group_ids),
                 .md5 = metadata.floor_md5.take(strings),
             };
