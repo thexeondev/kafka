@@ -42,7 +42,7 @@ pub const Header = extern struct {
         assert(hasUniqueRepresentation(@This()));
     }
 
-    pub const current_version: u32 = 12;
+    pub const current_version: u32 = 13;
 };
 
 pub const Avatar = struct {
@@ -675,6 +675,9 @@ pub const Time = packed struct(u8) {
 };
 
 pub const BigScene = extern struct {
+    cur_floor_id: OptionalFloorId,
+    position: [3]i32,
+    rotation: [3]i32,
     lineup_avatars: [lineup_avatar_count]LineupAvatar,
 
     comptime {
@@ -699,6 +702,23 @@ pub const BigScene = extern struct {
             return @fromBackingInt(avatar_id);
         }
     };
+
+    pub const OptionalFloorId = enum(u32) {
+        none = 0,
+        _,
+
+        pub fn unwrap(optional: OptionalFloorId) ?u32 {
+            return switch (optional) {
+                .none => null,
+                _ => @backingInt(optional),
+            };
+        }
+
+        pub fn wrap(floor_id: u32) OptionalFloorId {
+            assert(floor_id != 0);
+            return @fromBackingInt(floor_id);
+        }
+    };
 };
 
 pub fn initDefaults(storage: *Storage) void {
@@ -721,6 +741,9 @@ pub fn initDefaults(storage: *Storage) void {
             .period = .morning,
         },
         .big_scene = .{
+            .cur_floor_id = .none,
+            .position = @splat(0),
+            .rotation = @splat(0),
             .lineup_avatars = @splat(.none),
         },
     };

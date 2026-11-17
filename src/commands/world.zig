@@ -7,7 +7,7 @@ const protobuf = remielle.protobuf;
 const StaticIntMap = remielle.StaticIntMap;
 
 pub fn EnterWorldCsReq(session: Session(.EnterWorldCsReq)) !void {
-    session.player.enterMainCity();
+    session.player.enterLastScene();
     return session.respond(.{});
 }
 
@@ -16,7 +16,7 @@ pub fn EnterSectionCompleteCsReq(session: Session(.EnterSectionCompleteCsReq)) !
 }
 
 pub fn LeaveCurSceneCsReq(session: Session(.LeaveCurSceneCsReq)) !void {
-    session.player.enterMainCity();
+    session.player.enterLastScene();
     return session.success();
 }
 
@@ -25,7 +25,7 @@ pub fn EnterSectionCsReq(session: Session(.EnterSectionCsReq)) !void {
     const section = Player.MainCitySection.fromInt(request.section_id) orelse
         return session.fail(.RET_SCENE_NOT_FOUND);
 
-    session.player.updateMainCitySection(section);
+    session.player.enterMainCitySection(section);
     return session.success();
 }
 

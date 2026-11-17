@@ -6573,7 +6573,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             @"reason": u32 = 0,
             @"IPEOHCDJIJF": bool = false,
             @"floor_position": ?FloorPositionInfo = null,
-            @"MPEAFFHACCK": u32 = 0,
+            @"floor_version": u32 = 0,
             @"floor_md5": []const u8 = &.{},
             @"IFOCAFPBPGD": bool = false,
             @"floor_id": u32 = 0,
@@ -6581,7 +6581,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"ACECJDHNAOF": u31 = 6761;
                 pub const @"LKLHMAKHDIE": u31 = 12316;
                 pub const @"reason": u31 = 9067;
-                pub const @"MPEAFFHACCK": u31 = 5118;
+                pub const @"floor_version": u31 = 5118;
                 pub const @"floor_id": u31 = 3574;
             };
             pub const oneof_by_field = struct {
@@ -6595,7 +6595,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"reason" = 7,
                 @"IPEOHCDJIJF" = 9,
                 @"floor_position" = 10,
-                @"MPEAFFHACCK" = 11,
+                @"floor_version" = 11,
                 @"floor_md5" = 12,
                 @"IFOCAFPBPGD" = 13,
                 @"floor_id" = 14,
@@ -6612,7 +6612,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"reason": u32 = 0,
                 @"IPEOHCDJIJF": bool = false,
                 @"floor_position": ?FloorPositionInfo.Decoded = null,
-                @"MPEAFFHACCK": u32 = 0,
+                @"floor_version": u32 = 0,
                 @"floor_md5": []const u8 = &.{},
                 @"IFOCAFPBPGD": bool = false,
                 @"floor_id": u32 = 0,
@@ -6626,7 +6626,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"reason": Encoding = .normal;
                 pub const @"IPEOHCDJIJF": Encoding = .normal;
                 pub const @"floor_position": Encoding = .normal;
-                pub const @"MPEAFFHACCK": Encoding = .normal;
+                pub const @"floor_version": Encoding = .normal;
                 pub const @"floor_md5": Encoding = .normal;
                 pub const @"IFOCAFPBPGD": Encoding = .normal;
                 pub const @"floor_id": Encoding = .normal;
@@ -42504,30 +42504,30 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"config_id": Encoding = .normal;
             };
         };
-        pub const GIKFOIIGIAC = struct {
-            pub const message_name = "GIKFOIIGIAC";
+        pub const EnterFloorDoneCsReq = struct {
+            pub const message_name = "EnterFloorDoneCsReq";
             pub const cmd_id: u16 = 4575;
             @"floor_md5": []const u8 = &.{},
-            @"MPEAFFHACCK": u32 = 0,
+            @"floor_version": u32 = 0,
             pub const xor_by_field = struct {
-                pub const @"MPEAFFHACCK": u31 = 3491;
+                pub const @"floor_version": u31 = 3491;
             };
             pub const oneof_by_field = struct {
             };
             pub const FieldNumber = enum(u29) {
                 @"floor_md5" = 10,
-                @"MPEAFFHACCK" = 13,
+                @"floor_version" = 13,
                 _,
             };
             pub const Decoded = struct {
-                pub const Parent = GIKFOIIGIAC;
+                pub const Parent = EnterFloorDoneCsReq;
                 pub const init: @This() = .{};
                 @"floor_md5": []const u8 = &.{},
-                @"MPEAFFHACCK": u32 = 0,
+                @"floor_version": u32 = 0,
             };
             pub const encoding_by_field = struct {
                 pub const @"floor_md5": Encoding = .normal;
-                pub const @"MPEAFFHACCK": Encoding = .normal;
+                pub const @"floor_version": Encoding = .normal;
             };
         };
         pub const HHDEILJOGGE = struct {

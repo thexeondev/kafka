@@ -737,6 +737,9 @@ pub fn pack(
             .period = zon.time.period,
         },
         .big_scene = .{
+            .cur_floor_id = .none, // TODO
+            .position = @splat(0), // TODO
+            .rotation = @splat(0), // TODO
             .lineup_avatars = @splat(.none), // TODO
         },
     };

@@ -16,6 +16,7 @@ const remielle = @import("remielle.zig");
 const gen = remielle.protobuf.gen;
 const pack = remielle.protobuf.pack;
 const battle = remielle.battle;
+const assets = remielle.assets;
 
 pub const Sync = struct {
     needs_player_sync_notify: bool,
@@ -30,6 +31,7 @@ pub const Sync = struct {
     pub const Scene = struct {
         reload_hall_scene: bool,
         time_modified: bool,
+        reload_big_scene_floor: bool,
 
         hall_buffer: pack.HallBuffer,
     };
@@ -51,6 +53,7 @@ pub const Sync = struct {
         .scene = .{
             .reload_hall_scene = false,
             .time_modified = false,
+            .reload_big_scene_floor = false,
             .hall_buffer = .{ .npcs = .empty },
         },
     };
@@ -432,15 +435,33 @@ pub fn updateControlGuiseAvatar(player: *Player, guise: ControlGuiseAvatar) void
     player.sync.control_guise_avatar_changed = true;
 }
 
-pub fn updateMainCitySection(player: *Player, section: MainCitySection) void {
+pub fn enterMainCitySection(player: *Player, section: MainCitySection) void {
     player.needs_save = true;
     player.sync.scene.reload_hall_scene = true;
 
+    player.storage.big_scene.cur_floor_id = .none;
     player.storage.main_city.section = section;
 }
 
-pub fn enterMainCity(player: *Player) void {
-    player.sync.scene.reload_hall_scene = true;
+pub fn enterLastScene(player: *Player) void {
+    if (player.storage.big_scene.cur_floor_id != .none) {
+        player.sync.scene.reload_big_scene_floor = true;
+    } else {
+        player.sync.scene.reload_hall_scene = true;
+    }
+}
+
+pub fn enterBigSceneFloor(player: *Player, options: struct {
+    floor_id: u32,
+    position: [3]i32,
+    rotation: [3]i32,
+}) void {
+    player.needs_save = true;
+    player.sync.scene.reload_big_scene_floor = true;
+
+    player.storage.big_scene.cur_floor_id = .wrap(options.floor_id);
+    player.storage.big_scene.position = options.position;
+    player.storage.big_scene.rotation = options.rotation;
 }
 
 // TODO: store minutes instead of time periods + make this API a bit more flexible,
@@ -617,4 +638,30 @@ pub fn buildHallRefresh(player: *Player) ?gen.HallRefreshScNotify {
     refresh_notify.force_refresh = true;
 
     return refresh_notify;
+}
+
+pub fn buildEnterFloorScNotify(player: *Player) ?gen.EnterFloorScNotify {
+    if (!player.sync.scene.reload_big_scene_floor) return null;
+
+    const floor_id = player.storage.big_scene.cur_floor_id.unwrap().?;
+    const pos = player.storage.big_scene.position;
+    const rot = player.storage.big_scene.rotation;
+
+    const floor = assets.Floor.table.get(floor_id).?;
+
+    return .{
+        .pos = .{ .x = pos[0], .y = pos[1], .z = pos[2] },
+        .floor_position = .{
+            .player_position = .{ .x = pos[0], .y = pos[1], .z = pos[2] },
+            .player_rotation = .{ .x = rot[0], .y = rot[1], .z = rot[2] },
+        },
+        .rollback_point = .{
+            .position = .{ .x = pos[0], .y = pos[1], .z = pos[2] },
+            .rotation = .{ .x = rot[0], .y = rot[1], .z = rot[2] },
+        },
+        .scene_id = floor.scene_config_id,
+        .floor_id = floor_id,
+        .day_of_week = @backingInt(player.storage.time.day),
+        .time_in_minutes = player.storage.time.period.toMinutes(),
+    };
 }
