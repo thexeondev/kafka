@@ -532,7 +532,6 @@ fn takeVarInt(comptime Int: type, reader: *Io.Reader) (Io.Reader.Error || VarInt
         if (!byte.continuation) return switch (@typeInfo(Int).int.signedness) {
             .unsigned => std.math.cast(Int, raw_value) orelse error.VarIntOverflow,
             .signed => std.math.cast(Int, @as(i64, @bitCast(raw_value))) orelse {
-                std.log.err("suckers {d} {d}", .{ raw_value, @as(i64, @bitCast(raw_value)) });
                 return error.VarIntOverflow;
             },
         };

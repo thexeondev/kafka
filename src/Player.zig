@@ -6,6 +6,7 @@ sync: Sync,
 const Player = @This();
 const std = @import("std");
 const assert = std.debug.assert;
+const ArrayList = std.ArrayList;
 
 pub const Zon = @import("Player/Zon.zig");
 pub const Storage = @import("Player/Storage.zig");
@@ -21,6 +22,10 @@ pub const Sync = struct {
     avatar_list: pack.AvatarInfoList,
     control_guise_avatar_changed: bool,
     scene: Scene, // Not sure if this belongs here. Maybe `Sync` needs a better name.
+    buffers: Buffers,
+    big_scene_team_replaced: ?struct {
+        prev: BigSceneTeam,
+    },
 
     pub const Scene = struct {
         reload_hall_scene: bool,
@@ -29,10 +34,20 @@ pub const Sync = struct {
         hall_buffer: pack.HallBuffer,
     };
 
+    pub const Buffers = struct {
+        big_scene_avatar_minimal: [Storage.Avatar.count_max]gen.BigSceneAvatarInfo,
+        big_scene_avatar_team: pack.BigSceneAvatarList,
+    };
+
     pub const init: Sync = .{
         .needs_player_sync_notify = false,
         .avatar_list = .empty,
         .control_guise_avatar_changed = false,
+        .big_scene_team_replaced = null,
+        .buffers = .{
+            .big_scene_avatar_minimal = undefined,
+            .big_scene_avatar_team = .empty,
+        },
         .scene = .{
             .reload_hall_scene = false,
             .time_modified = false,
@@ -184,6 +199,38 @@ pub const ControlGuiseAvatar = enum(u32) {
 
 pub const MainCitySection = Storage.MainCity.Section; // TODO: maybe move the definition here?
 pub const TimePeriod = Storage.Time.Period; // TODO: maybe move the definition here?
+
+pub const BigSceneTeam = struct {
+    lineup_avatar_list: [lineup_avatar_max]?u32,
+
+    pub const lineup_avatar_max = Storage.BigScene.lineup_avatar_count;
+
+    pub const empty: BigSceneTeam = .{
+        .lineup_avatar_list = @splat(null),
+    };
+
+    pub const AddAvatarError = error{ NoSpaceLeft, DuplicatedId };
+
+    pub fn addAvatarId(team: *BigSceneTeam, avatar_id: u32) AddAvatarError!void {
+        for (&team.lineup_avatar_list) |*avatar_id_maybe| {
+            if (avatar_id_maybe.*) |existing_avatar_id| {
+                if (existing_avatar_id == avatar_id)
+                    return error.DuplicatedId;
+            } else {
+                avatar_id_maybe.* = avatar_id;
+                break;
+            }
+        } else return error.NoSpaceLeft;
+    }
+
+    pub fn containsAvatarId(team: *const BigSceneTeam, avatar_id: u32) bool {
+        for (&team.lineup_avatar_list) |avatar_id_maybe| {
+            if (avatar_id == avatar_id_maybe) return true;
+        }
+
+        return false;
+    }
+};
 
 fn avatarAtIndex(player: *const Player, index: u32) Avatar {
     const storage_avatar = player.storage.avatars.getPtr(index);
@@ -443,6 +490,31 @@ pub fn getBattleAvatarInitById(player: *Player, avatar_id: u32) ?battle.AvatarIn
     };
 }
 
+pub fn getBigSceneTeam(player: *Player) BigSceneTeam {
+    var team: BigSceneTeam = .{
+        .lineup_avatar_list = @splat(null),
+    };
+
+    for (&team.lineup_avatar_list, player.storage.big_scene.lineup_avatars) |*out, avatar_maybe| {
+        out.* = avatar_maybe.unwrap();
+    }
+
+    return team;
+}
+
+pub fn replaceBigSceneTeam(player: *Player, new_team: BigSceneTeam) void {
+    player.needs_save = true;
+    player.sync.needs_player_sync_notify = true;
+    player.sync.big_scene_team_replaced = .{ .prev = player.getBigSceneTeam() };
+
+    for (
+        &player.storage.big_scene.lineup_avatars,
+        &new_team.lineup_avatar_list,
+    ) |*storage, avatar_id_maybe| {
+        storage.* = if (avatar_id_maybe) |avatar_id| .wrap(avatar_id) else .none;
+    }
+}
+
 pub fn buildPlayerSyncScNotify(player: *Player) ?gen.PlayerSyncScNotify {
     if (!player.sync.needs_player_sync_notify) return null;
 
@@ -466,6 +538,53 @@ pub fn buildPlayerSyncScNotify(player: *Player) ?gen.PlayerSyncScNotify {
         notify.misc.?.player_accessory = .{
             .control_guise_avatar_id = player.getControlGuiseAvatarId(),
             .control_guise_avatar_skin_id = guise_skin_id,
+        };
+    }
+
+    if (player.sync.big_scene_team_replaced) |team_replaced| {
+        const prev_team = team_replaced.prev;
+        const new_team = player.getBigSceneTeam();
+
+        var scene_avatar_list: ArrayList(gen.BigSceneAvatarInfo) =
+            .initBuffer(&player.sync.buffers.big_scene_avatar_minimal);
+
+        for (prev_team.lineup_avatar_list) |avatar_id_maybe| {
+            const avatar_id = avatar_id_maybe orelse continue;
+
+            pack.bigSceneAvatarInfoMinimal(scene_avatar_list.addOneAssumeCapacity(), .{
+                .avatar_id = avatar_id,
+                .hp_percentage = 100,
+                .operation = .REPLACE_TEAM,
+            });
+        }
+
+        for (new_team.lineup_avatar_list) |avatar_id_maybe| {
+            const avatar_id = avatar_id_maybe orelse continue;
+            if (!prev_team.containsAvatarId(avatar_id)) {
+                pack.bigSceneAvatarInfoMinimal(scene_avatar_list.addOneAssumeCapacity(), .{
+                    .avatar_id = avatar_id,
+                    .hp_percentage = 100,
+                    .operation = .REPLACE_TEAM,
+                });
+            }
+
+            const avatar_init = player.getBattleAvatarInitById(avatar_id).?;
+
+            var property_map: battle.Property.Map = .init;
+            battle.makeAvatarProperties(&property_map, avatar_init);
+
+            pack.bigSceneAvatarInfo(player.sync.buffers.big_scene_avatar_team.addOneAssumeCapacity(), .{
+                .avatar_id = avatar_id,
+                .hp_percentage = 100,
+                .operation = .NONE,
+                .property_map = &property_map,
+            });
+        }
+
+        notify.big_scene = .{
+            .scene_avatar_list = scene_avatar_list.items,
+            .cur_scene_avatar_list = player.sync.buffers.big_scene_avatar_team.items(.info),
+            .is_team_replaced = true,
         };
     }
 

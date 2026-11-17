@@ -736,6 +736,9 @@ pub fn pack(
             .day = zon.time.day,
             .period = zon.time.period,
         },
+        .big_scene = .{
+            .lineup_avatars = @splat(.none), // TODO
+        },
     };
 
     for (zon.avatars) |avatar_zon| {

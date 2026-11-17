@@ -407,3 +407,54 @@ pub fn battleDataRecord(
         },
     };
 }
+
+pub fn bigSceneAvatarInfoMinimal(
+    out: *gen.BigSceneAvatarInfo,
+    options: struct {
+        avatar_id: u32,
+        hp_percentage: u32,
+        operation: gen.TeamMemberOperation,
+    },
+) void {
+    out.* = .{
+        .avatar_id = options.avatar_id,
+        .source = @fromBackingInt(1),
+        .cur_state = @fromBackingInt(1),
+        .cur_hp = options.hp_percentage,
+        .operation = options.operation,
+        .unit = null,
+    };
+}
+
+pub const BigSceneAvatarList = BoundedMultiArray(struct {
+    info: gen.BigSceneAvatarInfo,
+    properties_buffer: [battle.Property.count]protobuf.KeyValue(u32, i32),
+}, Player.BigSceneTeam.lineup_avatar_max);
+
+pub fn bigSceneAvatarInfo(out: BigSceneAvatarList.Ptr, options: struct {
+    avatar_id: u32,
+    hp_percentage: u32,
+    operation: gen.TeamMemberOperation,
+    property_map: *const battle.Property.Map,
+}) void {
+    var properties: ArrayList(protobuf.KeyValue(u32, i32)) = .initBuffer(out.properties_buffer);
+    for (&options.property_map.values, 0..) |property_value, property_index_int| {
+        const property: battle.Property = .fromIndex(@fromBackingInt(@intCast(property_index_int)));
+        properties.appendAssumeCapacity(.{
+            .key = @backingInt(property),
+            .value = property_value,
+        });
+    }
+
+    out.info.* = .{
+        .avatar_id = options.avatar_id,
+        .source = @fromBackingInt(1),
+        .cur_state = @fromBackingInt(1),
+        .cur_hp = options.hp_percentage,
+        .operation = options.operation,
+        .unit = .{
+            .avatar_id = options.avatar_id,
+            .properties = properties.items,
+        },
+    };
+}

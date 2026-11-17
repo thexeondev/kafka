@@ -5,10 +5,11 @@ weapons: BoundedMultiArray(Weapon.KeyValue, Weapon.count_max),
 weapon_uid_counter: u32,
 equipment: BoundedMultiArray(Equipment.KeyValue, Equipment.count_max),
 equipment_uid_counter: u32,
-// TODO: these 3 can be merged into a single struct so that they use a single buffer for save/load.
+// TODO: these 4 can be merged into a single struct so that they use a single buffer for save/load.
 main_city: MainCity,
 role: Role,
 time: Time,
+big_scene: BigScene,
 
 const Storage = @This();
 
@@ -41,7 +42,7 @@ pub const Header = extern struct {
         assert(hasUniqueRepresentation(@This()));
     }
 
-    pub const current_version: u32 = 11;
+    pub const current_version: u32 = 12;
 };
 
 pub const Avatar = struct {
@@ -673,6 +674,33 @@ pub const Time = packed struct(u8) {
     };
 };
 
+pub const BigScene = extern struct {
+    lineup_avatars: [lineup_avatar_count]LineupAvatar,
+
+    comptime {
+        assert(hasUniqueRepresentation(@This()));
+    }
+
+    pub const lineup_avatar_count = 3;
+
+    pub const LineupAvatar = enum(u32) {
+        none = 0,
+        _,
+
+        pub fn unwrap(avatar: LineupAvatar) ?u32 {
+            return switch (avatar) {
+                .none => null,
+                _ => @backingInt(avatar),
+            };
+        }
+
+        pub fn wrap(avatar_id: u32) LineupAvatar {
+            assert(avatar_id != 0);
+            return @fromBackingInt(avatar_id);
+        }
+    };
+};
+
 pub fn initDefaults(storage: *Storage) void {
     storage.* = .{
         .avatars = .empty,
@@ -691,6 +719,9 @@ pub fn initDefaults(storage: *Storage) void {
         .time = .{
             .day = .friday,
             .period = .morning,
+        },
+        .big_scene = .{
+            .lineup_avatars = @splat(.none),
         },
     };
 
@@ -865,7 +896,7 @@ pub fn addRandomEquipment(
 }
 
 pub fn saveToFile(storage: *Storage, io: Io, dir: Io.Dir, sub_path: []const u8) !void {
-    var vecs_buffer: [12][]const u8 = undefined;
+    var vecs_buffer: [13][]const u8 = undefined;
     var vecs: std.ArrayList([]const u8) = .initBuffer(&vecs_buffer);
 
     const header: Header = .{
@@ -889,6 +920,7 @@ pub fn saveToFile(storage: *Storage, io: Io, dir: Io.Dir, sub_path: []const u8) 
     vecs.appendAssumeCapacity(@ptrCast(&storage.main_city));
     vecs.appendAssumeCapacity(@ptrCast(&storage.role));
     vecs.appendAssumeCapacity(@ptrCast(&storage.time));
+    vecs.appendAssumeCapacity(@ptrCast(&storage.big_scene));
 
     var af = try dir.createFileAtomic(io, sub_path, .{ .replace = true });
     defer af.deinit(io);
@@ -1020,7 +1052,7 @@ pub fn loadFromFile(
             .encountered = header.equipment_count,
         });
 
-    var vecs_buffer: [11][]u8 = undefined;
+    var vecs_buffer: [12][]u8 = undefined;
     var vecs: std.ArrayList([]u8) = .initBuffer(&vecs_buffer);
 
     storage.avatars.count = header.avatar_count;
@@ -1040,10 +1072,9 @@ pub fn loadFromFile(
     vecs.appendAssumeCapacity(@ptrCast(storage.equipment.items(.uid)));
 
     vecs.appendAssumeCapacity(@ptrCast(&storage.main_city));
-
     vecs.appendAssumeCapacity(@ptrCast(&storage.role));
-
     vecs.appendAssumeCapacity(@ptrCast(&storage.time));
+    vecs.appendAssumeCapacity(@ptrCast(&storage.big_scene));
 
     file_reader.interface.readVecAll(vecs.items) catch |err| switch (err) {
         error.EndOfStream => return diag.fileSystem(error.EarlyEos),
