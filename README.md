@@ -33,10 +33,11 @@ Before trying to connect to server, make sure you have the compatible client ver
 ## Features
 Remielle is in active development. At present, it has the following features available:
 - Logging in
-- Training room
+- Overworld with NPC spawn, including Roscaelifer
+- Investigation Zones
 - Shiyu Defense and Deadly Assault
-- W-Engines, Disc Drives, Potential Vision
-- Overworld with basic (very) NPC spawn
+- W-Engines, Disc Drives, Potential Vision, Skins
+- Training room
 
 For the implementation roadmap, see [the issue tracker](https://git.xeondev.com/CovenantOfDayat/remielle/issues).
 
