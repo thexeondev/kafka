@@ -444,7 +444,7 @@ pub fn enterMainCitySection(player: *Player, section: MainCitySection) void {
 }
 
 pub fn enterLastScene(player: *Player) void {
-    if (player.storage.big_scene.cur_floor_id != .none) {
+    if (player.isInBigScene()) {
         player.sync.scene.reload_big_scene_floor = true;
     } else {
         player.sync.scene.reload_hall_scene = true;
@@ -468,7 +468,12 @@ pub fn enterBigSceneFloor(player: *Player, options: struct {
 // TimePeriod.Change doesn't really help here.
 pub fn updateTimePeriod(player: *Player, change: TimePeriod.Change) void {
     player.needs_save = true;
-    player.sync.scene.time_modified = true;
+
+    if (player.isInHall()) {
+        player.sync.scene.time_modified = true;
+    } else if (player.isInBigScene()) {
+        player.sync.scene.reload_big_scene_floor = true;
+    } else unreachable;
 
     player.storage.time.period = change.new_value;
     if (change.day_advanced) player.storage.time.day = player.storage.time.day.increment();
@@ -480,6 +485,14 @@ pub fn getControlGuiseAvatarId(player: *Player) u32 {
     const avatar = player.getAvatarById(avatar_id) orelse return avatar_id;
 
     return avatar.form_id_maybe orelse avatar_id;
+}
+
+pub fn isInHall(player: *const Player) bool {
+    return !player.isInBigScene();
+}
+
+pub fn isInBigScene(player: *const Player) bool {
+    return player.storage.big_scene.cur_floor_id != .none;
 }
 
 fn appendAvatarToSync(player: *Player, avatar: Avatar) void {
