@@ -69,11 +69,18 @@ const ConfigGroupHeader = extern struct {
     gadget_count: u32,
     gadget_ids_offset: u32,
     gadget_config_ids_offset: u32,
+    gadget_positions_offset: u32,
     gadget_types_offset: u32,
 };
 
 const GroupMetadata = extern struct {
     gadgets: Slice,
+};
+
+pub const Vector3 = extern struct {
+    x: i32,
+    y: i32,
+    z: i32,
 };
 
 pub const GadgetType = enum(u8) {
@@ -87,8 +94,9 @@ pub const GadgetType = enum(u8) {
 
 pub const Group = struct {
     id: u32,
-    gadget_ids: []const u32,
+    gadget_ids: []const i32,
     gadget_config_ids: []const u32,
+    gadget_positions: []const Vector3,
     gadget_types: []const GadgetType,
 
     pub const table = struct {
@@ -99,11 +107,14 @@ pub const Group = struct {
         pub const group_ids: []const u32 =
             ptrCast(u32, bytes[header.group_id_offset..].ptr)[0..header.group_count];
 
-        pub const gadget_ids: []const u32 =
-            ptrCast(u32, bytes[header.gadget_ids_offset..].ptr)[0..header.gadget_count];
+        pub const gadget_ids: []const i32 =
+            ptrCast(i32, bytes[header.gadget_ids_offset..].ptr)[0..header.gadget_count];
 
         pub const gadget_config_ids: []const u32 =
             ptrCast(u32, bytes[header.gadget_config_ids_offset..].ptr)[0..header.gadget_count];
+
+        pub const gadget_positions: []const Vector3 =
+            ptrCast(Vector3, bytes[header.gadget_positions_offset..].ptr)[0..header.gadget_count];
 
         pub const gadget_types: []const GadgetType =
             ptrCast(GadgetType, bytes[header.gadget_types_offset..].ptr)[0..header.gadget_count];
@@ -119,6 +130,7 @@ pub const Group = struct {
                 .id = group_id,
                 .gadget_ids = group_metadata.gadgets.take(gadget_ids),
                 .gadget_config_ids = group_metadata.gadgets.take(gadget_config_ids),
+                .gadget_positions = group_metadata.gadgets.take(gadget_positions),
                 .gadget_types = group_metadata.gadgets.take(gadget_types),
             };
         }

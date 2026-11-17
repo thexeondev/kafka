@@ -72,7 +72,7 @@ pub fn EnterFloorCsReq(session: Session(.EnterFloorCsReq)) !void {
     const request = try session.decodeBody();
     if (assets.Floor.table.get(request.floor_id) == null) {
         log.debug("floor {d} doesn't exist", .{request.floor_id});
-        return session.fail(.RET_FAIL);
+        return session.fail(.RET_SCENE_NOT_FOUND);
     }
 
     const rollback_point = request.rollback_point orelse return session.fail(.RET_INVALID_REQUEST_DATA);
@@ -89,5 +89,119 @@ pub fn EnterFloorCsReq(session: Session(.EnterFloorCsReq)) !void {
 }
 
 pub fn EnterFloorDoneCsReq(session: Session(.EnterFloorDoneCsReq)) !void {
+    const floor_id = session.player.storage.big_scene.cur_floor_id.unwrap() orelse {
+        return session.fail(.RET_SCENE_NOT_RIGHT);
+    };
+
+    const floor = assets.Floor.table.get(floor_id).?;
+    try notifyGroupMemberCreate(session.typeErased(), &floor);
+    try notifyGroupOrders(session.typeErased(), &floor);
+    try notifySceneEntityAppearance(session.typeErased(), &floor);
+
     return session.success();
+}
+
+const gadget_count_max = assets.Group.table.gadget_ids.len;
+
+fn notifyGroupMemberCreate(
+    session: *remielle.session.TypeErased,
+    floor: *const assets.Floor,
+) !void {
+    var group_member_buffer: [gadget_count_max]gen.GroupMemberId = undefined;
+    var group_member_list: ArrayList(gen.GroupMemberId) = .initBuffer(&group_member_buffer);
+
+    for (floor.group_id_list) |group_id| {
+        const group = assets.Group.table.getGroupById(group_id).?;
+
+        for (group.gadget_types, group.gadget_config_ids) |gadget_type, config_id| {
+            if (gadget_type == .portal) {
+                group_member_list.appendAssumeCapacity(.{
+                    .group_id = group_id,
+                    .config_id = config_id,
+                });
+            }
+        }
+    }
+
+    try session.sink.notify(gen.GroupMemberCreateScNotify, &.{
+        .group_member_list = group_member_list.items,
+    });
+}
+
+fn notifyGroupOrders(
+    session: *remielle.session.TypeErased,
+    floor: *const assets.Floor,
+) !void {
+    for (floor.group_id_list) |group_id| {
+        var member_config_id_buffer: [gadget_count_max]u32 = undefined;
+        var member_config_id_list: ArrayList(u32) = .initBuffer(&member_config_id_buffer);
+        const group = assets.Group.table.getGroupById(group_id).?;
+
+        for (group.gadget_types, group.gadget_config_ids) |gadget_type, config_id| {
+            if (gadget_type == .portal) {
+                member_config_id_list.appendAssumeCapacity(config_id);
+            }
+        }
+
+        if (member_config_id_list.items.len != 0) {
+            try session.sink.notify(gen.GroupOrderReadyScNotify, &.{ .group_info = .{
+                .group_id = group_id,
+                .reason = .{ .group_order_reason = @fromBackingInt(1) },
+                .member_config_id_list = member_config_id_list.items,
+            } });
+        }
+    }
+}
+
+fn notifySceneEntityAppearance(
+    session: *remielle.session.TypeErased,
+    floor: *const assets.Floor,
+) !void {
+    var entity_buffer: [128]gen.SceneEntityInfo = undefined;
+    var entity_list: ArrayList(gen.SceneEntityInfo) = .initBuffer(&entity_buffer);
+
+    const entity_type_gadget: u32 = 7;
+    var entity_id: u32 = (entity_type_gadget << 24) | 1;
+    for (floor.group_id_list) |group_id| {
+        const group = assets.Group.table.getGroupById(group_id).?;
+        for (
+            group.gadget_types,
+            group.gadget_config_ids,
+            group.gadget_ids,
+            group.gadget_positions,
+        ) |gadget_type, config_id, gadget_id, position| {
+            if (gadget_type == .portal) {
+                defer entity_id += 1;
+                entity_list.appendBounded(.{
+                    .entity_id = entity_id,
+                    .group_id = group_id,
+                    .config_id = config_id,
+                    .position = .{
+                        .x = position.x,
+                        .y = position.y,
+                        .z = position.z,
+                    },
+                    .rotation = .{},
+                    .entity = .{ .Gadget = .{
+                        .gadget_id = gadget_id,
+                    } },
+                }) catch {
+                    defer entity_list.clearRetainingCapacity();
+                    try session.sink.notify(gen.SceneEntityAppearScNotify, &.{
+                        .appear_type = @fromBackingInt(1),
+                        .entity_list = entity_list.items,
+                        .param = 0,
+                    });
+                };
+            }
+        }
+    }
+
+    if (entity_list.items.len != 0) {
+        try session.sink.notify(gen.SceneEntityAppearScNotify, &.{
+            .appear_type = @fromBackingInt(1),
+            .entity_list = entity_list.items,
+            .param = 0,
+        });
+    }
 }

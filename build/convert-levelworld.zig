@@ -178,8 +178,13 @@ const ConfigGroupJson = struct {
     const Member = struct {
         config_id: u32,
         member_type: u8,
+        member_position: struct {
+            x: f32,
+            y: f32,
+            z: f32,
+        },
         gadget_server_metadata: ?struct {
-            gadget_id: u32,
+            gadget_id: i32,
             gadget_type: u8,
         } = null,
     };
@@ -192,7 +197,18 @@ const ConfigGroupHeader = extern struct {
     gadget_count: u32,
     gadget_ids_offset: u32,
     gadget_config_ids_offset: u32,
+    gadget_positions_offset: u32,
     gadget_types_offset: u32,
+
+    comptime {
+        assert(hasUniqueRepresentation(@This()));
+    }
+};
+
+const Vector3 = extern struct {
+    x: i32,
+    y: i32,
+    z: i32,
 
     comptime {
         assert(hasUniqueRepresentation(@This()));
@@ -214,8 +230,11 @@ fn convertConfigGroups(io: Io, gpa: Allocator, dirs: Dirs) !void {
     var group_metadata: Table(GroupMetadata) = .init;
     defer group_metadata.deinit(gpa);
 
-    var gadget_ids: Table(u32) = .init;
+    var gadget_ids: Table(i32) = .init;
     defer gadget_ids.deinit(gpa);
+
+    var gadget_positions: Table(Vector3) = .init;
+    defer gadget_positions.deinit(gpa);
 
     var gadget_config_ids: Table(u32) = .init;
     defer gadget_config_ids.deinit(gpa);
@@ -240,6 +259,11 @@ fn convertConfigGroups(io: Io, gpa: Allocator, dirs: Dirs) !void {
             try gadget_config_ids.putOne(gpa, member.config_id);
             try gadget_ids.putOne(gpa, member.gadget_server_metadata.?.gadget_id);
             try gadget_types.putOne(gpa, member.gadget_server_metadata.?.gadget_type);
+            try gadget_positions.putOne(gpa, .{
+                .x = @trunc(member.member_position.x * 100),
+                .y = @trunc(member.member_position.y * 100),
+                .z = @trunc(member.member_position.z * 100),
+            });
         }
 
         try group_ids.putOne(gpa, config_group.value.group_id);
@@ -257,7 +281,8 @@ fn convertConfigGroups(io: Io, gpa: Allocator, dirs: Dirs) !void {
     const gadget_count = gadget_types.itemCount();
     const gadget_ids_offset = group_metadata_offset + group_metadata.byteCount();
     const gadget_config_ids_offset = gadget_ids_offset + gadget_ids.byteCount();
-    const gadget_types_offset = gadget_config_ids_offset + gadget_config_ids.byteCount();
+    const gadget_positions_offset = gadget_config_ids_offset + gadget_config_ids.byteCount();
+    const gadget_types_offset = gadget_positions_offset + gadget_positions.byteCount();
 
     const header: ConfigGroupHeader = .{
         .group_count = group_count,
@@ -266,15 +291,17 @@ fn convertConfigGroups(io: Io, gpa: Allocator, dirs: Dirs) !void {
         .gadget_count = gadget_count,
         .gadget_ids_offset = gadget_ids_offset,
         .gadget_config_ids_offset = gadget_config_ids_offset,
+        .gadget_positions_offset = gadget_positions_offset,
         .gadget_types_offset = gadget_types_offset,
     };
 
-    var vec: [6][]const u8 = .{
+    var vec: [7][]const u8 = .{
         @ptrCast(&header),
         group_ids.byteSlice(),
         group_metadata.byteSlice(),
         gadget_ids.byteSlice(),
         gadget_config_ids.byteSlice(),
+        gadget_positions.byteSlice(),
         gadget_types.byteSlice(),
     };
     try writeVecToFile(io, dirs.output, "ConfigGroup.bin", &vec);
