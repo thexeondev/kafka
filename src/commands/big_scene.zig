@@ -112,9 +112,8 @@ fn notifyGroupMemberCreate(
 
     for (floor.group_id_list) |group_id| {
         const group = assets.Group.table.getGroupById(group_id).?;
-
-        for (group.gadget_types, group.gadget_config_ids) |gadget_type, config_id| {
-            if (gadget_type == .portal) {
+        if ((group.vo_group_type == 1 or group.vo_group_type == 2) and group.group_usage == 0) {
+            for (group.gadget_config_ids) |config_id| {
                 group_member_list.appendAssumeCapacity(.{
                     .group_id = group_id,
                     .config_id = config_id,
@@ -136,14 +135,11 @@ fn notifyGroupOrders(
         var member_config_id_buffer: [gadget_count_max]u32 = undefined;
         var member_config_id_list: ArrayList(u32) = .initBuffer(&member_config_id_buffer);
         const group = assets.Group.table.getGroupById(group_id).?;
-
-        for (group.gadget_types, group.gadget_config_ids) |gadget_type, config_id| {
-            if (gadget_type == .portal) {
+        if ((group.vo_group_type == 1 or group.vo_group_type == 2) and group.group_usage == 0) {
+            for (group.gadget_config_ids) |config_id| {
                 member_config_id_list.appendAssumeCapacity(config_id);
             }
-        }
 
-        if (member_config_id_list.items.len != 0) {
             try session.sink.notify(gen.GroupOrderReadyScNotify, &.{ .group_info = .{
                 .group_id = group_id,
                 .reason = .{ .group_order_reason = @fromBackingInt(1) },
@@ -164,14 +160,14 @@ fn notifySceneEntityAppearance(
     var entity_id: u32 = (entity_type_gadget << 24) | 1;
     for (floor.group_id_list) |group_id| {
         const group = assets.Group.table.getGroupById(group_id).?;
-        for (
-            group.gadget_types,
-            group.gadget_config_ids,
-            group.gadget_ids,
-            group.gadget_positions,
-        ) |gadget_type, config_id, gadget_id, position| {
-            if (gadget_type == .portal) {
+        if ((group.vo_group_type == 1 or group.vo_group_type == 2) and group.group_usage == 0) {
+            for (
+                group.gadget_config_ids,
+                group.gadget_ids,
+                group.gadget_positions,
+            ) |config_id, gadget_id, position| {
                 defer entity_id += 1;
+
                 entity_list.appendBounded(.{
                     .entity_id = entity_id,
                     .group_id = group_id,
@@ -181,7 +177,12 @@ fn notifySceneEntityAppearance(
                         .y = position.y,
                         .z = position.z,
                     },
-                    .rotation = .{},
+                    .rotation = .{ .y = position.euler_y },
+                    .member_variables = &.{
+                        .{ .key = "OpenType", .value = 0 },
+                    },
+                    .FEBMNHDPJMK = .{},
+                    .ALCHMDPMPMC = .{},
                     .entity = .{ .Gadget = .{
                         .gadget_id = gadget_id,
                     } },

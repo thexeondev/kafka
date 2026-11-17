@@ -173,6 +173,8 @@ fn convertConfigFloor(io: Io, gpa: Allocator, dirs: Dirs) !void {
 
 const ConfigGroupJson = struct {
     group_id: u32,
+    vo_group_type: u32,
+    group_usage: u32,
     members: []const Member,
 
     const Member = struct {
@@ -183,6 +185,7 @@ const ConfigGroupJson = struct {
             y: f32,
             z: f32,
         },
+        member_euler: struct { y: f32 },
         gadget_server_metadata: ?struct {
             gadget_id: i32,
             gadget_type: u8,
@@ -205,10 +208,11 @@ const ConfigGroupHeader = extern struct {
     }
 };
 
-const Vector3 = extern struct {
+const Position = extern struct {
     x: i32,
     y: i32,
     z: i32,
+    euler_y: i32,
 
     comptime {
         assert(hasUniqueRepresentation(@This()));
@@ -216,6 +220,8 @@ const Vector3 = extern struct {
 };
 
 const GroupMetadata = extern struct {
+    vo_group_type: u32,
+    group_usage: u32,
     gadgets: Slice,
 
     comptime {
@@ -233,7 +239,7 @@ fn convertConfigGroups(io: Io, gpa: Allocator, dirs: Dirs) !void {
     var gadget_ids: Table(i32) = .init;
     defer gadget_ids.deinit(gpa);
 
-    var gadget_positions: Table(Vector3) = .init;
+    var gadget_positions: Table(Position) = .init;
     defer gadget_positions.deinit(gpa);
 
     var gadget_config_ids: Table(u32) = .init;
@@ -263,11 +269,14 @@ fn convertConfigGroups(io: Io, gpa: Allocator, dirs: Dirs) !void {
                 .x = @trunc(member.member_position.x * 100),
                 .y = @trunc(member.member_position.y * 100),
                 .z = @trunc(member.member_position.z * 100),
+                .euler_y = @trunc(member.member_euler.y * 100),
             });
         }
 
         try group_ids.putOne(gpa, config_group.value.group_id);
         try group_metadata.putOne(gpa, .{
+            .vo_group_type = config_group.value.vo_group_type,
+            .group_usage = config_group.value.group_usage,
             .gadgets = .{
                 .offset = gadgets_offset,
                 .len = gadget_types.itemCount() - gadgets_offset,

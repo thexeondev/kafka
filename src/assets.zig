@@ -74,13 +74,16 @@ const ConfigGroupHeader = extern struct {
 };
 
 const GroupMetadata = extern struct {
+    vo_group_type: u32,
+    group_usage: u32,
     gadgets: Slice,
 };
 
-pub const Vector3 = extern struct {
+pub const Position = extern struct {
     x: i32,
     y: i32,
     z: i32,
+    euler_y: i32,
 };
 
 pub const GadgetType = enum(u8) {
@@ -94,9 +97,11 @@ pub const GadgetType = enum(u8) {
 
 pub const Group = struct {
     id: u32,
+    vo_group_type: u32,
+    group_usage: u32,
     gadget_ids: []const i32,
     gadget_config_ids: []const u32,
-    gadget_positions: []const Vector3,
+    gadget_positions: []const Position,
     gadget_types: []const GadgetType,
 
     pub const table = struct {
@@ -113,8 +118,8 @@ pub const Group = struct {
         pub const gadget_config_ids: []const u32 =
             ptrCast(u32, bytes[header.gadget_config_ids_offset..].ptr)[0..header.gadget_count];
 
-        pub const gadget_positions: []const Vector3 =
-            ptrCast(Vector3, bytes[header.gadget_positions_offset..].ptr)[0..header.gadget_count];
+        pub const gadget_positions: []const Position =
+            ptrCast(Position, bytes[header.gadget_positions_offset..].ptr)[0..header.gadget_count];
 
         pub const gadget_types: []const GadgetType =
             ptrCast(GadgetType, bytes[header.gadget_types_offset..].ptr)[0..header.gadget_count];
@@ -128,6 +133,8 @@ pub const Group = struct {
 
             return .{
                 .id = group_id,
+                .vo_group_type = group_metadata.vo_group_type,
+                .group_usage = group_metadata.group_usage,
                 .gadget_ids = group_metadata.gadgets.take(gadget_ids),
                 .gadget_config_ids = group_metadata.gadgets.take(gadget_config_ids),
                 .gadget_positions = group_metadata.gadgets.take(gadget_positions),
