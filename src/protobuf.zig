@@ -522,14 +522,22 @@ const VByte = packed struct(u8) {
 
 fn takeVarInt(comptime Int: type, reader: *Io.Reader) (Io.Reader.Error || VarIntError)!Int {
     var raw_value: u64 = 0;
-    var shift: std.math.Log2Int(u64) = 0;
+    const Shift = std.math.Log2Int(u64);
+    var shift: Shift = 0;
 
-    while (shift < @bitSizeOf(u64) - @bitSizeOf(u7)) : (shift += 7) {
+    while (true) : (shift += 7) {
         const byte: VByte = @bitCast(try reader.takeByte());
         raw_value |= @as(u64, byte.value) << shift;
 
-        if (!byte.continuation)
-            return std.math.cast(Int, raw_value) orelse error.VarIntOverflow;
+        if (!byte.continuation) return switch (@typeInfo(Int).int.signedness) {
+            .unsigned => std.math.cast(Int, raw_value) orelse error.VarIntOverflow,
+            .signed => std.math.cast(Int, @as(i64, @bitCast(raw_value))) orelse {
+                std.log.err("suckers {d} {d}", .{ raw_value, @as(i64, @bitCast(raw_value)) });
+                return error.VarIntOverflow;
+            },
+        };
+
+        if (@as(u64, shift) + 7 > std.math.maxInt(Shift)) return error.VarIntOverflow;
     } else return error.VarIntOverflow;
 }
 
