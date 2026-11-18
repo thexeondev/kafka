@@ -8,6 +8,7 @@ const assert = std.debug.assert;
 const Allocator = std.mem.Allocator;
 
 const remielle = @import("../remielle.zig");
+const client = remielle.client;
 const Player = remielle.Player;
 const templates = remielle.templates;
 const Storage = remielle.Player.Storage;
@@ -15,6 +16,7 @@ const Storage = remielle.Player.Storage;
 role: Role,
 main_city: MainCity,
 time: Time,
+keymap: Keymap,
 avatars: []Avatar,
 weapons_undressed: []Weapon,
 equipment_undressed: []Equipment,
@@ -494,6 +496,21 @@ pub const Equipment = struct {
     }
 };
 
+pub const Keymap = struct {
+    keyboard: []const Keyboard,
+    mouse: []const Mouse,
+
+    pub const Keyboard = struct {
+        key: client.KeyboardKey,
+        action: client.LogicButtonInputType,
+    };
+
+    pub const Mouse = struct {
+        button: client.MouseButton,
+        action: client.LogicButtonInputType,
+    };
+};
+
 pub fn init(arena: Allocator, name_map: *const NameMap, player: *Storage) Allocator.Error!Zon {
     const role: Role = .{
         .avatar = name_by_player_role_avatar.get(player.role.avatar),
@@ -588,10 +605,38 @@ pub fn init(arena: Allocator, name_map: *const NameMap, player: *Storage) Alloca
         equipment_list.appendAssumeCapacity(.init(equipment, name_map));
     }
 
+    const keyboard_keys = try arena.alloc(
+        Keymap.Keyboard,
+        player.system_settings.keyboard_keymap.list.count,
+    );
+    for (
+        keyboard_keys,
+        player.system_settings.keyboard_keymap.list.items(.key),
+        player.system_settings.keyboard_keymap.list.items(.input),
+    ) |*keymap, key, input| {
+        keymap.* = .{ .key = key, .action = input };
+    }
+
+    const mouse_buttons = try arena.alloc(
+        Keymap.Mouse,
+        player.system_settings.mouse_keymap.list.count,
+    );
+    for (
+        mouse_buttons,
+        player.system_settings.mouse_keymap.list.items(.key),
+        player.system_settings.mouse_keymap.list.items(.input),
+    ) |*keymap, key, input| {
+        keymap.* = .{ .button = key, .action = input };
+    }
+
     return .{
         .role = role,
         .main_city = main_city,
         .time = time,
+        .keymap = .{
+            .keyboard = keyboard_keys,
+            .mouse = mouse_buttons,
+        },
         .avatars = avatars,
         .weapons_undressed = weapons.items,
         .equipment_undressed = equipment_list.items,
@@ -635,6 +680,8 @@ pub const PackDiagnostics = union(enum) {
     avatar_awake_enable_invalid: struct {
         avatar_name: []const u8,
     },
+    keyboard_keymap_duplicated: Keymap.Keyboard,
+    mouse_keymap_duplicated: Keymap.Mouse,
 
     pub fn format(diag: *const PackDiagnostics, writer: *Io.Writer) Io.Writer.Error!void {
         switch (diag.*) {
@@ -676,6 +723,14 @@ pub const PackDiagnostics = union(enum) {
             .avatar_awake_enable_invalid => |details| return writer.print(
                 "avatar {q} awake cannot be enabled",
                 .{details.avatar_name},
+            ),
+            .keyboard_keymap_duplicated => |details| return writer.print(
+                "duplicated keyboard keymap: {any}",
+                .{details},
+            ),
+            .mouse_keymap_duplicated => |details| return writer.print(
+                "duplicated mouse keymap: {any}",
+                .{details},
             ),
         }
     }
@@ -743,8 +798,8 @@ pub fn pack(
             .lineup_avatars = @splat(.none), // TODO
         },
         .system_settings = .{
-            .keyboard_keymap = .empty, // TODO
-            .mouse_keymap = .empty, // TODO
+            .keyboard_keymap = .empty,
+            .mouse_keymap = .empty,
         },
     };
 
@@ -882,6 +937,16 @@ pub fn pack(
                 .limit = Storage.Equipment.count_max,
             }),
         };
+    }
+
+    for (zon.keymap.keyboard) |keymap| {
+        if (!player.system_settings.keyboard_keymap.put(keymap.key, keymap.action))
+            return diag.fail(.keyboard_keymap_duplicated, keymap);
+    }
+
+    for (zon.keymap.mouse) |keymap| {
+        if (!player.system_settings.mouse_keymap.put(keymap.button, keymap.action))
+            return diag.fail(.mouse_keymap_duplicated, keymap);
     }
 
     return player;
