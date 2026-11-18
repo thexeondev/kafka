@@ -495,6 +495,22 @@ pub fn isInBigScene(player: *const Player) bool {
     return player.storage.big_scene.cur_floor_id != .none;
 }
 
+pub fn updateKeyboardKeymap(
+    player: *Player,
+    keymap: Player.Storage.SystemSettings.KeyboardKeymap,
+) void {
+    player.needs_save = true;
+    player.storage.system_settings.keyboard_keymap = keymap;
+}
+
+pub fn updateMouseKeymap(
+    player: *Player,
+    keymap: Player.Storage.SystemSettings.MouseKeymap,
+) void {
+    player.needs_save = true;
+    player.storage.system_settings.mouse_keymap = keymap;
+}
+
 fn appendAvatarToSync(player: *Player, avatar: Avatar) void {
     player.sync.needs_player_sync_notify = true;
     pack.avatarInfo(player.sync.avatar_list.addOneAssumeCapacity(), avatar);

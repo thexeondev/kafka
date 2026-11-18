@@ -17,6 +17,7 @@ pub const StaticIntMap = @import("static_int_map.zig").StaticIntMap;
 pub const IntMultiSet = @import("int_multi_set.zig").IntMultiSet;
 pub const battle = @import("battle.zig");
 pub const assets = @import("assets.zig");
+pub const client = @import("client.zig");
 
 pub const session = @import("session.zig");
 

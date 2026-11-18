@@ -2800,7 +2800,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
         pub const AJGKKFGNCIF = struct {
             pub const message_name = "AJGKKFGNCIF";
             pub const cmd_id: u16 = 9941;
-            @"POCKMBCBLAJ": ?INNOBLAPHLJ = null,
+            @"system_settings": ?SystemSettings = null,
             @"type": u32 = 0,
             pub const xor_by_field = struct {
                 pub const @"type": u31 = 1255;
@@ -2808,18 +2808,18 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const oneof_by_field = struct {
             };
             pub const FieldNumber = enum(u29) {
-                @"POCKMBCBLAJ" = 14,
+                @"system_settings" = 14,
                 @"type" = 15,
                 _,
             };
             pub const Decoded = struct {
                 pub const Parent = AJGKKFGNCIF;
                 pub const init: @This() = .{};
-                @"POCKMBCBLAJ": ?INNOBLAPHLJ.Decoded = null,
+                @"system_settings": ?SystemSettings.Decoded = null,
                 @"type": u32 = 0,
             };
             pub const encoding_by_field = struct {
-                pub const @"POCKMBCBLAJ": Encoding = .normal;
+                pub const @"system_settings": Encoding = .normal;
                 pub const @"type": Encoding = .normal;
             };
         };
@@ -29049,24 +29049,24 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const encoding_by_field = struct {
             };
         };
-        pub const HCEOMODDMPD = struct {
-            pub const message_name = "HCEOMODDMPD";
-            @"HKGNHFMBCCE": []const KeyValue(u32, i32) = &.{},
+        pub const InputSettings = struct {
+            pub const message_name = "InputSettings";
+            @"input_key_map": []const KeyValue(u32, i32) = &.{},
             pub const xor_by_field = struct {
             };
             pub const oneof_by_field = struct {
             };
             pub const FieldNumber = enum(u29) {
-                @"HKGNHFMBCCE" = 5,
+                @"input_key_map" = 5,
                 _,
             };
             pub const Decoded = struct {
-                pub const Parent = HCEOMODDMPD;
+                pub const Parent = InputSettings;
                 pub const init: @This() = .{};
-                @"HKGNHFMBCCE": Iterator(KeyValue(u32, i32).Decoded) = .empty,
+                @"input_key_map": Iterator(KeyValue(u32, i32).Decoded) = .empty,
             };
             pub const encoding_by_field = struct {
-                pub const @"HKGNHFMBCCE": Encoding = .normal;
+                pub const @"input_key_map": Encoding = .normal;
             };
         };
         pub const NAGMJNLGNDO = struct {
@@ -60748,10 +60748,10 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"OEELANJFILP": Encoding = .normal;
             };
         };
-        pub const GBHEGHCJIDP = struct {
-            pub const message_name = "GBHEGHCJIDP";
+        pub const GetSystemSettingsScRsp = struct {
+            pub const message_name = "GetSystemSettingsScRsp";
             pub const cmd_id: u16 = 6548;
-            @"POCKMBCBLAJ": ?INNOBLAPHLJ = null,
+            @"system_settings": ?SystemSettings = null,
             @"type": u32 = 0,
             @"retcode": i32 = 0,
             @"AKEGCLOHLOK": []const KeyValue(u32, u32) = &.{},
@@ -60762,22 +60762,22 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const oneof_by_field = struct {
             };
             pub const FieldNumber = enum(u29) {
-                @"POCKMBCBLAJ" = 4,
+                @"system_settings" = 4,
                 @"type" = 5,
                 @"retcode" = 14,
                 @"AKEGCLOHLOK" = 15,
                 _,
             };
             pub const Decoded = struct {
-                pub const Parent = GBHEGHCJIDP;
+                pub const Parent = GetSystemSettingsScRsp;
                 pub const init: @This() = .{};
-                @"POCKMBCBLAJ": ?INNOBLAPHLJ.Decoded = null,
+                @"system_settings": ?SystemSettings.Decoded = null,
                 @"type": u32 = 0,
                 @"retcode": i32 = 0,
                 @"AKEGCLOHLOK": Iterator(KeyValue(u32, u32).Decoded) = .empty,
             };
             pub const encoding_by_field = struct {
-                pub const @"POCKMBCBLAJ": Encoding = .normal;
+                pub const @"system_settings": Encoding = .normal;
                 pub const @"type": Encoding = .normal;
                 pub const @"retcode": Encoding = .normal;
                 pub const @"AKEGCLOHLOK": Encoding = .normal;
@@ -61707,8 +61707,8 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"EMECKCFBMIN": Encoding = .normal;
             };
         };
-        pub const INNOBLAPHLJ = struct {
-            pub const message_name = "INNOBLAPHLJ";
+        pub const SystemSettings = struct {
+            pub const message_name = "SystemSettings";
             @"IILCJMFNABI": u32 = 0,
             @"PGIGPALHCCC": []const KeyValue(u32, u32) = &.{},
             @"EHJAPGPIPNK": []const u32 = &.{},
@@ -61717,7 +61717,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             @"GOPHNKKGOJH": bool = false,
             @"POALBHGOMED": u32 = 0,
             @"FEJPFAOKKDJ": u32 = 0,
-            @"LMJLBFIJDDA": []const KeyValue(u32, HCEOMODDMPD) = &.{},
+            @"input_settings_map": []const KeyValue(u32, InputSettings) = &.{},
             @"APKOCIJMGIC": bool = false,
             @"JJCGHPNAELA": u32 = 0,
             @"CENMFFGFNKH": bool = false,
@@ -61740,7 +61740,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"GOPHNKKGOJH" = 7,
                 @"POALBHGOMED" = 8,
                 @"FEJPFAOKKDJ" = 9,
-                @"LMJLBFIJDDA" = 10,
+                @"input_settings_map" = 10,
                 @"APKOCIJMGIC" = 11,
                 @"JJCGHPNAELA" = 12,
                 @"CENMFFGFNKH" = 13,
@@ -61749,7 +61749,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 _,
             };
             pub const Decoded = struct {
-                pub const Parent = INNOBLAPHLJ;
+                pub const Parent = SystemSettings;
                 pub const init: @This() = .{};
                 @"IILCJMFNABI": u32 = 0,
                 @"PGIGPALHCCC": Iterator(KeyValue(u32, u32).Decoded) = .empty,
@@ -61759,7 +61759,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"GOPHNKKGOJH": bool = false,
                 @"POALBHGOMED": u32 = 0,
                 @"FEJPFAOKKDJ": u32 = 0,
-                @"LMJLBFIJDDA": Iterator(KeyValue(u32, ?HCEOMODDMPD.Decoded).Decoded) = .empty,
+                @"input_settings_map": Iterator(KeyValue(u32, ?InputSettings.Decoded).Decoded) = .empty,
                 @"APKOCIJMGIC": bool = false,
                 @"JJCGHPNAELA": u32 = 0,
                 @"CENMFFGFNKH": bool = false,
@@ -61775,7 +61775,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"GOPHNKKGOJH": Encoding = .normal;
                 pub const @"POALBHGOMED": Encoding = .normal;
                 pub const @"FEJPFAOKKDJ": Encoding = .normal;
-                pub const @"LMJLBFIJDDA": Encoding = .normal;
+                pub const @"input_settings_map": Encoding = .normal;
                 pub const @"APKOCIJMGIC": Encoding = .normal;
                 pub const @"JJCGHPNAELA": Encoding = .normal;
                 pub const @"CENMFFGFNKH": Encoding = .normal;
@@ -108969,26 +108969,26 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"PPEIHPOELKI": Encoding = .normal;
             };
         };
-        pub const PBEPGNFLHHM = struct {
-            pub const message_name = "PBEPGNFLHHM";
+        pub const GetSystemSettingsCsReq = struct {
+            pub const message_name = "GetSystemSettingsCsReq";
             pub const cmd_id: u16 = 990;
-            @"UNK_PBEPGNFLHHM_32": u32 = 0,
+            @"type": u32 = 0,
             pub const xor_by_field = struct {
-                pub const @"UNK_PBEPGNFLHHM_32": u31 = 13281;
+                pub const @"type": u31 = 13281;
             };
             pub const oneof_by_field = struct {
             };
             pub const FieldNumber = enum(u29) {
-                @"UNK_PBEPGNFLHHM_32" = 7,
+                @"type" = 7,
                 _,
             };
             pub const Decoded = struct {
-                pub const Parent = PBEPGNFLHHM;
+                pub const Parent = GetSystemSettingsCsReq;
                 pub const init: @This() = .{};
-                @"UNK_PBEPGNFLHHM_32": u32 = 0,
+                @"type": u32 = 0,
             };
             pub const encoding_by_field = struct {
-                pub const @"UNK_PBEPGNFLHHM_32": Encoding = .normal;
+                pub const @"type": Encoding = .normal;
             };
         };
         pub const DHBAPKEHIJI = struct {
@@ -120091,12 +120091,12 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"retcode": Encoding = .normal;
             };
         };
-        pub const GFNDDJABFAC = struct {
-            pub const message_name = "GFNDDJABFAC";
+        pub const ModSystemSettingsCsReq = struct {
+            pub const message_name = "ModSystemSettingsCsReq";
             pub const cmd_id: u16 = 2348;
             @"NENJCAPIGLB": []const KeyValue(u32, i32) = &.{},
             @"type": u32 = 0,
-            @"OIHMDDLNDCP": ?HCEOMODDMPD = null,
+            @"input_settings": ?InputSettings = null,
             @"OCAEKHCDBIM": []const KeyValue(u32, u32) = &.{},
             @"CKCFGONICJO": ?OLKEMCNIJNA = null,
             @"EIOCDCNEMPE": u32 = 0,
@@ -120110,7 +120110,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const FieldNumber = enum(u29) {
                 @"NENJCAPIGLB" = 4,
                 @"type" = 5,
-                @"OIHMDDLNDCP" = 6,
+                @"input_settings" = 6,
                 @"OCAEKHCDBIM" = 7,
                 @"CKCFGONICJO" = 8,
                 @"EIOCDCNEMPE" = 12,
@@ -120118,11 +120118,11 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 _,
             };
             pub const Decoded = struct {
-                pub const Parent = GFNDDJABFAC;
+                pub const Parent = ModSystemSettingsCsReq;
                 pub const init: @This() = .{};
                 @"NENJCAPIGLB": Iterator(KeyValue(u32, i32).Decoded) = .empty,
                 @"type": u32 = 0,
-                @"OIHMDDLNDCP": ?HCEOMODDMPD.Decoded = null,
+                @"input_settings": ?InputSettings.Decoded = null,
                 @"OCAEKHCDBIM": Iterator(KeyValue(u32, u32).Decoded) = .empty,
                 @"CKCFGONICJO": ?OLKEMCNIJNA.Decoded = null,
                 @"EIOCDCNEMPE": u32 = 0,
@@ -120131,7 +120131,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const encoding_by_field = struct {
                 pub const @"NENJCAPIGLB": Encoding = .normal;
                 pub const @"type": Encoding = .normal;
-                pub const @"OIHMDDLNDCP": Encoding = .normal;
+                pub const @"input_settings": Encoding = .normal;
                 pub const @"OCAEKHCDBIM": Encoding = .normal;
                 pub const @"CKCFGONICJO": Encoding = .normal;
                 pub const @"EIOCDCNEMPE": Encoding = .normal;

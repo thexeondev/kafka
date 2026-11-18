@@ -82,5 +82,10 @@ pub fn BoundedMultiArray(comptime Struct: type, comptime capacity: u32) type {
         ) []@FieldType(Struct, @tagName(field)) {
             return @field(list.arrays, @tagName(field))[0..list.count];
         }
+
+        pub fn setCount(list: *List, count: u32) error{CapacityExceeded}!void {
+            if (count > capacity) return error.CapacityExceeded;
+            list.count = count;
+        }
     };
 }

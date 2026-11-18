@@ -46,8 +46,24 @@ pub fn KeyValue(comptime K: type, comptime V: type) type {
         pub const Decoded = struct {
             pub const Parent = Kv;
 
-            key: K,
-            value: Value,
+            key: K = switch (@typeInfo(K)) {
+                .int, .float => 0,
+                .@"struct" => .empty,
+                .pointer => &.{},
+                .optional => null,
+                .@"enum" => @fromBackingInt(0),
+                else => unreachable,
+            },
+            value: Value = switch (@typeInfo(Value)) {
+                .int, .float => 0,
+                .@"struct" => .empty,
+                .pointer => &.{},
+                .optional => null,
+                .@"enum" => @fromBackingInt(0),
+                else => unreachable,
+            },
+
+            pub const init: Decoded = .{};
         };
     };
 }

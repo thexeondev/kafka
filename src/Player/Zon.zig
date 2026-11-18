@@ -742,6 +742,10 @@ pub fn pack(
             .rotation = @splat(0), // TODO
             .lineup_avatars = @splat(.none), // TODO
         },
+        .system_settings = .{
+            .keyboard_keymap = .empty, // TODO
+            .mouse_keymap = .empty, // TODO
+        },
     };
 
     for (zon.avatars) |avatar_zon| {

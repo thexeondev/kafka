@@ -5,6 +5,7 @@ weapons: BoundedMultiArray(Weapon.KeyValue, Weapon.count_max),
 weapon_uid_counter: u32,
 equipment: BoundedMultiArray(Equipment.KeyValue, Equipment.count_max),
 equipment_uid_counter: u32,
+system_settings: SystemSettings,
 // TODO: these 4 can be merged into a single struct so that they use a single buffer for save/load.
 main_city: MainCity,
 role: Role,
@@ -22,6 +23,7 @@ const assert = std.debug.assert;
 const hasUniqueRepresentation = std.meta.hasUniqueRepresentation;
 
 const remielle = @import("../remielle.zig");
+const client = remielle.client;
 const templates = remielle.templates;
 const BoundedMultiArray = remielle.BoundedMultiArray;
 
@@ -37,12 +39,14 @@ pub const Header = extern struct {
     weapon_uid_counter: u32,
     equipment_count: u32,
     equipment_uid_counter: u32,
+    keyboard_keymap_count: u32,
+    mouse_keymap_count: u32,
 
     comptime {
         assert(hasUniqueRepresentation(@This()));
     }
 
-    pub const current_version: u32 = 13;
+    pub const current_version: u32 = 14;
 };
 
 pub const Avatar = struct {
@@ -721,6 +725,54 @@ pub const BigScene = extern struct {
     };
 };
 
+pub const SystemSettings = struct {
+    keyboard_keymap: KeyboardKeymap,
+    mouse_keymap: MouseKeymap,
+
+    pub const KeyboardKeymap = Keymap(client.KeyboardKey);
+    pub const MouseKeymap = Keymap(client.MouseButton);
+
+    pub fn Keymap(comptime Key: type) type {
+        return struct {
+            list: BoundedMultiArray(struct {
+                key: Key,
+                input: client.LogicButtonInputType,
+            }, capacity),
+
+            pub const empty: @This() = .{ .list = .empty };
+
+            pub const capacity: u32 = @intCast(@typeInfo(Key).@"enum".field_names.len);
+
+            pub fn put(
+                key_map: *@This(),
+                key: Key,
+                input: client.LogicButtonInputType,
+            ) bool {
+                if (mem.findScalar(
+                    Key,
+                    key_map.list.items(.key),
+                    key,
+                ) != null)
+                    return false;
+
+                if (mem.findScalar(
+                    client.LogicButtonInputType,
+                    key_map.list.items(.input),
+                    input,
+                ) != null)
+                    return false;
+
+                key_map.list.appendAssumeCapacity(.{
+                    .key = key,
+                    .input = input,
+                });
+
+                return true;
+            }
+        };
+    }
+};
+
 pub fn initDefaults(storage: *Storage) void {
     storage.* = .{
         .avatars = .empty,
@@ -745,6 +797,10 @@ pub fn initDefaults(storage: *Storage) void {
             .position = @splat(0),
             .rotation = @splat(0),
             .lineup_avatars = @splat(.none),
+        },
+        .system_settings = .{
+            .keyboard_keymap = .empty,
+            .mouse_keymap = .empty,
         },
     };
 
@@ -919,7 +975,7 @@ pub fn addRandomEquipment(
 }
 
 pub fn saveToFile(storage: *Storage, io: Io, dir: Io.Dir, sub_path: []const u8) !void {
-    var vecs_buffer: [13][]const u8 = undefined;
+    var vecs_buffer: [17][]const u8 = undefined;
     var vecs: std.ArrayList([]const u8) = .initBuffer(&vecs_buffer);
 
     const header: Header = .{
@@ -929,6 +985,8 @@ pub fn saveToFile(storage: *Storage, io: Io, dir: Io.Dir, sub_path: []const u8) 
         .weapon_uid_counter = storage.weapon_uid_counter,
         .equipment_count = storage.equipment.count,
         .equipment_uid_counter = storage.equipment_uid_counter,
+        .keyboard_keymap_count = storage.system_settings.keyboard_keymap.list.count,
+        .mouse_keymap_count = storage.system_settings.mouse_keymap.list.count,
     };
 
     vecs.appendAssumeCapacity(@ptrCast(&header));
@@ -944,6 +1002,10 @@ pub fn saveToFile(storage: *Storage, io: Io, dir: Io.Dir, sub_path: []const u8) 
     vecs.appendAssumeCapacity(@ptrCast(&storage.role));
     vecs.appendAssumeCapacity(@ptrCast(&storage.time));
     vecs.appendAssumeCapacity(@ptrCast(&storage.big_scene));
+    vecs.appendAssumeCapacity(@ptrCast(storage.system_settings.keyboard_keymap.list.items(.key)));
+    vecs.appendAssumeCapacity(@ptrCast(storage.system_settings.keyboard_keymap.list.items(.input)));
+    vecs.appendAssumeCapacity(@ptrCast(storage.system_settings.mouse_keymap.list.items(.key)));
+    vecs.appendAssumeCapacity(@ptrCast(storage.system_settings.mouse_keymap.list.items(.input)));
 
     var af = try dir.createFileAtomic(io, sub_path, .{ .replace = true });
     defer af.deinit(io);
@@ -1075,7 +1137,7 @@ pub fn loadFromFile(
             .encountered = header.equipment_count,
         });
 
-    var vecs_buffer: [12][]u8 = undefined;
+    var vecs_buffer: [16][]u8 = undefined;
     var vecs: std.ArrayList([]u8) = .initBuffer(&vecs_buffer);
 
     storage.avatars.count = header.avatar_count;
@@ -1098,6 +1160,24 @@ pub fn loadFromFile(
     vecs.appendAssumeCapacity(@ptrCast(&storage.role));
     vecs.appendAssumeCapacity(@ptrCast(&storage.time));
     vecs.appendAssumeCapacity(@ptrCast(&storage.big_scene));
+
+    storage.system_settings.keyboard_keymap.list.setCount(header.keyboard_keymap_count) catch
+        return diag.fail(.limit_exceeded, .{
+            .name = "keyboard keymap",
+            .limit = SystemSettings.KeyboardKeymap.capacity,
+            .encountered = header.keyboard_keymap_count,
+        });
+    vecs.appendAssumeCapacity(@ptrCast(storage.system_settings.keyboard_keymap.list.items(.key)));
+    vecs.appendAssumeCapacity(@ptrCast(storage.system_settings.keyboard_keymap.list.items(.input)));
+
+    storage.system_settings.mouse_keymap.list.setCount(header.mouse_keymap_count) catch
+        return diag.fail(.limit_exceeded, .{
+            .name = "mouse keymap",
+            .limit = SystemSettings.MouseKeymap.capacity,
+            .encountered = header.mouse_keymap_count,
+        });
+    vecs.appendAssumeCapacity(@ptrCast(storage.system_settings.mouse_keymap.list.items(.key)));
+    vecs.appendAssumeCapacity(@ptrCast(storage.system_settings.mouse_keymap.list.items(.input)));
 
     file_reader.interface.readVecAll(vecs.items) catch |err| switch (err) {
         error.EndOfStream => return diag.fileSystem(error.EarlyEos),
