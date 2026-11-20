@@ -99,11 +99,15 @@ pub const TypeErased = extern struct {
         if (session.player.buildEnterSceneScNotify()) |enter_scene|
             try session.sink.notify(protobuf.gen.EnterSceneScNotify, &enter_scene);
 
-        if (session.player.buildHallRefresh()) |hall_refresh|
-            try session.sink.notify(protobuf.gen.HallRefreshScNotify, &hall_refresh);
+        if (protobuf.features.hall_refresh) {
+            if (session.player.buildHallRefresh()) |hall_refresh|
+                try session.sink.notify(protobuf.gen.HallRefreshScNotify, &hall_refresh);
+        }
 
-        if (session.player.buildEnterFloorScNotify()) |enter_floor|
-            try session.sink.notify(protobuf.gen.EnterFloorScNotify, &enter_floor);
+        if (protobuf.features.big_scene_floor) {
+            if (session.player.buildEnterFloorScNotify()) |enter_floor|
+                try session.sink.notify(protobuf.gen.EnterFloorScNotify, &enter_floor);
+        }
     }
 };
 

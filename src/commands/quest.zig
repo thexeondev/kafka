@@ -157,7 +157,7 @@ pub fn RebeginHadalBattleCsReq(session: Session(.RebeginHadalBattleCsReq)) !void
         },
     }
 
-    return session.respond(.{});
+    return session.success();
 }
 
 pub fn HadalStatEndRoomCsReq(session: Session(.HadalStatEndRoomCsReq)) !void {

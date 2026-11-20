@@ -141,9 +141,9 @@ pub const HallOptions = struct {
 
 pub const HallBuffer = struct {
     npcs: BoundedMultiArray(struct {
-        npc_info: gen.NpcInfo,
-        interact_info: protobuf.KeyValue(u32, gen.InteractInfo),
-        interact_target: gen.InteractTarget,
+        npc_info: if (protobuf.features.hall_npcs) gen.NpcInfo else void,
+        interact_info: if (protobuf.features.hall_npcs) protobuf.KeyValue(u32, gen.InteractInfo) else void,
+        interact_target: if (protobuf.features.hall_npcs) gen.InteractTarget else void,
     }, npc_count_max),
 
     const npc_count_max = templates.MainCityDefaultObject.table.count;
@@ -159,60 +159,68 @@ pub fn sceneDataForHall(options: HallOptions, buffer: *HallBuffer) gen.SceneData
 pub fn hall(comptime Root: type, options: HallOptions, buffer: *HallBuffer) Root {
     const main_city_section_id = @backingInt(options.main_city.section);
 
-    for (templates.MainCityDefaultObject.table.items(.tag)) |object_tag| {
-        const object_template_index = templates.MainCityObject.table.getIndexByKey(object_tag) orelse
-            continue;
-
-        const transform_name = templates.MainCityObject.table.getString(
-            templates.MainCityObject.table.items(.create_position)[object_template_index],
-        );
-
-        const transform_index = templates.NpcTransform.getIndexByName(transform_name) orelse
-            continue;
-
-        const object_section_id = templates.NpcTransform.table.items(.section_id)[transform_index];
-        if (object_section_id != main_city_section_id) continue;
-
-        const data = buffer.npcs.addOneAssumeCapacity();
-
-        const default_interact_ids =
-            templates.MainCityObject.table.items(.default_interact_ids)[object_template_index];
-
-        var interacts: ArrayList(protobuf.KeyValue(u32, gen.InteractInfo)) =
-            .initBuffer(data.interact_info[0..1]);
-
-        if (default_interact_ids[0].unwrap()) |interact_id| {
-            data.interact_target.* = @fromBackingInt(2); // NPC
-
-            interacts.appendAssumeCapacity(.{
-                .key = interact_id,
-                .value = .{
-                    .tag_id = @intCast(object_tag),
-                    .interact_target_list = data.interact_target[0..1],
-                    .scale_x = 1,
-                    .scale_y = 1,
-                    .scale_z = 1,
-                    .scale_w = 1,
-                    .scale_r = 1,
-                },
-            });
-        }
-
-        data.npc_info.* = .{
-            .npc_id = object_tag,
-            .is_active = true,
-            .interacts_info = interacts.items,
-        };
-    }
-
-    return .{
+    var root: Root = .{
         .section_id = main_city_section_id,
         .control_avatar_id = @backingInt(options.role.control_avatar),
         .control_guise_avatar_id = @backingInt(options.role.control_guise_avatar),
-        .day_of_week = @backingInt(options.time.day),
-        .scene_time_in_minutes = options.time.period.toMinutes(),
-        .npc_list = buffer.npcs.items(.npc_info),
     };
+
+    if (protobuf.features.hall_time) {
+        root.day_of_week = @backingInt(options.time.day);
+        root.scene_time_in_minutes = options.time.period.toMinutes();
+    }
+
+    if (protobuf.features.hall_npcs) {
+        for (templates.MainCityDefaultObject.table.items(.tag)) |object_tag| {
+            const object_template_index = templates.MainCityObject.table.getIndexByKey(object_tag) orelse
+                continue;
+
+            const transform_name = templates.MainCityObject.table.getString(
+                templates.MainCityObject.table.items(.create_position)[object_template_index],
+            );
+
+            const transform_index = templates.NpcTransform.getIndexByName(transform_name) orelse
+                continue;
+
+            const object_section_id = templates.NpcTransform.table.items(.section_id)[transform_index];
+            if (object_section_id != main_city_section_id) continue;
+
+            const data = buffer.npcs.addOneAssumeCapacity();
+
+            const default_interact_ids =
+                templates.MainCityObject.table.items(.default_interact_ids)[object_template_index];
+
+            var interacts: ArrayList(protobuf.KeyValue(u32, gen.InteractInfo)) =
+                .initBuffer(data.interact_info[0..1]);
+
+            if (default_interact_ids[0].unwrap()) |interact_id| {
+                data.interact_target.* = @fromBackingInt(2); // NPC
+
+                interacts.appendAssumeCapacity(.{
+                    .key = interact_id,
+                    .value = .{
+                        .tag_id = @intCast(object_tag),
+                        .interact_target_list = data.interact_target[0..1],
+                        .scale_x = 1,
+                        .scale_y = 1,
+                        .scale_z = 1,
+                        .scale_w = 1,
+                        .scale_r = 1,
+                    },
+                });
+            }
+
+            data.npc_info.* = .{
+                .npc_id = object_tag,
+                .is_active = true,
+                .interacts_info = interacts.items,
+            };
+        }
+
+        root.npc_list = buffer.npcs.items(.npc_info);
+    }
+
+    return root;
 }
 
 pub fn selfBasicInfo(player: *Player) gen.SelfBasicInfo {
@@ -427,7 +435,7 @@ pub fn bigSceneAvatarInfoMinimal(
 }
 
 pub const BigSceneAvatarList = BoundedMultiArray(struct {
-    info: gen.BigSceneAvatarInfo,
+    info: if (protobuf.features.big_scene_avatars) gen.BigSceneAvatarInfo else void,
     properties_buffer: [battle.Property.count]protobuf.KeyValue(u32, i32),
 }, Player.BigSceneTeam.lineup_avatar_max);
 

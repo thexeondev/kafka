@@ -15,6 +15,7 @@ pub const Temporaries = @import("Player/Temporaries.zig");
 const remielle = @import("remielle.zig");
 const gen = remielle.protobuf.gen;
 const pack = remielle.protobuf.pack;
+const features = remielle.protobuf.features;
 const battle = remielle.battle;
 const assets = remielle.assets;
 
@@ -37,7 +38,10 @@ pub const Sync = struct {
     };
 
     pub const Buffers = struct {
-        big_scene_avatar_minimal: [Storage.Avatar.count_max]gen.BigSceneAvatarInfo,
+        big_scene_avatar_minimal: if (features.big_scene_avatars)
+            [Storage.Avatar.count_max]gen.BigSceneAvatarInfo
+        else
+            void,
         big_scene_avatar_team: pack.BigSceneAvatarList,
     };
 
@@ -569,7 +573,10 @@ pub fn buildPlayerSyncScNotify(player: *Player) ?gen.PlayerSyncScNotify {
     if (!player.sync.needs_player_sync_notify) return null;
 
     var notify: gen.PlayerSyncScNotify = .{ .misc = .{} };
-    notify.avatar = .{ .avatar_list = player.sync.avatar_list.items(.avatar_info) };
+
+    if (features.avatar_sync) {
+        notify.avatar = .{ .avatar_list = player.sync.avatar_list.items(.avatar_info) };
+    }
 
     const self_basic_info_needs_sync = player.sync.control_guise_avatar_changed;
     if (self_basic_info_needs_sync) {
@@ -591,7 +598,9 @@ pub fn buildPlayerSyncScNotify(player: *Player) ?gen.PlayerSyncScNotify {
         };
     }
 
-    if (player.sync.big_scene_team_replaced) |team_replaced| {
+    if (player.sync.big_scene_team_replaced) |team_replaced| big_scene_sync: {
+        if (!features.big_scene_sync) break :big_scene_sync;
+
         const prev_team = team_replaced.prev;
         const new_team = player.getBigSceneTeam();
 

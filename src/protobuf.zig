@@ -10,6 +10,7 @@ pub const gen = generated.makeNamespace(.{
 });
 
 pub const pack = @import("protobuf/pack.zig");
+pub const features = @import("protobuf/features.zig");
 
 pub const Retcode = @import("protobuf/retcode.zig").Retcode;
 

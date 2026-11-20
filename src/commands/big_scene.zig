@@ -181,8 +181,6 @@ fn notifySceneEntityAppearance(
                     .member_variables = &.{
                         .{ .key = "OpenType", .value = 0 },
                     },
-                    .FEBMNHDPJMK = .{},
-                    .ALCHMDPMPMC = .{},
                     .entity = .{ .Gadget = .{
                         .gadget_id = gadget_id,
                     } },
