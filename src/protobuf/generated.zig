@@ -36,132 +36,6 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"ack_packet_id": Encoding = .normal;
             };
         };
-        pub const ConfigShowTip = struct {
-            pub const message_name = "ConfigShowTip";
-            @"tip_id": u32 = 0,
-            pub const xor_by_field = struct {
-            };
-            pub const oneof_by_field = struct {
-            };
-            pub const FieldNumber = enum(u29) {
-                @"tip_id" = 1,
-                _,
-            };
-            pub const Decoded = struct {
-                pub const Parent = ConfigShowTip;
-                pub const init: @This() = .{};
-                @"tip_id": u32 = 0,
-            };
-            pub const encoding_by_field = struct {
-                pub const @"tip_id": Encoding = .normal;
-            };
-        };
-        pub const ActionOpenUi = struct {
-            pub const message_name = "ActionOpenUi";
-            @"ui": []const u8 = &.{},
-            @"args": u32 = 0,
-            @"store_template_id": u32 = 0,
-            @"npc_id": u32 = 0,
-            pub const xor_by_field = struct {
-            };
-            pub const oneof_by_field = struct {
-            };
-            pub const FieldNumber = enum(u29) {
-                @"ui" = 1,
-                @"args" = 2,
-                @"store_template_id" = 4,
-                @"npc_id" = 5,
-                _,
-            };
-            pub const Decoded = struct {
-                pub const Parent = ActionOpenUi;
-                pub const init: @This() = .{};
-                @"ui": []const u8 = &.{},
-                @"args": u32 = 0,
-                @"store_template_id": u32 = 0,
-                @"npc_id": u32 = 0,
-            };
-            pub const encoding_by_field = struct {
-                pub const @"ui": Encoding = .normal;
-                pub const @"args": Encoding = .normal;
-                pub const @"store_template_id": Encoding = .normal;
-                pub const @"npc_id": Encoding = .normal;
-            };
-        };
-        pub const ActionSwitchSection = struct {
-            pub const message_name = "ActionSwitchSection";
-            @"section": u32 = 0,
-            @"transform_id": []const u8 = &.{},
-            @"camera_x": u32 = 0,
-            @"camera_y": u32 = 0,
-            pub const xor_by_field = struct {
-            };
-            pub const oneof_by_field = struct {
-            };
-            pub const FieldNumber = enum(u29) {
-                @"section" = 1,
-                @"transform_id" = 2,
-                @"camera_x" = 3,
-                @"camera_y" = 4,
-                _,
-            };
-            pub const Decoded = struct {
-                pub const Parent = ActionSwitchSection;
-                pub const init: @This() = .{};
-                @"section": u32 = 0,
-                @"transform_id": []const u8 = &.{},
-                @"camera_x": u32 = 0,
-                @"camera_y": u32 = 0,
-            };
-            pub const encoding_by_field = struct {
-                pub const @"section": Encoding = .normal;
-                pub const @"transform_id": Encoding = .normal;
-                pub const @"camera_x": Encoding = .normal;
-                pub const @"camera_y": Encoding = .normal;
-            };
-        };
-        pub const ActionShowTeleportUi = struct {
-            pub const message_name = "ActionShowTeleportUi";
-            @"black_mask": bool = false,
-            pub const xor_by_field = struct {
-            };
-            pub const oneof_by_field = struct {
-            };
-            pub const FieldNumber = enum(u29) {
-                @"black_mask" = 1,
-                _,
-            };
-            pub const Decoded = struct {
-                pub const Parent = ActionShowTeleportUi;
-                pub const init: @This() = .{};
-                @"black_mask": bool = false,
-            };
-            pub const encoding_by_field = struct {
-                pub const @"black_mask": Encoding = .normal;
-            };
-        };
-        pub const DummyScRsp = struct {
-            pub const message_name = "DummyScRsp";
-            pub const cmd_id: u16 = 3461;
-            @"retcode": i32 = 0,
-            pub const xor_by_field = struct {
-                pub const @"retcode": u31 = 12184;
-            };
-            pub const oneof_by_field = struct {
-            };
-            pub const FieldNumber = enum(u29) {
-                @"retcode" = 6,
-                _,
-            };
-            pub const Decoded = struct {
-                pub const Parent = DummyScRsp;
-                pub const init: @This() = .{};
-                @"retcode": i32 = 0,
-            };
-            pub const encoding_by_field = struct {
-                pub const @"retcode": Encoding = .normal;
-            };
-        };
         pub const HMFDCLHBNPM = struct {
             pub const message_name = "HMFDCLHBNPM";
             pub const cmd_id: u16 = 8503;
@@ -155530,6 +155404,132 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const encoding_by_field = struct {
                 pub const @"NBNPBKMKCIH": Encoding = .normal;
                 pub const @"cur_state": Encoding = .normal;
+            };
+        };
+        pub const ConfigShowTip = struct {
+            pub const message_name = "ConfigShowTip";
+            @"tip_id": u32 = 0,
+            pub const xor_by_field = struct {
+            };
+            pub const oneof_by_field = struct {
+            };
+            pub const FieldNumber = enum(u29) {
+                @"tip_id" = 1,
+                _,
+            };
+            pub const Decoded = struct {
+                pub const Parent = ConfigShowTip;
+                pub const init: @This() = .{};
+                @"tip_id": u32 = 0,
+            };
+            pub const encoding_by_field = struct {
+                pub const @"tip_id": Encoding = .normal;
+            };
+        };
+        pub const ActionOpenUi = struct {
+            pub const message_name = "ActionOpenUi";
+            @"ui": []const u8 = &.{},
+            @"args": u32 = 0,
+            @"store_template_id": u32 = 0,
+            @"npc_id": u32 = 0,
+            pub const xor_by_field = struct {
+            };
+            pub const oneof_by_field = struct {
+            };
+            pub const FieldNumber = enum(u29) {
+                @"ui" = 1,
+                @"args" = 2,
+                @"store_template_id" = 4,
+                @"npc_id" = 5,
+                _,
+            };
+            pub const Decoded = struct {
+                pub const Parent = ActionOpenUi;
+                pub const init: @This() = .{};
+                @"ui": []const u8 = &.{},
+                @"args": u32 = 0,
+                @"store_template_id": u32 = 0,
+                @"npc_id": u32 = 0,
+            };
+            pub const encoding_by_field = struct {
+                pub const @"ui": Encoding = .normal;
+                pub const @"args": Encoding = .normal;
+                pub const @"store_template_id": Encoding = .normal;
+                pub const @"npc_id": Encoding = .normal;
+            };
+        };
+        pub const ActionSwitchSection = struct {
+            pub const message_name = "ActionSwitchSection";
+            @"section": u32 = 0,
+            @"transform_id": []const u8 = &.{},
+            @"camera_x": u32 = 0,
+            @"camera_y": u32 = 0,
+            pub const xor_by_field = struct {
+            };
+            pub const oneof_by_field = struct {
+            };
+            pub const FieldNumber = enum(u29) {
+                @"section" = 1,
+                @"transform_id" = 2,
+                @"camera_x" = 3,
+                @"camera_y" = 4,
+                _,
+            };
+            pub const Decoded = struct {
+                pub const Parent = ActionSwitchSection;
+                pub const init: @This() = .{};
+                @"section": u32 = 0,
+                @"transform_id": []const u8 = &.{},
+                @"camera_x": u32 = 0,
+                @"camera_y": u32 = 0,
+            };
+            pub const encoding_by_field = struct {
+                pub const @"section": Encoding = .normal;
+                pub const @"transform_id": Encoding = .normal;
+                pub const @"camera_x": Encoding = .normal;
+                pub const @"camera_y": Encoding = .normal;
+            };
+        };
+        pub const ActionShowTeleportUi = struct {
+            pub const message_name = "ActionShowTeleportUi";
+            @"black_mask": bool = false,
+            pub const xor_by_field = struct {
+            };
+            pub const oneof_by_field = struct {
+            };
+            pub const FieldNumber = enum(u29) {
+                @"black_mask" = 1,
+                _,
+            };
+            pub const Decoded = struct {
+                pub const Parent = ActionShowTeleportUi;
+                pub const init: @This() = .{};
+                @"black_mask": bool = false,
+            };
+            pub const encoding_by_field = struct {
+                pub const @"black_mask": Encoding = .normal;
+            };
+        };
+        pub const DummyScRsp = struct {
+            pub const message_name = "DummyScRsp";
+            pub const cmd_id: u16 = 3461;
+            @"retcode": i32 = 0,
+            pub const xor_by_field = struct {
+                pub const @"retcode": u31 = 12184;
+            };
+            pub const oneof_by_field = struct {
+            };
+            pub const FieldNumber = enum(u29) {
+                @"retcode" = 6,
+                _,
+            };
+            pub const Decoded = struct {
+                pub const Parent = DummyScRsp;
+                pub const init: @This() = .{};
+                @"retcode": i32 = 0,
+            };
+            pub const encoding_by_field = struct {
+                pub const @"retcode": Encoding = .normal;
             };
         };
     };
