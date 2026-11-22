@@ -4,19 +4,19 @@
         .cdn = .{
             .hotfix = .{
                 .design_data = .{
-                    .base_url = "https://autopatchcn.juequling.com/design_data/beta_live/output_20694646_e69bb23b87/client/",
-                    .data_revision = "20694646",
-                    .md5_files = "[{\"fileName\":\"data_version\",\"fileSize\":6654,\"fileMD5\":\"10202377775856322952\"}]",
+                    .base_url = "https://autopatchcn.juequling.com/design_data/beta_live/output_20713015_f3cc1cf122/client/",
+                    .data_revision = "20713015",
+                    .md5_files = "[{\"fileName\":\"data_version\",\"fileSize\":6652,\"fileMD5\":\"12711609889185440346\"}]",
                 },
                 .game_res = .{
                     .audio_revision = "20668795",
-                    .base_url = "https://autopatchcn.juequling.com/game_res/beta_live/output_20694646_e69bb23b87/client/",
+                    .base_url = "https://autopatchcn.juequling.com/game_res/beta_live/output_20713015_f3cc1cf122/client/",
                     .branch = "beta_live",
-                    .md5_files = "[{\"fileName\":\"res_version\",\"fileSize\":3219211,\"fileMD5\":\"2059034194848274098\"},{\"fileName\":\"audio_version\",\"fileSize\":75183,\"fileMD5\":\"16166950923840755892\"},{\"fileName\":\"base_revision\",\"fileSize\":19,\"fileMD5\":\"5523772551585749443\"}]",
-                    .res_revision = "20694646",
+                    .md5_files = "[{\"fileName\":\"res_version\",\"fileSize\":3219449,\"fileMD5\":\"12584395819160647062\"},{\"fileName\":\"audio_version\",\"fileSize\":75183,\"fileMD5\":\"16166950923840755892\"},{\"fileName\":\"base_revision\",\"fileSize\":19,\"fileMD5\":\"5523772551585749443\"}]",
+                    .res_revision = "20713015",
                 },
                 .silence_data = .{
-                    .base_url = "https://autopatchcn.juequling.com/design_data/beta_live/output_20694646_e69bb23b87/client_silence/",
+                    .base_url = "https://autopatchcn.juequling.com/design_data/beta_live/output_20713015_f3cc1cf122/client_silence/",
                     .md5_files = "[{\"fileName\":\"silence_version\",\"fileSize\":343,\"fileMD5\":\"15658971239283350900\"}]",
                     .silence_revision = "20685729",
                 },
@@ -27,7 +27,7 @@
                 .directory_overlayed = "client/StandaloneWindows64/oversea",
                 .base_revision_original = "output_20668795_fbd3ad38fb",
                 .base_revision_overlayed = "output_19316624_6fdf21fa4c",
-                .last_revision_original = "output_20694646_e69bb23b87",
+                .last_revision_original = "output_20713015_f3cc1cf122",
                 .last_revision_overlayed = "output_19815450_204c0cf87e",
                 .audio_version_size = 96537,
                 .audio_version_md5 = "13653176947588411745",
