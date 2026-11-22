@@ -108,6 +108,8 @@ pub const TypeErased = extern struct {
             if (session.player.buildEnterFloorScNotify()) |enter_floor|
                 try session.sink.notify(protobuf.gen.EnterFloorScNotify, &enter_floor);
         }
+
+        try session.player.notifyViewObjects(&session.sink);
     }
 };
 

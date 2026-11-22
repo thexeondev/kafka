@@ -1,15 +1,111 @@
 //! Data that lives throughout requests but gets reset after a relogin.
 
 cur_battle: ?Battle,
-entity_id_seq: u24,
+view_objects: ?ViewObjects,
 
 const Temporaries = @This();
 const std = @import("std");
 const assert = std.debug.assert;
 
+const remielle = @import("../remielle.zig");
+const assets = remielle.assets;
+
 pub const init: Temporaries = .{
     .cur_battle = null,
-    .entity_id_seq = 1,
+    .view_objects = null,
+};
+
+pub const ViewObjects = struct {
+    master_entity_id: EntityId,
+    entity_id_seq: u24,
+    groups: Groups,
+
+    pub fn init(vo: *ViewObjects, group_id_list: []const u32) void {
+        vo.master_entity_id = .{ .seqn = 1, .type = .avatar };
+        vo.entity_id_seq = 2;
+        vo.groups.init(group_id_list);
+    }
+
+    pub fn nextEntityId(vo: *ViewObjects, @"type": EntityId.Type) EntityId {
+        defer vo.entity_id_seq +%= 1;
+        return .{ .type = @"type", .seqn = vo.entity_id_seq };
+    }
+
+    pub const EntityId = packed struct(u32) {
+        seqn: u24,
+        type: Type,
+
+        pub const Type = enum(u8) {
+            avatar = 1,
+            monster = 2,
+            gadget = 7,
+            _,
+        };
+
+        pub fn toInt(id: EntityId) u32 {
+            return @backingInt(id);
+        }
+    };
+
+    pub const Groups = struct {
+        buffer: [count_max]u32,
+        inactive_count: u32,
+        active_count: u32,
+        ready_count: u32,
+
+        pub const count_max = assets.Group.table.group_ids.len;
+
+        pub fn init(groups: *Groups, group_id_list: []const u32) void {
+            assert(count_max >= group_id_list.len);
+
+            @memcpy(groups.buffer[0..group_id_list.len], group_id_list);
+            groups.inactive_count = @intCast(group_id_list.len);
+            groups.active_count = 0;
+            groups.ready_count = 0;
+        }
+
+        pub fn inactive(groups: *Groups) InactiveIterator {
+            return .{ .groups = groups, .next_index = 0 };
+        }
+
+        pub const InactiveIterator = struct {
+            groups: *Groups,
+            next_index: u32,
+
+            pub fn next(it: *InactiveIterator) ?u32 {
+                if (it.next_index >= it.groups.inactive_count) return null;
+
+                defer it.next_index += 1;
+                return it.groups.buffer[it.next_index];
+            }
+
+            /// Activates group previously returned from `next`.
+            pub fn activate(it: *InactiveIterator) void {
+                assert(it.next_index != 0);
+                assert(it.groups.inactive_count != 0);
+                defer it.next_index -= 1;
+
+                const inactive_index = it.next_index - 1;
+                const group_id = it.groups.buffer[inactive_index];
+                it.groups.buffer[inactive_index] = it.groups.buffer[it.groups.inactive_count - 1];
+                it.groups.inactive_count -= 1;
+
+                it.groups.active_count += 1;
+                const active_index = count_max - it.groups.active_count;
+                it.groups.buffer[active_index] = group_id;
+            }
+        };
+
+        pub fn flushGroupOrders(groups: *Groups) []const u32 {
+            assert(groups.active_count >= groups.ready_count);
+            defer groups.ready_count = groups.active_count;
+
+            const orders_count = groups.active_count - groups.ready_count;
+            const active_start = count_max - groups.active_count;
+
+            return groups.buffer[active_start..][0..orders_count];
+        }
+    };
 };
 
 pub const Battle = union(enum) {

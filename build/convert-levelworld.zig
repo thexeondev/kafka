@@ -176,6 +176,18 @@ const ConfigGroupJson = struct {
     vo_group_type: u32,
     group_usage: u32,
     members: []const Member,
+    gameplay_external_data: struct {
+        battle_region_map: std.json.ArrayHashMap(struct { data: struct {
+            areas: []const struct {
+                heightY: f32,
+                originPos: struct {
+                    x: f32,
+                    y: f32,
+                    z: f32,
+                },
+            },
+        } }),
+    },
 
     const Member = struct {
         config_id: u32,
@@ -190,6 +202,10 @@ const ConfigGroupJson = struct {
             gadget_id: i32,
             gadget_type: u8,
         } = null,
+        monster_info: ?struct {
+            monster_id: i32,
+            monster_id_type: u8,
+        } = null,
     };
 };
 
@@ -197,11 +213,17 @@ const ConfigGroupHeader = extern struct {
     group_count: u32,
     group_id_offset: u32,
     group_metadata_offset: u32,
+    battle_region_areas_offset: u32,
+    monster_count: u32,
+    monster_config_ids_offset: u32,
+    monster_ids_offset: u32,
+    monster_positions_offset: u32,
     gadget_count: u32,
     gadget_ids_offset: u32,
     gadget_config_ids_offset: u32,
     gadget_positions_offset: u32,
     gadget_types_offset: u32,
+    monster_id_types_offset: u32,
 
     comptime {
         assert(hasUniqueRepresentation(@This()));
@@ -219,15 +241,33 @@ const Position = extern struct {
     }
 };
 
-const GroupMetadata = extern struct {
-    vo_group_type: u32,
-    group_usage: u32,
-    gadgets: Slice,
+const Polygon = extern struct {
+    height_y: i32,
+    origin_pos: extern struct {
+        x: i32,
+        y: i32,
+        z: i32,
+    },
 
     comptime {
         assert(hasUniqueRepresentation(@This()));
     }
 };
+
+const GroupMetadata = extern struct {
+    vo_group_type: u32,
+    group_usage: u32,
+    gadgets: Slice,
+    monsters: Slice,
+    battle_region_areas: Slice,
+
+    comptime {
+        assert(hasUniqueRepresentation(@This()));
+    }
+};
+
+const member_type_monster = 0;
+const member_type_gadget = 1;
 
 fn convertConfigGroups(io: Io, gpa: Allocator, dirs: Dirs) !void {
     var group_ids: Table(u32) = .init;
@@ -235,6 +275,18 @@ fn convertConfigGroups(io: Io, gpa: Allocator, dirs: Dirs) !void {
 
     var group_metadata: Table(GroupMetadata) = .init;
     defer group_metadata.deinit(gpa);
+
+    var battle_region_areas: Table(Polygon) = .init;
+    defer battle_region_areas.deinit(gpa);
+
+    var monster_config_ids: Table(u32) = .init;
+    defer monster_config_ids.deinit(gpa);
+
+    var monster_ids: Table(i32) = .init;
+    defer monster_ids.deinit(gpa);
+
+    var monster_positions: Table(Position) = .init;
+    defer monster_positions.deinit(gpa);
 
     var gadget_ids: Table(i32) = .init;
     defer gadget_ids.deinit(gpa);
@@ -248,6 +300,9 @@ fn convertConfigGroups(io: Io, gpa: Allocator, dirs: Dirs) !void {
     var gadget_types: Table(u8) = .init;
     defer gadget_types.deinit(gpa);
 
+    var monster_id_types: Table(u8) = .init;
+    defer monster_id_types.deinit(gpa);
+
     const group_dir = try dirs.input.openDir(io, "ConfigGroup", .{ .iterate = true });
     defer group_dir.close(io);
 
@@ -258,19 +313,54 @@ fn convertConfigGroups(io: Io, gpa: Allocator, dirs: Dirs) !void {
         const config_group = try parseJsonFile(ConfigGroupJson, io, gpa, group_dir, entry.name);
         defer config_group.deinit();
 
+        const monsters_offset = monster_ids.itemCount();
         const gadgets_offset = gadget_types.itemCount();
-        for (config_group.value.members) |*member| {
-            if (member.member_type != 1) continue;
 
-            try gadget_config_ids.putOne(gpa, member.config_id);
-            try gadget_ids.putOne(gpa, member.gadget_server_metadata.?.gadget_id);
-            try gadget_types.putOne(gpa, member.gadget_server_metadata.?.gadget_type);
-            try gadget_positions.putOne(gpa, .{
-                .x = @trunc(member.member_position.x * 100),
-                .y = @trunc(member.member_position.y * 100),
-                .z = @trunc(member.member_position.z * 100),
-                .euler_y = @trunc(member.member_euler.y * 100),
-            });
+        for (config_group.value.members) |*member| {
+            switch (member.member_type) {
+                member_type_gadget => {
+                    try gadget_config_ids.putOne(gpa, member.config_id);
+                    try gadget_ids.putOne(gpa, member.gadget_server_metadata.?.gadget_id);
+                    try gadget_types.putOne(gpa, member.gadget_server_metadata.?.gadget_type);
+                    try gadget_positions.putOne(gpa, .{
+                        .x = @trunc(member.member_position.x * 100),
+                        .y = @trunc(member.member_position.y * 100),
+                        .z = @trunc(member.member_position.z * 100),
+                        .euler_y = @trunc(member.member_euler.y * 100),
+                    });
+                },
+                member_type_monster => {
+                    try monster_config_ids.putOne(gpa, member.config_id);
+                    try monster_ids.putOne(gpa, member.monster_info.?.monster_id);
+                    try monster_id_types.putOne(gpa, member.monster_info.?.monster_id_type);
+                    try monster_positions.putOne(gpa, .{
+                        .x = @trunc(member.member_position.x * 100),
+                        .y = @trunc(member.member_position.y * 100),
+                        .z = @trunc(member.member_position.z * 100),
+                        .euler_y = @trunc(member.member_euler.y * 100),
+                    });
+                },
+                else => {},
+            }
+        }
+
+        const battle_region_areas_offset = battle_region_areas.itemCount();
+        const battle_regions_json =
+            config_group.value.gameplay_external_data.battle_region_map.map.values();
+
+        if (battle_regions_json.len != 0) {
+            const region = &battle_regions_json[0];
+
+            for (region.data.areas) |area| {
+                try battle_region_areas.putOne(gpa, .{
+                    .height_y = @trunc(area.heightY * 100),
+                    .origin_pos = .{
+                        .x = @trunc(area.originPos.x * 100),
+                        .y = @trunc(area.originPos.y * 100),
+                        .z = @trunc(area.originPos.z * 100),
+                    },
+                });
+            }
         }
 
         try group_ids.putOne(gpa, config_group.value.group_id);
@@ -281,37 +371,66 @@ fn convertConfigGroups(io: Io, gpa: Allocator, dirs: Dirs) !void {
                 .offset = gadgets_offset,
                 .len = gadget_types.itemCount() - gadgets_offset,
             },
+            .monsters = .{
+                .offset = monsters_offset,
+                .len = monster_ids.itemCount() - monsters_offset,
+            },
+            .battle_region_areas = .{
+                .offset = battle_region_areas_offset,
+                .len = battle_region_areas.itemCount() - battle_region_areas_offset,
+            },
         });
     }
 
     const group_count = group_ids.itemCount();
     const group_id_offset = @sizeOf(ConfigGroupHeader);
     const group_metadata_offset = group_id_offset + group_ids.byteCount();
+
+    const battle_region_areas_offset = group_metadata_offset + group_metadata.byteCount();
+
+    const monster_count = monster_ids.itemCount();
+    const monster_config_ids_offset = battle_region_areas_offset + battle_region_areas.byteCount();
+    const monster_ids_offset = monster_config_ids_offset + monster_config_ids.byteCount();
+    const monster_positions_offset = monster_ids_offset + monster_ids.byteCount();
+
     const gadget_count = gadget_types.itemCount();
-    const gadget_ids_offset = group_metadata_offset + group_metadata.byteCount();
+    const gadget_ids_offset = monster_positions_offset + monster_positions.byteCount();
     const gadget_config_ids_offset = gadget_ids_offset + gadget_ids.byteCount();
     const gadget_positions_offset = gadget_config_ids_offset + gadget_config_ids.byteCount();
+
     const gadget_types_offset = gadget_positions_offset + gadget_positions.byteCount();
+    const monster_id_types_offset = gadget_types_offset + gadget_types.byteCount();
 
     const header: ConfigGroupHeader = .{
         .group_count = group_count,
         .group_id_offset = group_id_offset,
         .group_metadata_offset = group_metadata_offset,
+        .battle_region_areas_offset = battle_region_areas_offset,
+        .monster_count = monster_count,
+        .monster_config_ids_offset = monster_config_ids_offset,
+        .monster_ids_offset = monster_ids_offset,
+        .monster_positions_offset = monster_positions_offset,
         .gadget_count = gadget_count,
         .gadget_ids_offset = gadget_ids_offset,
         .gadget_config_ids_offset = gadget_config_ids_offset,
         .gadget_positions_offset = gadget_positions_offset,
         .gadget_types_offset = gadget_types_offset,
+        .monster_id_types_offset = monster_id_types_offset,
     };
 
-    var vec: [7][]const u8 = .{
+    var vec: [12][]const u8 = .{
         @ptrCast(&header),
         group_ids.byteSlice(),
         group_metadata.byteSlice(),
+        battle_region_areas.byteSlice(),
+        monster_config_ids.byteSlice(),
+        monster_ids.byteSlice(),
+        monster_positions.byteSlice(),
         gadget_ids.byteSlice(),
         gadget_config_ids.byteSlice(),
         gadget_positions.byteSlice(),
         gadget_types.byteSlice(),
+        monster_id_types.byteSlice(),
     };
     try writeVecToFile(io, dirs.output, "ConfigGroup.bin", &vec);
 }

@@ -5264,18 +5264,18 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
         };
         pub const DGIKENCBOKC = struct {
             pub const message_name = "DGIKENCBOKC";
-            @"AJFCJODCIKO": u32 = 0,
+            @"monster_id": u32 = 0,
             @"OFDENPDPAKB": u32 = 0,
             @"JCINPOPLJAF": u32 = 0,
             pub const xor_by_field = struct {
-                pub const @"AJFCJODCIKO": u31 = 6631;
+                pub const @"monster_id": u31 = 6631;
                 pub const @"OFDENPDPAKB": u31 = 9766;
                 pub const @"JCINPOPLJAF": u31 = 6964;
             };
             pub const oneof_by_field = struct {
             };
             pub const FieldNumber = enum(u29) {
-                @"AJFCJODCIKO" = 2,
+                @"monster_id" = 2,
                 @"OFDENPDPAKB" = 5,
                 @"JCINPOPLJAF" = 7,
                 _,
@@ -5283,12 +5283,12 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const Decoded = struct {
                 pub const Parent = DGIKENCBOKC;
                 pub const init: @This() = .{};
-                @"AJFCJODCIKO": u32 = 0,
+                @"monster_id": u32 = 0,
                 @"OFDENPDPAKB": u32 = 0,
                 @"JCINPOPLJAF": u32 = 0,
             };
             pub const encoding_by_field = struct {
-                pub const @"AJFCJODCIKO": Encoding = .normal;
+                pub const @"monster_id": Encoding = .normal;
                 pub const @"OFDENPDPAKB": Encoding = .normal;
                 pub const @"JCINPOPLJAF": Encoding = .normal;
             };
@@ -16225,8 +16225,8 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             @"CFHOEFHDPGC": ?KGALHHHJMNE = null,
             @"BHLILGICPCG": ?IFILMEGKNCN = null,
             @"entity": ?union(enum) {
-                @"Avatar": KGLILLPBEME,
-                @"Monster": AEHJGOLEKCJ,
+                @"Avatar": SceneAvatarInfo,
+                @"Monster": SceneMonsterInfo,
                 @"Gadget": SceneGadgetInfo,
                 @"Npc": FPKJDEBFHCP,
                 @"Summonee": CBOADOMEPNG,
@@ -16304,8 +16304,8 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"CFHOEFHDPGC": ?KGALHHHJMNE.Decoded = null,
                 @"BHLILGICPCG": ?IFILMEGKNCN.Decoded = null,
                 @"entity": ?union(enum) {
-                    @"Avatar": KGLILLPBEME.Decoded,
-                    @"Monster": AEHJGOLEKCJ.Decoded,
+                    @"Avatar": SceneAvatarInfo.Decoded,
+                    @"Monster": SceneMonsterInfo.Decoded,
                     @"Gadget": SceneGadgetInfo.Decoded,
                     @"Npc": FPKJDEBFHCP.Decoded,
                     @"Summonee": CBOADOMEPNG.Decoded,
@@ -33077,7 +33077,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
         };
         pub const CEBPACHPLJB = struct {
             pub const message_name = "CEBPACHPLJB";
-            @"AJFCJODCIKO": i32 = 0,
+            @"monster_id": i32 = 0,
             @"DCNMNAGJLPM": i64 = 0,
             @"damage": i32 = 0,
             @"LOLIGPGAJDC": i32 = 0,
@@ -33114,7 +33114,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const oneof_by_field = struct {
             };
             pub const FieldNumber = enum(u29) {
-                @"AJFCJODCIKO" = 1,
+                @"monster_id" = 1,
                 @"DCNMNAGJLPM" = 2,
                 @"damage" = 3,
                 @"LOLIGPGAJDC" = 4,
@@ -33151,7 +33151,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const Decoded = struct {
                 pub const Parent = CEBPACHPLJB;
                 pub const init: @This() = .{};
-                @"AJFCJODCIKO": i32 = 0,
+                @"monster_id": i32 = 0,
                 @"DCNMNAGJLPM": i64 = 0,
                 @"damage": i32 = 0,
                 @"LOLIGPGAJDC": i32 = 0,
@@ -33185,7 +33185,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"DNPEFKHMNEO": Iterator(FFDCEALFHMB.Decoded) = .empty,
             };
             pub const encoding_by_field = struct {
-                pub const @"AJFCJODCIKO": Encoding = .normal;
+                pub const @"monster_id": Encoding = .normal;
                 pub const @"DCNMNAGJLPM": Encoding = .normal;
                 pub const @"damage": Encoding = .normal;
                 pub const @"LOLIGPGAJDC": Encoding = .normal;
@@ -36819,25 +36819,25 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
         };
         pub const NDABHJIEOBH = struct {
             pub const message_name = "NDABHJIEOBH";
-            @"AJFCJODCIKO": u32 = 0,
+            @"monster_id": u32 = 0,
             @"DGHGPJPJMEH": u32 = 0,
             pub const xor_by_field = struct {
             };
             pub const oneof_by_field = struct {
             };
             pub const FieldNumber = enum(u29) {
-                @"AJFCJODCIKO" = 1,
+                @"monster_id" = 1,
                 @"DGHGPJPJMEH" = 2,
                 _,
             };
             pub const Decoded = struct {
                 pub const Parent = NDABHJIEOBH;
                 pub const init: @This() = .{};
-                @"AJFCJODCIKO": u32 = 0,
+                @"monster_id": u32 = 0,
                 @"DGHGPJPJMEH": u32 = 0,
             };
             pub const encoding_by_field = struct {
-                pub const @"AJFCJODCIKO": Encoding = .normal;
+                pub const @"monster_id": Encoding = .normal;
                 pub const @"DGHGPJPJMEH": Encoding = .normal;
             };
         };
@@ -37985,7 +37985,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
         pub const EIJELJGPLOA = struct {
             pub const message_name = "EIJELJGPLOA";
             pub const cmd_id: u16 = 1303;
-            @"UNK_EIJELJGPLOA_32": []const BLAOCAMIENI = &.{},
+            @"UNK_EIJELJGPLOA_32": []const EntityMotionInfo = &.{},
             pub const xor_by_field = struct {
             };
             pub const oneof_by_field = struct {
@@ -37997,7 +37997,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const Decoded = struct {
                 pub const Parent = EIJELJGPLOA;
                 pub const init: @This() = .{};
-                @"UNK_EIJELJGPLOA_32": Iterator(BLAOCAMIENI.Decoded) = .empty,
+                @"UNK_EIJELJGPLOA_32": Iterator(EntityMotionInfo.Decoded) = .empty,
             };
             pub const encoding_by_field = struct {
                 pub const @"UNK_EIJELJGPLOA_32": Encoding = .normal;
@@ -41638,7 +41638,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             @"FFBDIHIBJCJ": i32 = 0,
             @"GNFMMPBNLIC": bool = false,
             @"JOJNCOPBCML": u64 = 0,
-            @"UNK_JPNBKLEHEOG_32": []const KGLILLPBEME = &.{},
+            @"UNK_JPNBKLEHEOG_32": []const SceneAvatarInfo = &.{},
             @"floor_id": u32 = 0,
             @"uid": u32 = 0,
             @"CHCEFCPOAML": bool = false,
@@ -41683,7 +41683,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"FFBDIHIBJCJ": i32 = 0,
                 @"GNFMMPBNLIC": bool = false,
                 @"JOJNCOPBCML": u64 = 0,
-                @"UNK_JPNBKLEHEOG_32": Iterator(KGLILLPBEME.Decoded) = .empty,
+                @"UNK_JPNBKLEHEOG_32": Iterator(SceneAvatarInfo.Decoded) = .empty,
                 @"floor_id": u32 = 0,
                 @"uid": u32 = 0,
                 @"CHCEFCPOAML": bool = false,
@@ -43701,7 +43701,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             @"INNGJNKCHBC": bool = false,
             @"control_avatar_id": u32 = 0,
             @"FCCAAAJEMKK": u32 = 0,
-            @"OAGDACKHPDN": u32 = 0,
+            @"world_level": u32 = 0,
             @"nick_name": []const u8 = &.{},
             @"KBAKELCCKGC": u32 = 0,
             @"control_guise_avatar_id": u32 = 0,
@@ -43717,7 +43717,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"exp": u31 = 2488;
                 pub const @"control_avatar_id": u31 = 13893;
                 pub const @"FCCAAAJEMKK": u31 = 722;
-                pub const @"OAGDACKHPDN": u31 = 12204;
+                pub const @"world_level": u31 = 12204;
                 pub const @"KBAKELCCKGC": u31 = 1473;
                 pub const @"control_guise_avatar_id": u31 = 14022;
                 pub const @"JCACALMNHMK": u31 = 1162;
@@ -43738,7 +43738,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"INNGJNKCHBC" = 10,
                 @"control_avatar_id" = 11,
                 @"FCCAAAJEMKK" = 12,
-                @"OAGDACKHPDN" = 13,
+                @"world_level" = 13,
                 @"nick_name" = 14,
                 @"KBAKELCCKGC" = 15,
                 @"control_guise_avatar_id" = 98,
@@ -43762,7 +43762,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"INNGJNKCHBC": bool = false,
                 @"control_avatar_id": u32 = 0,
                 @"FCCAAAJEMKK": u32 = 0,
-                @"OAGDACKHPDN": u32 = 0,
+                @"world_level": u32 = 0,
                 @"nick_name": []const u8 = &.{},
                 @"KBAKELCCKGC": u32 = 0,
                 @"control_guise_avatar_id": u32 = 0,
@@ -43783,7 +43783,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"INNGJNKCHBC": Encoding = .normal;
                 pub const @"control_avatar_id": Encoding = .normal;
                 pub const @"FCCAAAJEMKK": Encoding = .normal;
-                pub const @"OAGDACKHPDN": Encoding = .normal;
+                pub const @"world_level": Encoding = .normal;
                 pub const @"nick_name": Encoding = .normal;
                 pub const @"KBAKELCCKGC": Encoding = .normal;
                 pub const @"control_guise_avatar_id": Encoding = .normal;
@@ -62568,25 +62568,25 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
         };
         pub const DBCHCKNIFHL = struct {
             pub const message_name = "DBCHCKNIFHL";
-            @"AJFCJODCIKO": u32 = 0,
+            @"monster_id": u32 = 0,
             @"GGMFGOHKJOP": u32 = 0,
             pub const xor_by_field = struct {
             };
             pub const oneof_by_field = struct {
             };
             pub const FieldNumber = enum(u29) {
-                @"AJFCJODCIKO" = 1,
+                @"monster_id" = 1,
                 @"GGMFGOHKJOP" = 2,
                 _,
             };
             pub const Decoded = struct {
                 pub const Parent = DBCHCKNIFHL;
                 pub const init: @This() = .{};
-                @"AJFCJODCIKO": u32 = 0,
+                @"monster_id": u32 = 0,
                 @"GGMFGOHKJOP": u32 = 0,
             };
             pub const encoding_by_field = struct {
-                pub const @"AJFCJODCIKO": Encoding = .normal;
+                pub const @"monster_id": Encoding = .normal;
                 pub const @"GGMFGOHKJOP": Encoding = .normal;
             };
         };
@@ -83721,13 +83721,13 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             @"damage": u32 = 0,
             @"NJGEBJPHGBA": u32 = 0,
             @"AFIAPBMKIGJ": u32 = 0,
-            @"AJFCJODCIKO": u32 = 0,
+            @"monster_id": u32 = 0,
             @"PFKOOMOACFC": u32 = 0,
             pub const xor_by_field = struct {
                 pub const @"damage": u31 = 13555;
                 pub const @"NJGEBJPHGBA": u31 = 13117;
                 pub const @"AFIAPBMKIGJ": u31 = 9150;
-                pub const @"AJFCJODCIKO": u31 = 9109;
+                pub const @"monster_id": u31 = 9109;
                 pub const @"PFKOOMOACFC": u31 = 9155;
             };
             pub const oneof_by_field = struct {
@@ -83736,7 +83736,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"damage" = 2,
                 @"NJGEBJPHGBA" = 4,
                 @"AFIAPBMKIGJ" = 10,
-                @"AJFCJODCIKO" = 11,
+                @"monster_id" = 11,
                 @"PFKOOMOACFC" = 14,
                 _,
             };
@@ -83746,14 +83746,14 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"damage": u32 = 0,
                 @"NJGEBJPHGBA": u32 = 0,
                 @"AFIAPBMKIGJ": u32 = 0,
-                @"AJFCJODCIKO": u32 = 0,
+                @"monster_id": u32 = 0,
                 @"PFKOOMOACFC": u32 = 0,
             };
             pub const encoding_by_field = struct {
                 pub const @"damage": Encoding = .normal;
                 pub const @"NJGEBJPHGBA": Encoding = .normal;
                 pub const @"AFIAPBMKIGJ": Encoding = .normal;
-                pub const @"AJFCJODCIKO": Encoding = .normal;
+                pub const @"monster_id": Encoding = .normal;
                 pub const @"PFKOOMOACFC": Encoding = .normal;
             };
         };
@@ -84535,7 +84535,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
         pub const CIFLGHMNMGG = struct {
             pub const message_name = "CIFLGHMNMGG";
             pub const cmd_id: u16 = 709;
-            @"AAGHGJJAOOC": []const FIBGMFAAJPJ = &.{},
+            @"motion_list": []const FIBGMFAAJPJ = &.{},
             @"BGOONKKMHEL": u32 = 0,
             pub const xor_by_field = struct {
                 pub const @"BGOONKKMHEL": u31 = 1000;
@@ -84543,18 +84543,18 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const oneof_by_field = struct {
             };
             pub const FieldNumber = enum(u29) {
-                @"AAGHGJJAOOC" = 6,
+                @"motion_list" = 6,
                 @"BGOONKKMHEL" = 12,
                 _,
             };
             pub const Decoded = struct {
                 pub const Parent = CIFLGHMNMGG;
                 pub const init: @This() = .{};
-                @"AAGHGJJAOOC": Iterator(FIBGMFAAJPJ.Decoded) = .empty,
+                @"motion_list": Iterator(FIBGMFAAJPJ.Decoded) = .empty,
                 @"BGOONKKMHEL": u32 = 0,
             };
             pub const encoding_by_field = struct {
-                pub const @"AAGHGJJAOOC": Encoding = .normal;
+                pub const @"motion_list": Encoding = .normal;
                 pub const @"BGOONKKMHEL": Encoding = .normal;
             };
         };
@@ -97231,9 +97231,9 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"retcode": Encoding = .normal;
             };
         };
-        pub const AEHJGOLEKCJ = struct {
-            pub const message_name = "AEHJGOLEKCJ";
-            @"AJFCJODCIKO": i32 = 0,
+        pub const SceneMonsterInfo = struct {
+            pub const message_name = "SceneMonsterInfo";
+            @"monster_id": i32 = 0,
             @"level": i32 = 0,
             @"MOBIHACNHHL": ?OAKCOGMECJF = null,
             @"HBJGHAGMBPO": []const FMAFDGILDEO = &.{},
@@ -97243,7 +97243,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const oneof_by_field = struct {
             };
             pub const FieldNumber = enum(u29) {
-                @"AJFCJODCIKO" = 1,
+                @"monster_id" = 1,
                 @"level" = 2,
                 @"MOBIHACNHHL" = 3,
                 @"HBJGHAGMBPO" = 4,
@@ -97251,16 +97251,16 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 _,
             };
             pub const Decoded = struct {
-                pub const Parent = AEHJGOLEKCJ;
+                pub const Parent = SceneMonsterInfo;
                 pub const init: @This() = .{};
-                @"AJFCJODCIKO": i32 = 0,
+                @"monster_id": i32 = 0,
                 @"level": i32 = 0,
                 @"MOBIHACNHHL": ?OAKCOGMECJF.Decoded = null,
                 @"HBJGHAGMBPO": Iterator(FMAFDGILDEO.Decoded) = .empty,
                 @"JKDEMGEFILL": u32 = 0,
             };
             pub const encoding_by_field = struct {
-                pub const @"AJFCJODCIKO": Encoding = .normal;
+                pub const @"monster_id": Encoding = .normal;
                 pub const @"level": Encoding = .normal;
                 pub const @"MOBIHACNHHL": Encoding = .normal;
                 pub const @"HBJGHAGMBPO": Encoding = .normal;
@@ -116999,7 +116999,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
         };
         pub const IDKJCMFFINL = struct {
             pub const message_name = "IDKJCMFFINL";
-            @"AJFCJODCIKO": u32 = 0,
+            @"monster_id": u32 = 0,
             @"DFHHPMMGKLH": u32 = 0,
             @"EFBNBDHOODL": []const u8 = &.{},
             pub const xor_by_field = struct {
@@ -117007,7 +117007,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const oneof_by_field = struct {
             };
             pub const FieldNumber = enum(u29) {
-                @"AJFCJODCIKO" = 1,
+                @"monster_id" = 1,
                 @"DFHHPMMGKLH" = 2,
                 @"EFBNBDHOODL" = 3,
                 _,
@@ -117015,12 +117015,12 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const Decoded = struct {
                 pub const Parent = IDKJCMFFINL;
                 pub const init: @This() = .{};
-                @"AJFCJODCIKO": u32 = 0,
+                @"monster_id": u32 = 0,
                 @"DFHHPMMGKLH": u32 = 0,
                 @"EFBNBDHOODL": []const u8 = &.{},
             };
             pub const encoding_by_field = struct {
-                pub const @"AJFCJODCIKO": Encoding = .normal;
+                pub const @"monster_id": Encoding = .normal;
                 pub const @"DFHHPMMGKLH": Encoding = .normal;
                 pub const @"EFBNBDHOODL": Encoding = .normal;
             };
@@ -117971,7 +117971,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             @"AOKBKOHLFFF": u32 = 0,
             @"KFKDELAKEHK": u32 = 0,
             @"scene_reward": ?SceneRewardInfo = null,
-            @"AJFCJODCIKO": u32 = 0,
+            @"monster_id": u32 = 0,
             @"GPBEPHNNNBH": u32 = 0,
             @"LAIEBHJFBLH": []const u8 = &.{},
             @"ICFCDCHDCCA": u32 = 0,
@@ -117982,7 +117982,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const xor_by_field = struct {
                 pub const @"AOKBKOHLFFF": u31 = 7568;
                 pub const @"KFKDELAKEHK": u31 = 10655;
-                pub const @"AJFCJODCIKO": u31 = 1814;
+                pub const @"monster_id": u31 = 1814;
                 pub const @"GPBEPHNNNBH": u31 = 10412;
                 pub const @"ICFCDCHDCCA": u31 = 3204;
                 pub const @"GIBDHCCDPJC": u31 = 11378;
@@ -117995,7 +117995,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"AOKBKOHLFFF" = 1,
                 @"KFKDELAKEHK" = 2,
                 @"scene_reward" = 4,
-                @"AJFCJODCIKO" = 6,
+                @"monster_id" = 6,
                 @"GPBEPHNNNBH" = 7,
                 @"LAIEBHJFBLH" = 8,
                 @"ICFCDCHDCCA" = 9,
@@ -118011,7 +118011,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"AOKBKOHLFFF": u32 = 0,
                 @"KFKDELAKEHK": u32 = 0,
                 @"scene_reward": ?SceneRewardInfo.Decoded = null,
-                @"AJFCJODCIKO": u32 = 0,
+                @"monster_id": u32 = 0,
                 @"GPBEPHNNNBH": u32 = 0,
                 @"LAIEBHJFBLH": []const u8 = &.{},
                 @"ICFCDCHDCCA": u32 = 0,
@@ -118024,7 +118024,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"AOKBKOHLFFF": Encoding = .normal;
                 pub const @"KFKDELAKEHK": Encoding = .normal;
                 pub const @"scene_reward": Encoding = .normal;
-                pub const @"AJFCJODCIKO": Encoding = .normal;
+                pub const @"monster_id": Encoding = .normal;
                 pub const @"GPBEPHNNNBH": Encoding = .normal;
                 pub const @"LAIEBHJFBLH": Encoding = .normal;
                 pub const @"ICFCDCHDCCA": Encoding = .normal;
@@ -126882,13 +126882,13 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"NKMCJAAMNJF": Encoding = .normal;
             };
         };
-        pub const AECIOPJOEBN = struct {
-            pub const message_name = "AECIOPJOEBN";
+        pub const SceneEntityMoveCsReq = struct {
+            pub const message_name = "SceneEntityMoveCsReq";
             pub const cmd_id: u16 = 907;
             @"DLKGNAAEEKJ": bool = false,
-            @"LFBGLMHEPAB": ?BLAOCAMIENI = null,
+            @"entity_motion": ?EntityMotionInfo = null,
             @"floor_id": u32 = 0,
-            @"AAGHGJJAOOC": []const BLAOCAMIENI = &.{},
+            @"motion_list": []const EntityMotionInfo = &.{},
             pub const xor_by_field = struct {
                 pub const @"floor_id": u31 = 16338;
             };
@@ -126896,24 +126896,24 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             };
             pub const FieldNumber = enum(u29) {
                 @"DLKGNAAEEKJ" = 2,
-                @"LFBGLMHEPAB" = 5,
+                @"entity_motion" = 5,
                 @"floor_id" = 10,
-                @"AAGHGJJAOOC" = 14,
+                @"motion_list" = 14,
                 _,
             };
             pub const Decoded = struct {
-                pub const Parent = AECIOPJOEBN;
+                pub const Parent = SceneEntityMoveCsReq;
                 pub const init: @This() = .{};
                 @"DLKGNAAEEKJ": bool = false,
-                @"LFBGLMHEPAB": ?BLAOCAMIENI.Decoded = null,
+                @"entity_motion": ?EntityMotionInfo.Decoded = null,
                 @"floor_id": u32 = 0,
-                @"AAGHGJJAOOC": Iterator(BLAOCAMIENI.Decoded) = .empty,
+                @"motion_list": Iterator(EntityMotionInfo.Decoded) = .empty,
             };
             pub const encoding_by_field = struct {
                 pub const @"DLKGNAAEEKJ": Encoding = .normal;
-                pub const @"LFBGLMHEPAB": Encoding = .normal;
+                pub const @"entity_motion": Encoding = .normal;
                 pub const @"floor_id": Encoding = .normal;
-                pub const @"AAGHGJJAOOC": Encoding = .normal;
+                pub const @"motion_list": Encoding = .normal;
             };
         };
         pub const DJNPHOACCKC = struct {
@@ -136543,8 +136543,8 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const encoding_by_field = struct {
             };
         };
-        pub const BLAOCAMIENI = struct {
-            pub const message_name = "BLAOCAMIENI";
+        pub const EntityMotionInfo = struct {
+            pub const message_name = "EntityMotionInfo";
             @"entity_id": u32 = 0,
             @"rotation": ?Vector3 = null,
             @"position": ?Vector3 = null,
@@ -136560,7 +136560,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 _,
             };
             pub const Decoded = struct {
-                pub const Parent = BLAOCAMIENI;
+                pub const Parent = EntityMotionInfo;
                 pub const init: @This() = .{};
                 @"entity_id": u32 = 0,
                 @"rotation": ?Vector3.Decoded = null,
@@ -138221,7 +138221,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
         pub const PPJHALGDLOC = struct {
             pub const message_name = "PPJHALGDLOC";
             pub const cmd_id: u16 = 9343;
-            @"JCMJILEDHPI": []const BLAOCAMIENI = &.{},
+            @"JCMJILEDHPI": []const EntityMotionInfo = &.{},
             pub const xor_by_field = struct {
             };
             pub const oneof_by_field = struct {
@@ -138233,7 +138233,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const Decoded = struct {
                 pub const Parent = PPJHALGDLOC;
                 pub const init: @This() = .{};
-                @"JCMJILEDHPI": Iterator(BLAOCAMIENI.Decoded) = .empty,
+                @"JCMJILEDHPI": Iterator(EntityMotionInfo.Decoded) = .empty,
             };
             pub const encoding_by_field = struct {
                 pub const @"JCMJILEDHPI": Encoding = .normal;
@@ -139672,7 +139672,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const message_name = "IBDCGHFALBO";
             pub const cmd_id: u16 = 9790;
             @"BGOONKKMHEL": u32 = 0,
-            @"AAGHGJJAOOC": []const FIBGMFAAJPJ = &.{},
+            @"motion_list": []const FIBGMFAAJPJ = &.{},
             pub const xor_by_field = struct {
                 pub const @"BGOONKKMHEL": u31 = 7476;
             };
@@ -139680,18 +139680,18 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             };
             pub const FieldNumber = enum(u29) {
                 @"BGOONKKMHEL" = 3,
-                @"AAGHGJJAOOC" = 6,
+                @"motion_list" = 6,
                 _,
             };
             pub const Decoded = struct {
                 pub const Parent = IBDCGHFALBO;
                 pub const init: @This() = .{};
                 @"BGOONKKMHEL": u32 = 0,
-                @"AAGHGJJAOOC": Iterator(FIBGMFAAJPJ.Decoded) = .empty,
+                @"motion_list": Iterator(FIBGMFAAJPJ.Decoded) = .empty,
             };
             pub const encoding_by_field = struct {
                 pub const @"BGOONKKMHEL": Encoding = .normal;
-                pub const @"AAGHGJJAOOC": Encoding = .normal;
+                pub const @"motion_list": Encoding = .normal;
             };
         };
         pub const GLANINHBAON = struct {
@@ -140202,18 +140202,18 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
         };
         pub const AAPOAEAAADJ = struct {
             pub const message_name = "AAPOAEAAADJ";
-            @"AJFCJODCIKO": u32 = 0,
+            @"monster_id": u32 = 0,
             @"INICKGCBGFG": u32 = 0,
             @"JCINPOPLJAF": u32 = 0,
             pub const xor_by_field = struct {
-                pub const @"AJFCJODCIKO": u31 = 11847;
+                pub const @"monster_id": u31 = 11847;
                 pub const @"INICKGCBGFG": u31 = 10247;
                 pub const @"JCINPOPLJAF": u31 = 4115;
             };
             pub const oneof_by_field = struct {
             };
             pub const FieldNumber = enum(u29) {
-                @"AJFCJODCIKO" = 1,
+                @"monster_id" = 1,
                 @"INICKGCBGFG" = 5,
                 @"JCINPOPLJAF" = 12,
                 _,
@@ -140221,12 +140221,12 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const Decoded = struct {
                 pub const Parent = AAPOAEAAADJ;
                 pub const init: @This() = .{};
-                @"AJFCJODCIKO": u32 = 0,
+                @"monster_id": u32 = 0,
                 @"INICKGCBGFG": u32 = 0,
                 @"JCINPOPLJAF": u32 = 0,
             };
             pub const encoding_by_field = struct {
-                pub const @"AJFCJODCIKO": Encoding = .normal;
+                pub const @"monster_id": Encoding = .normal;
                 pub const @"INICKGCBGFG": Encoding = .normal;
                 pub const @"JCINPOPLJAF": Encoding = .normal;
             };
@@ -142123,8 +142123,8 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"DGKMFPCPPPL": Encoding = .normal;
             };
         };
-        pub const KGLILLPBEME = struct {
-            pub const message_name = "KGLILLPBEME";
+        pub const SceneAvatarInfo = struct {
+            pub const message_name = "SceneAvatarInfo";
             @"avatar_id": i32 = 0,
             @"uid": u32 = 0,
             @"level": i32 = 0,
@@ -142147,7 +142147,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 _,
             };
             pub const Decoded = struct {
-                pub const Parent = KGLILLPBEME;
+                pub const Parent = SceneAvatarInfo;
                 pub const init: @This() = .{};
                 @"avatar_id": i32 = 0,
                 @"uid": u32 = 0,
@@ -150808,7 +150808,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             @"KPEGDMBIHFP": bool = false,
             @"quest_type": u32 = 0,
             @"BIFEMPJJMBA": []const u32 = &.{},
-            @"OAGDACKHPDN": u32 = 0,
+            @"world_level": u32 = 0,
             @"JGJMBPMLBID": ?IAHMJMFJLJA = null,
             @"PPKHDEGACLP": []const AvatarUnitInfo = &.{},
             @"EIJAABCAJOM": ?OIJFINCMMMI = null,
@@ -150839,7 +150839,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"EKPMICNLCOE": u31 = 14757;
                 pub const @"quest_id": u31 = 3674;
                 pub const @"quest_type": u31 = 13480;
-                pub const @"OAGDACKHPDN": u31 = 6575;
+                pub const @"world_level": u31 = 6575;
                 pub const @"IPJKPINKDMO": u31 = 2862;
                 pub const @"MAIBILHIIGC": u31 = 8027;
                 pub const @"NFFJGNJPIAH": u31 = 12705;
@@ -150871,7 +150871,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"KPEGDMBIHFP" = 152,
                 @"quest_type" = 161,
                 @"BIFEMPJJMBA" = 377,
-                @"OAGDACKHPDN" = 416,
+                @"world_level" = 416,
                 @"JGJMBPMLBID" = 587,
                 @"PPKHDEGACLP" = 620,
                 @"EIJAABCAJOM" = 681,
@@ -150924,7 +150924,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"KPEGDMBIHFP": bool = false,
                 @"quest_type": u32 = 0,
                 @"BIFEMPJJMBA": Iterator(u32) = .empty,
-                @"OAGDACKHPDN": u32 = 0,
+                @"world_level": u32 = 0,
                 @"JGJMBPMLBID": ?IAHMJMFJLJA.Decoded = null,
                 @"PPKHDEGACLP": Iterator(AvatarUnitInfo.Decoded) = .empty,
                 @"EIJAABCAJOM": ?OIJFINCMMMI.Decoded = null,
@@ -150974,7 +150974,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"KPEGDMBIHFP": Encoding = .normal;
                 pub const @"quest_type": Encoding = .normal;
                 pub const @"BIFEMPJJMBA": Encoding = .normal;
-                pub const @"OAGDACKHPDN": Encoding = .normal;
+                pub const @"world_level": Encoding = .normal;
                 pub const @"JGJMBPMLBID": Encoding = .normal;
                 pub const @"PPKHDEGACLP": Encoding = .normal;
                 pub const @"EIJAABCAJOM": Encoding = .normal;

@@ -33,6 +33,7 @@ pub const Sync = struct {
         reload_hall_scene: bool,
         time_modified: bool,
         reload_big_scene_floor: bool,
+        big_scene_logic_started: bool,
 
         hall_buffer: pack.HallBuffer,
     };
@@ -58,6 +59,7 @@ pub const Sync = struct {
             .reload_hall_scene = false,
             .time_modified = false,
             .reload_big_scene_floor = false,
+            .big_scene_logic_started = false,
             .hall_buffer = .{ .npcs = .empty },
         },
     };
@@ -294,21 +296,6 @@ pub const BigSceneTeam = struct {
     }
 };
 
-pub const EntityId = packed struct(u32) {
-    seqn: u24,
-    type: Type,
-
-    pub const Type = enum(u8) {
-        avatar = 1,
-        gadget = 7,
-        _,
-    };
-
-    pub fn toInt(id: EntityId) u32 {
-        return @backingInt(id);
-    }
-};
-
 fn avatarAtIndex(player: *const Player, index: u32) Avatar {
     const storage_avatar = player.storage.avatars.getPtr(index);
 
@@ -511,6 +498,7 @@ pub fn updateControlGuiseAvatar(player: *Player, guise: ControlGuiseAvatar) void
 pub fn enterMainCitySection(player: *Player, section: MainCitySection) void {
     player.needs_save = true;
     player.sync.scene.reload_hall_scene = true;
+    player.temp.view_objects = null;
 
     player.storage.big_scene.cur_floor_id = .none;
     player.storage.main_city.section = section;
@@ -531,15 +519,11 @@ pub fn enterBigSceneFloor(player: *Player, options: struct {
 }) void {
     player.needs_save = true;
     player.sync.scene.reload_big_scene_floor = true;
+    player.temp.view_objects = null;
 
     player.storage.big_scene.cur_floor_id = .wrap(options.floor_id);
     player.storage.big_scene.position = options.position;
     player.storage.big_scene.rotation = options.rotation;
-}
-
-pub fn nextBigSceneEntityId(player: *Player, @"type": EntityId.Type) EntityId {
-    defer player.temp.entity_id_seq +%= 1;
-    return .{ .type = @"type", .seqn = player.temp.entity_id_seq };
 }
 
 pub const RollbackPointOptions = struct {
@@ -551,6 +535,87 @@ pub fn updateRollbackPoint(player: *Player, options: RollbackPointOptions) void 
     player.needs_save = true;
     player.storage.big_scene.position = options.position;
     player.storage.big_scene.rotation = options.rotation;
+}
+
+/// Must be called when `EnterFloorDoneCsReq` is received.
+///
+/// Returns `true` on success.
+/// Returns `false` if logic was already started or the player
+/// is not on big scene in the first place.
+pub fn startBigSceneLogic(player: *Player) bool {
+    if (player.temp.view_objects != null) return false; // already started.
+    player.sync.scene.big_scene_logic_started = true;
+
+    const floor_id = player.storage.big_scene.cur_floor_id.unwrap() orelse return false;
+    const floor = assets.Floor.table.get(floor_id).?;
+
+    player.temp.view_objects = @as(Temporaries.ViewObjects, undefined);
+    player.temp.view_objects.?.init(floor.group_id_list);
+
+    player.updateViewObjectGroups(&player.temp.view_objects.?, .{
+        .floor = &floor,
+        .position = player.storage.big_scene.position,
+    });
+    return true;
+}
+
+pub fn updateBigScenePosition(player: *Player, new_position: [3]i32) bool {
+    const view_objects = &(player.temp.view_objects orelse return false);
+
+    const floor_id = player.storage.big_scene.cur_floor_id.unwrap() orelse return false;
+    const floor = assets.Floor.table.get(floor_id).?;
+
+    player.updateViewObjectGroups(view_objects, .{
+        .floor = &floor,
+        .position = new_position,
+    });
+
+    return true;
+}
+
+const ViewObjectZone = struct {
+    floor: *const assets.Floor,
+    position: [3]i32,
+};
+
+fn updateViewObjectGroups(
+    player: *Player,
+    vo: *Temporaries.ViewObjects,
+    zone: ViewObjectZone,
+) void {
+    _ = player;
+
+    const position_x = zone.position[0];
+    const position_y = zone.position[1];
+    const position_z = zone.position[2];
+
+    var inactive_groups = vo.groups.inactive();
+    while (inactive_groups.next()) |group_id| {
+        const group = assets.Group.table.getGroupMetadata(group_id).?;
+        if (group.vo_group_type == 1 or group.vo_group_type == 2) {
+            if (group.battle_region_areas.len == 0) {
+                inactive_groups.activate();
+                continue;
+            }
+
+            for (group.battle_region_areas) |battle_region_area| {
+                if (position_y - battle_region_area.origin_pos.y <= battle_region_area.height_y and
+                    @abs(battle_region_area.origin_pos.z - position_z) <= 4_000 and
+                    @abs(battle_region_area.origin_pos.x - position_x) <= 4_000)
+                {
+                    inactive_groups.activate();
+                    continue;
+                }
+            }
+        }
+    }
+}
+
+pub fn getMasterViewObjectEntityId(player: *Player) ?Temporaries.ViewObjects.EntityId {
+    if (player.temp.view_objects) |*vo|
+        return vo.master_entity_id;
+
+    return null;
 }
 
 pub fn updateMainCityTime(player: *Player, time: Time) void {
@@ -813,4 +878,191 @@ pub fn buildEnterFloorScNotify(player: *Player) ?gen.EnterFloorScNotify {
             } },
         },
     };
+}
+
+pub fn notifyViewObjects(
+    player: *Player,
+    sink: *remielle.session.Sink,
+) !void {
+    const view_objects = &(player.temp.view_objects orelse return);
+
+    if (player.sync.scene.big_scene_logic_started) {
+        try player.notifyMasterEntityAppearance(sink);
+    }
+
+    const group_id_list = view_objects.groups.flushGroupOrders();
+    if (group_id_list.len != 0) {
+        try notifyGroupMemberCreation(sink, group_id_list);
+        try notifyGroupOrders(sink, group_id_list);
+        try notifyGroupEntitiesAppearance(view_objects, sink, group_id_list);
+    }
+}
+
+const entity_count_max =
+    assets.Group.table.gadget_ids.len +
+    assets.Group.table.monster_ids.len;
+
+fn notifyGroupMemberCreation(
+    sink: *remielle.session.Sink,
+    group_id_list: []const u32,
+) !void {
+    var group_member_buffer: [entity_count_max]gen.GroupMemberId = undefined;
+    var group_member_list: ArrayList(gen.GroupMemberId) = .initBuffer(&group_member_buffer);
+
+    for (group_id_list) |group_id| {
+        const group = assets.Group.table.getGroupById(group_id).?;
+        for (group.configIdVec()) |config_ids| {
+            for (config_ids) |config_id| {
+                group_member_list.appendAssumeCapacity(.{
+                    .group_id = group_id,
+                    .config_id = config_id,
+                });
+            }
+        }
+    }
+
+    try sink.notify(gen.GroupMemberCreateScNotify, &.{
+        .group_member_list = group_member_list.items,
+    });
+}
+
+fn notifyGroupOrders(
+    sink: *remielle.session.Sink,
+    group_id_list: []const u32,
+) !void {
+    for (group_id_list) |group_id| {
+        var member_config_id_buffer: [entity_count_max]u32 = undefined;
+        var member_config_id_list: ArrayList(u32) = .initBuffer(&member_config_id_buffer);
+        const group = assets.Group.table.getGroupById(group_id).?;
+
+        for (group.configIdVec()) |config_ids| {
+            for (config_ids) |config_id| {
+                member_config_id_list.appendAssumeCapacity(config_id);
+            }
+        }
+
+        try sink.notify(gen.GroupOrderReadyScNotify, &.{ .group_info = .{
+            .group_id = group_id,
+            .reason = .{ .group_order_reason = @fromBackingInt(1) },
+            .member_config_id_list = member_config_id_list.items,
+        } });
+    }
+}
+
+fn notifyMasterEntityAppearance(player: *Player, sink: *remielle.session.Sink) !void {
+    const avatar_id = player.getControlBigSceneAvatarId();
+    const entity_id = player.temp.view_objects.?.master_entity_id;
+    const position = player.storage.big_scene.position;
+
+    try sink.notify(gen.SceneEntityAppearScNotify, &.{
+        .param = 0,
+        .appear_type = @fromBackingInt(1),
+        .entity_list = &.{.{
+            .entity_id = entity_id.toInt(),
+            .position = .{
+                .x = position[0],
+                .y = position[1],
+                .z = position[2],
+            },
+            .rotation = .{},
+            .entity = .{ .Avatar = .{
+                .avatar_id = @intCast(avatar_id),
+            } },
+        }},
+    });
+}
+
+const EntityBatch = struct {
+    sink: *remielle.session.Sink,
+    buffer: []gen.SceneEntityInfo,
+    count: usize,
+
+    fn init(sink: *remielle.session.Sink, buffer: []gen.SceneEntityInfo) EntityBatch {
+        return .{
+            .sink = sink,
+            .buffer = buffer,
+            .count = 0,
+        };
+    }
+
+    fn add(batch: *EntityBatch, info: gen.SceneEntityInfo) !void {
+        if (batch.count == batch.buffer.len) try batch.send();
+
+        defer batch.count += 1;
+        batch.buffer[batch.count] = info;
+    }
+
+    fn send(batch: *EntityBatch) !void {
+        if (batch.count == 0) return;
+        defer batch.count = 0;
+
+        return batch.sink.notify(gen.SceneEntityAppearScNotify, &.{
+            .appear_type = @fromBackingInt(1),
+            .entity_list = batch.buffer[0..batch.count],
+            .param = 0,
+        });
+    }
+};
+
+fn notifyGroupEntitiesAppearance(
+    vo: *Temporaries.ViewObjects,
+    sink: *remielle.session.Sink,
+    group_id_list: []const u32,
+) !void {
+    var buffer: [128]gen.SceneEntityInfo = undefined;
+    var batch: EntityBatch = .init(sink, &buffer);
+
+    for (group_id_list) |group_id| {
+        const group = assets.Group.table.getGroupById(group_id).?;
+        for (
+            group.gadget_config_ids,
+            group.gadget_ids,
+            group.gadget_positions,
+        ) |config_id, gadget_id, position| {
+            const entity_id = vo.nextEntityId(.gadget);
+
+            try batch.add(.{
+                .entity_id = entity_id.toInt(),
+                .group_id = group_id,
+                .config_id = config_id,
+                .position = .{
+                    .x = position.x,
+                    .y = position.y,
+                    .z = position.z,
+                },
+                .rotation = .{ .y = position.euler_y },
+                .member_variables = &.{
+                    .{ .key = "OpenType", .value = 0 },
+                },
+                .entity = .{ .Gadget = .{
+                    .gadget_id = gadget_id,
+                } },
+            });
+        }
+
+        for (
+            group.monster_config_ids,
+            group.monster_ids,
+            group.monster_positions,
+        ) |config_id, monster_id, position| {
+            const entity_id = vo.nextEntityId(.monster);
+
+            try batch.add(.{
+                .entity_id = entity_id.toInt(),
+                .group_id = group_id,
+                .config_id = config_id,
+                .position = .{
+                    .x = position.x,
+                    .y = position.y,
+                    .z = position.z,
+                },
+                .rotation = .{ .y = position.euler_y },
+                .entity = .{ .Monster = .{
+                    .monster_id = monster_id,
+                } },
+            });
+        }
+    }
+
+    try batch.send();
 }

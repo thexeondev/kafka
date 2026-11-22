@@ -66,17 +66,25 @@ const ConfigGroupHeader = extern struct {
     group_count: u32,
     group_id_offset: u32,
     group_metadata_offset: u32,
+    battle_region_areas_offset: u32,
+    monster_count: u32,
+    monster_config_ids_offset: u32,
+    monster_ids_offset: u32,
+    monster_positions_offset: u32,
     gadget_count: u32,
     gadget_ids_offset: u32,
     gadget_config_ids_offset: u32,
     gadget_positions_offset: u32,
     gadget_types_offset: u32,
+    monster_id_types_offset: u32,
 };
 
 const GroupMetadata = extern struct {
     vo_group_type: u32,
     group_usage: u32,
     gadgets: Slice,
+    monsters: Slice,
+    battle_region_areas: Slice,
 };
 
 pub const Position = extern struct {
@@ -95,14 +103,40 @@ pub const GadgetType = enum(u8) {
     _,
 };
 
+pub const MonsterIdType = enum(u8) {
+    base_id = 0,
+    sub_id = 1,
+};
+
+const Polygon = extern struct {
+    height_y: i32,
+    origin_pos: extern struct {
+        x: i32,
+        y: i32,
+        z: i32,
+    },
+};
+
 pub const Group = struct {
     id: u32,
-    vo_group_type: u32,
-    group_usage: u32,
+    monster_config_ids: []const u32,
+    monster_ids: []const i32,
+    monster_positions: []const Position,
+    monster_id_types: []const MonsterIdType,
     gadget_ids: []const i32,
     gadget_config_ids: []const u32,
     gadget_positions: []const Position,
     gadget_types: []const GadgetType,
+
+    pub const Metadata = struct {
+        vo_group_type: u32,
+        group_usage: u32,
+        battle_region_areas: []const Polygon,
+    };
+
+    pub fn configIdVec(group: *const Group) [2][]const u32 {
+        return .{ group.gadget_config_ids, group.monster_config_ids };
+    }
 
     pub const table = struct {
         const bytes align(@alignOf(u32)) = @embedFile("assets/LevelWorld/bin/ConfigGroup.bin");
@@ -111,6 +145,15 @@ pub const Group = struct {
 
         pub const group_ids: []const u32 =
             ptrCast(u32, bytes[header.group_id_offset..].ptr)[0..header.group_count];
+
+        pub const monster_config_ids: []const u32 =
+            ptrCast(u32, bytes[header.monster_config_ids_offset..].ptr)[0..header.monster_count];
+
+        pub const monster_ids: []const i32 =
+            ptrCast(i32, bytes[header.monster_ids_offset..].ptr)[0..header.monster_count];
+
+        pub const monster_positions: []const Position =
+            ptrCast(Position, bytes[header.monster_positions_offset..].ptr)[0..header.monster_count];
 
         pub const gadget_ids: []const i32 =
             ptrCast(i32, bytes[header.gadget_ids_offset..].ptr)[0..header.gadget_count];
@@ -124,6 +167,9 @@ pub const Group = struct {
         pub const gadget_types: []const GadgetType =
             ptrCast(GadgetType, bytes[header.gadget_types_offset..].ptr)[0..header.gadget_count];
 
+        pub const monster_id_types: []const MonsterIdType =
+            ptrCast(MonsterIdType, bytes[header.monster_id_types_offset..].ptr)[0..header.monster_count];
+
         pub fn getGroupById(group_id: u32) ?Group {
             const group_index = mem.findScalar(u32, group_ids, group_id) orelse
                 return null;
@@ -133,12 +179,31 @@ pub const Group = struct {
 
             return .{
                 .id = group_id,
-                .vo_group_type = group_metadata.vo_group_type,
-                .group_usage = group_metadata.group_usage,
+                .monster_config_ids = group_metadata.monsters.take(monster_config_ids),
+                .monster_ids = group_metadata.monsters.take(monster_ids),
+                .monster_positions = group_metadata.monsters.take(monster_positions),
+                .monster_id_types = group_metadata.monsters.take(monster_id_types),
                 .gadget_ids = group_metadata.gadgets.take(gadget_ids),
                 .gadget_config_ids = group_metadata.gadgets.take(gadget_config_ids),
                 .gadget_positions = group_metadata.gadgets.take(gadget_positions),
                 .gadget_types = group_metadata.gadgets.take(gadget_types),
+            };
+        }
+
+        pub fn getGroupMetadata(group_id: u32) ?Group.Metadata {
+            const group_index = mem.findScalar(u32, group_ids, group_id) orelse
+                return null;
+
+            const group_metadata =
+                ptrCast(GroupMetadata, bytes[header.group_metadata_offset..])[group_index];
+
+            const battle_region_areas =
+                ptrCast(Polygon, bytes[header.battle_region_areas_offset..]);
+
+            return .{
+                .vo_group_type = group_metadata.vo_group_type,
+                .group_usage = group_metadata.group_usage,
+                .battle_region_areas = group_metadata.battle_region_areas.take(battle_region_areas),
             };
         }
     };

@@ -228,6 +228,7 @@ pub fn selfBasicInfo(player: *Player) gen.SelfBasicInfo {
         .nick_name = "xeondev",
         .level = 1,
         .name_change_times = 1,
+        .world_level = 5,
         .avatar_id = @backingInt(player.storage.role.avatar),
         .control_avatar_id = @backingInt(player.storage.role.control_avatar),
         .control_guise_avatar_id = player.getControlGuiseAvatarId(),
