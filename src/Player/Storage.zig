@@ -23,6 +23,7 @@ const assert = std.debug.assert;
 const hasUniqueRepresentation = std.meta.hasUniqueRepresentation;
 
 const remielle = @import("../remielle.zig");
+const Player = remielle.Player;
 const client = remielle.client;
 const templates = remielle.templates;
 const BoundedMultiArray = remielle.BoundedMultiArray;
@@ -601,76 +602,9 @@ pub const Role = extern struct {
 };
 
 pub const Time = packed struct(u8) {
-    day: Day,
-    period: Period,
+    day: Player.Time.Day.Int,
+    period: Player.Time.Period.Int,
     _: u3 = 0,
-
-    pub const Day = enum(u3) {
-        sunday = 0,
-        monday = 1,
-        tuesday = 2,
-        wednesday = 3,
-        thursday = 4,
-        friday = 5,
-        saturday = 6,
-
-        pub fn fromInt(day_unwrapped: u32) Day {
-            return @fromBackingInt(@intCast(day_unwrapped % 7));
-        }
-
-        pub fn increment(day: Day) Day {
-            return .fromInt(@backingInt(day) + 1);
-        }
-    };
-
-    pub const Period = enum(u2) {
-        morning = 0,
-        afternoon = 1,
-        evening = 2,
-        night = 3,
-
-        const variants_count = 4;
-        const minutes_in_day: u16 = 24 * 60;
-        const minutes_in_period: u16 = minutes_in_day / variants_count;
-
-        pub const Change = struct {
-            new_value: Period,
-            day_advanced: bool,
-        };
-
-        pub fn increment(period: Period) Change {
-            return switch (period) {
-                .morning => .{ .new_value = .afternoon, .day_advanced = false },
-                .afternoon => .{ .new_value = .evening, .day_advanced = false },
-                .evening => .{ .new_value = .night, .day_advanced = false },
-                .night => .{ .new_value = .morning, .day_advanced = true },
-            };
-        }
-
-        pub fn fastForwardTo(from: Period, to: Period) Change {
-            var day_advanced: bool = false;
-            var new_value: Period = from;
-            defer assert(new_value == to);
-
-            var increments: u8 = 0;
-            while (new_value != to) : (increments += 1) {
-                assert(increments < variants_count);
-
-                const incremented = new_value.increment();
-                new_value = incremented.new_value;
-
-                if (day_advanced) assert(!incremented.day_advanced); // day advanced 2 times?
-                day_advanced = day_advanced or incremented.day_advanced;
-            }
-
-            return .{ .new_value = new_value, .day_advanced = day_advanced };
-        }
-
-        pub fn toMinutes(period: Period) u16 {
-            const period_int: u16 = @backingInt(period);
-            return (period_int + 1) * minutes_in_period;
-        }
-    };
 };
 
 pub const BigScene = extern struct {
@@ -784,8 +718,8 @@ pub fn initDefaults(storage: *Storage) void {
             .control_guise_avatar = Role.Guise.fromInt(1581).?,
         },
         .time = .{
-            .day = .friday,
-            .period = .morning,
+            .day = @backingInt(Player.Time.Day.friday),
+            .period = @backingInt(Player.Time.Period.morning),
         },
         .big_scene = .{
             .cur_floor_id = .none,

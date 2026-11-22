@@ -136,7 +136,7 @@ pub fn equipInfo(out: EquipInfoList.Ptr, kv: Player.Equipment.KeyValue) void {
 pub const HallOptions = struct {
     main_city: *const Player.Storage.MainCity,
     role: *const Player.Storage.Role,
-    time: *const Player.Storage.Time,
+    time: Player.Time,
 };
 
 pub const HallBuffer = struct {
@@ -167,7 +167,7 @@ pub fn hall(comptime Root: type, options: HallOptions, buffer: *HallBuffer) Root
 
     if (protobuf.features.hall_time) {
         root.day_of_week = @backingInt(options.time.day);
-        root.scene_time_in_minutes = options.time.period.toMinutes();
+        root.scene_time_in_minutes = options.time.period.minutes();
     }
 
     if (protobuf.features.hall_npcs) {

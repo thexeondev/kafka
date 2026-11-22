@@ -205,7 +205,60 @@ pub const ControlGuiseAvatar = enum(u32) {
 };
 
 pub const MainCitySection = Storage.MainCity.Section; // TODO: maybe move the definition here?
-pub const TimePeriod = Storage.Time.Period; // TODO: maybe move the definition here?
+
+pub const Time = struct {
+    day: Day,
+    period: Period,
+
+    pub const Day = enum(u3) {
+        sunday = 0,
+        monday = 1,
+        tuesday = 2,
+        wednesday = 3,
+        thursday = 4,
+        friday = 5,
+        saturday = 6,
+
+        pub const Int = @typeInfo(@This()).@"enum".tag_type;
+
+        pub fn fromInt(day_int_unwrapped: u32) Day {
+            return @fromBackingInt(@intCast(day_int_unwrapped % 7));
+        }
+
+        pub fn next(day: Day) Day {
+            return .fromInt(@backingInt(day) + 1);
+        }
+    };
+
+    pub fn fastForwardToPeriod(time: *Time, new_period: Period) bool {
+        if (time.period == new_period) return false;
+
+        if (@backingInt(new_period) < @backingInt(time.period)) {
+            time.day = time.day.next();
+        }
+
+        time.period = new_period;
+        return true;
+    }
+
+    pub const Period = enum(u2) {
+        morning = 0,
+        afternoon = 1,
+        evening = 2,
+        night = 3,
+
+        pub const Int = @typeInfo(@This()).@"enum".tag_type;
+
+        const variants_count = 4;
+        const minutes_in_day: u16 = 24 * 60;
+        const minutes_in_period: u16 = minutes_in_day / variants_count;
+
+        pub fn minutes(period: Period) u16 {
+            const period_int: u16 = @backingInt(period);
+            return (period_int + 1) * minutes_in_period;
+        }
+    };
+};
 
 pub const BigSceneTeam = struct {
     lineup_avatar_list: [lineup_avatar_max]?u32,
@@ -468,19 +521,25 @@ pub fn enterBigSceneFloor(player: *Player, options: struct {
     player.storage.big_scene.rotation = options.rotation;
 }
 
-// TODO: store minutes instead of time periods + make this API a bit more flexible,
-// TimePeriod.Change doesn't really help here.
-pub fn updateTimePeriod(player: *Player, change: TimePeriod.Change) void {
+pub fn updateMainCityTime(player: *Player, time: Time) void {
     player.needs_save = true;
+    player.storage.time = .{
+        .day = @backingInt(time.day),
+        .period = @backingInt(time.period),
+    };
 
     if (player.isInHall()) {
         player.sync.scene.time_modified = true;
     } else if (player.isInBigScene()) {
         player.sync.scene.reload_big_scene_floor = true;
     } else unreachable;
+}
 
-    player.storage.time.period = change.new_value;
-    if (change.day_advanced) player.storage.time.day = player.storage.time.day.increment();
+pub fn getMainCityTime(player: *const Player) Time {
+    return .{
+        .day = @fromBackingInt(player.storage.time.day),
+        .period = @fromBackingInt(player.storage.time.period),
+    };
 }
 
 pub fn getControlGuiseAvatarId(player: *Player) u32 {
@@ -657,7 +716,7 @@ pub fn buildEnterSceneScNotify(player: *Player) ?gen.EnterSceneScNotify {
         .scene = pack.sceneDataForHall(.{
             .main_city = &player.storage.main_city,
             .role = &player.storage.role,
-            .time = &player.storage.time,
+            .time = player.getMainCityTime(),
         }, &player.sync.scene.hall_buffer),
     };
 }
@@ -671,7 +730,7 @@ pub fn buildHallRefresh(player: *Player) ?gen.HallRefreshScNotify {
     var refresh_notify = pack.hall(gen.HallRefreshScNotify, .{
         .main_city = &player.storage.main_city,
         .role = &player.storage.role,
-        .time = &player.storage.time,
+        .time = player.getMainCityTime(),
     }, &player.sync.scene.hall_buffer);
     refresh_notify.force_refresh = true;
 
@@ -687,6 +746,8 @@ pub fn buildEnterFloorScNotify(player: *Player) ?gen.EnterFloorScNotify {
 
     const floor = assets.Floor.table.get(floor_id).?;
 
+    const time = player.getMainCityTime();
+
     return .{
         .pos = .{ .x = pos[0], .y = pos[1], .z = pos[2] },
         .floor_position = .{
@@ -699,7 +760,7 @@ pub fn buildEnterFloorScNotify(player: *Player) ?gen.EnterFloorScNotify {
         },
         .scene_id = floor.scene_config_id,
         .floor_id = floor_id,
-        .day_of_week = @backingInt(player.storage.time.day),
-        .time_in_minutes = player.storage.time.period.toMinutes(),
+        .day_of_week = @backingInt(time.day),
+        .time_in_minutes = time.period.minutes(),
     };
 }

@@ -190,8 +190,8 @@ const name_by_player_role_avatar: std.EnumArray(Storage.Role.Avatar, []const u8)
 });
 
 pub const Time = struct {
-    day: Storage.Time.Day,
-    period: Storage.Time.Period,
+    day: Player.Time.Day,
+    period: Player.Time.Period,
 };
 
 pub const Avatar = struct {
@@ -529,8 +529,8 @@ pub fn init(arena: Allocator, name_map: *const NameMap, player: *Storage) Alloca
     };
 
     const time: Time = .{
-        .day = player.time.day,
-        .period = player.time.period,
+        .day = @fromBackingInt(player.time.day),
+        .period = @fromBackingInt(player.time.period),
     };
 
     const avatars = try arena.alloc(Avatar, player.avatars.count);
@@ -788,8 +788,8 @@ pub fn pack(
                     ))),
         },
         .time = .{
-            .day = zon.time.day,
-            .period = zon.time.period,
+            .day = @backingInt(zon.time.day),
+            .period = @backingInt(zon.time.period),
         },
         .big_scene = .{
             .cur_floor_id = .none, // TODO

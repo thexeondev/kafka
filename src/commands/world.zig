@@ -30,28 +30,29 @@ pub fn EnterSectionCsReq(session: Session(.EnterSectionCsReq)) !void {
 }
 
 pub fn ModMainCityTimeCsReq(session: Session(.ModMainCityTimeCsReq)) !void {
+    const log = std.log.scoped(.ModMainCityTimeCsReq);
     const request = try session.decodeBody();
 
-    const period_tag = std.enums.fromInt(protobuf.gen.TimePeriodType, request.time_period) orelse
-        return session.fail(.RET_INVALID_REQUEST_DATA);
+    const next_time_period: Player.Time.Period = switch (request.time_period) {
+        1 => .morning,
+        2 => .afternoon,
+        3 => .evening,
+        4 => .night,
 
-    const next_time_period_maybe: ?Player.TimePeriod = switch (period_tag) {
-        .TimePeriodType_MORNING => .morning,
-        .TimePeriodType_AFTERNOON => .afternoon,
-        .TimePeriodType_EVENING => .evening,
-        .TimePeriodType_NIGHT => .night,
-
-        .TimePeriodType_NOW,
-        .TimePeriodType_TIME_PERIOD_TYPE_NONE,
-        => null,
+        else => |period_int| {
+            log.debug("invalid time period: {d}", .{period_int});
+            return session.fail(.RET_INVALID_REQUEST_DATA);
+        },
     };
 
-    if (next_time_period_maybe) |next_time_period| {
-        const time_period_change = session.player.storage.time.period.fastForwardTo(next_time_period);
-        session.player.updateTimePeriod(time_period_change);
-    }
+    var time = session.player.getMainCityTime();
 
-    return session.success();
+    if (time.fastForwardToPeriod(next_time_period)) {
+        session.player.updateMainCityTime(time);
+        return session.success();
+    } else {
+        return session.fail(.RET_FORBID_MOD_TIME);
+    }
 }
 
 fn encodeAction(comptime Action: type, buffer: []u8, action: Action) ![]u8 {
