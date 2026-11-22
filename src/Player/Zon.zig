@@ -21,154 +21,6 @@ avatars: []Avatar,
 weapons_undressed: []Weapon,
 equipment_undressed: []Equipment,
 
-pub const NameMap = struct {
-    avatar_id_by_name: std.array_hash_map.String(Storage.Avatar.Id),
-    avatar_name_by_id: std.array_hash_map.Auto(Storage.Avatar.Id, []const u8),
-    weapon_id_by_name: std.array_hash_map.String(Storage.Weapon.Id),
-    weapon_name_by_id: std.array_hash_map.Auto(Storage.Weapon.Id, []const u8),
-    equipment_id_by_name_rarity_s: std.array_hash_map.String(u32),
-    equipment_name_by_id_rarity_s: std.array_hash_map.Auto(u32, []const u8),
-    section_id_by_name: std.array_hash_map.String(u32),
-    section_name_by_id: std.array_hash_map.Auto(u32, []const u8),
-    avatar_form_id_by_name: std.array_hash_map.String(u32),
-    avatar_form_name_by_id: std.array_hash_map.Auto(u32, []const u8),
-
-    pub fn init(arena: Allocator, text_map: *const templates.Text.Map) Allocator.Error!NameMap {
-        var avatar_id_by_name: std.array_hash_map.String(Storage.Avatar.Id) = .empty;
-        try avatar_id_by_name.ensureTotalCapacity(arena, templates.AvatarBase.table.count);
-        var avatar_name_by_id: std.array_hash_map.Auto(Storage.Avatar.Id, []const u8) = .empty;
-        try avatar_name_by_id.ensureTotalCapacity(arena, templates.AvatarBase.table.count);
-
-        for (
-            templates.AvatarBase.table.items(.id),
-            templates.AvatarBase.table.items(.code_name),
-        ) |id_int, code_name| {
-            const id = Storage.Avatar.Id.fromInt(id_int) orelse continue;
-
-            const code_name_slice = templates.AvatarBase.table.getString(code_name);
-            const code_name_text = text_map.get(code_name_slice) orelse code_name_slice;
-
-            avatar_id_by_name.putAssumeCapacityNoClobber(code_name_text, id);
-            avatar_name_by_id.putAssumeCapacityNoClobber(id, code_name_text);
-        }
-
-        var weapon_id_by_name: std.array_hash_map.String(Storage.Weapon.Id) = .empty;
-        try weapon_id_by_name.ensureTotalCapacity(arena, templates.Weapon.table.count);
-        var weapon_name_by_id: std.array_hash_map.Auto(Storage.Weapon.Id, []const u8) = .empty;
-        try weapon_name_by_id.ensureTotalCapacity(arena, templates.Weapon.table.count);
-
-        for (
-            templates.Weapon.table.items(.id),
-            templates.Weapon.table.items(.weapon_name),
-        ) |id_int, weapon_name| {
-            const id = Storage.Weapon.Id.fromInt(id_int) orelse continue;
-
-            const weapon_name_unformatted = templates.Weapon.table.getString(weapon_name);
-            const weapon_name_slice = try arena.print("Item_{s}_Name", .{weapon_name_unformatted});
-            const weapon_name_text = text_map.get(weapon_name_slice) orelse weapon_name_slice;
-
-            weapon_id_by_name.putAssumeCapacityNoClobber(weapon_name_text, id);
-            weapon_name_by_id.putAssumeCapacityNoClobber(id, weapon_name_text);
-        }
-
-        var equipment_id_by_name_rarity_s: std.array_hash_map.String(u32) = .empty;
-        try equipment_id_by_name_rarity_s.ensureTotalCapacity(arena, templates.Equipment.table.count);
-        var equipment_name_by_id_rarity_s: std.array_hash_map.Auto(u32, []const u8) = .empty;
-        try equipment_name_by_id_rarity_s.ensureTotalCapacity(arena, templates.Equipment.table.count);
-
-        for (templates.Equipment.table.items(.id)) |id_int| {
-            const rarity: Equipment.Id.Rarity = @fromBackingInt((id_int / 10) % 10);
-            if (rarity != .s) continue;
-
-            const equipment_name_slice = try arena.print("Item_Equipment_{d}_name", .{id_int});
-            const equipment_name_text = text_map.get(equipment_name_slice) orelse equipment_name_slice;
-
-            equipment_id_by_name_rarity_s.putAssumeCapacityNoClobber(equipment_name_text, id_int);
-            equipment_name_by_id_rarity_s.putAssumeCapacityNoClobber(id_int, equipment_name_text);
-        }
-
-        var section_id_by_name: std.array_hash_map.String(u32) = .empty;
-        try section_id_by_name.ensureTotalCapacity(arena, templates.SectionConfig.table.count);
-        var section_name_by_id: std.array_hash_map.Auto(u32, []const u8) = .empty;
-        try section_name_by_id.ensureTotalCapacity(arena, templates.SectionConfig.table.count);
-
-        for (
-            templates.SectionConfig.table.items(.id),
-            templates.SectionConfig.table.items(.display_name),
-        ) |id, display_name| {
-            const display_name_slice = templates.SectionConfig.table.getString(display_name);
-            if (display_name_slice.len == 0) continue;
-
-            var display_name_text = text_map.get(display_name_slice) orelse display_name_slice;
-            const get_or_put = section_id_by_name.getOrPutAssumeCapacity(display_name_text);
-            if (get_or_put.found_existing) {
-                display_name_text = try arena.print("Section_{d}", .{id});
-                section_id_by_name.putAssumeCapacityNoClobber(display_name_text, id);
-            } else {
-                get_or_put.value_ptr.* = id;
-            }
-
-            section_name_by_id.putAssumeCapacityNoClobber(id, display_name_text);
-        }
-
-        var avatar_form_id_by_name: std.array_hash_map.String(u32) = .empty;
-        try avatar_form_id_by_name.ensureTotalCapacity(arena, templates.AvatarForm.table.count);
-        var avatar_form_name_by_id: std.array_hash_map.Auto(u32, []const u8) = .empty;
-        try avatar_form_name_by_id.ensureTotalCapacity(arena, templates.AvatarForm.table.count);
-
-        for (
-            templates.AvatarForm.table.items(.id),
-            templates.AvatarForm.table.items(.name),
-        ) |id, name| {
-            const name_slice = templates.AvatarForm.table.getString(name);
-            const name_text = text_map.get(name_slice) orelse name_slice;
-            avatar_form_id_by_name.putAssumeCapacityNoClobber(name_text, id);
-            avatar_form_name_by_id.putAssumeCapacityNoClobber(id, name_text);
-        }
-
-        return .{
-            .avatar_id_by_name = avatar_id_by_name,
-            .avatar_name_by_id = avatar_name_by_id,
-            .weapon_id_by_name = weapon_id_by_name,
-            .weapon_name_by_id = weapon_name_by_id,
-            .equipment_name_by_id_rarity_s = equipment_name_by_id_rarity_s,
-            .equipment_id_by_name_rarity_s = equipment_id_by_name_rarity_s,
-            .section_id_by_name = section_id_by_name,
-            .section_name_by_id = section_name_by_id,
-            .avatar_form_id_by_name = avatar_form_id_by_name,
-            .avatar_form_name_by_id = avatar_form_name_by_id,
-        };
-    }
-
-    pub fn getEquipmentIdByNameForRarity(
-        name_map: *const NameMap,
-        name: []const u8,
-        rarity: Equipment.Id.Rarity,
-    ) ?Storage.Equipment.Id {
-        const id_rarity_s = name_map.equipment_id_by_name_rarity_s.get(name) orelse return null;
-        const slot = id_rarity_s % 10;
-        const id_int = ((id_rarity_s / 100) * 100) +
-            (@backingInt(rarity) * 10) +
-            slot;
-
-        return Storage.Equipment.Id.fromInt(id_int);
-    }
-
-    pub fn getEquipmentNameAndRarityById(
-        name_map: *const NameMap,
-        id: Storage.Equipment.Id,
-    ) Equipment.Id {
-        const id_int = @backingInt(id);
-        const slot = id_int % 10;
-        const id_rarity_s = ((id_int / 100) * 100) +
-            (@backingInt(Equipment.Id.Rarity.s) * 10) +
-            slot;
-
-        const name = name_map.equipment_name_by_id_rarity_s.get(id_rarity_s).?;
-        return .{ .name = name, .rarity = @fromBackingInt((id_int / 10) % 10) };
-    }
-};
-
 pub const MainCity = struct {
     section: []const u8,
 };
@@ -951,3 +803,151 @@ pub fn pack(
 
     return player;
 }
+
+pub const NameMap = struct {
+    avatar_id_by_name: std.array_hash_map.String(Storage.Avatar.Id),
+    avatar_name_by_id: std.array_hash_map.Auto(Storage.Avatar.Id, []const u8),
+    weapon_id_by_name: std.array_hash_map.String(Storage.Weapon.Id),
+    weapon_name_by_id: std.array_hash_map.Auto(Storage.Weapon.Id, []const u8),
+    equipment_id_by_name_rarity_s: std.array_hash_map.String(u32),
+    equipment_name_by_id_rarity_s: std.array_hash_map.Auto(u32, []const u8),
+    section_id_by_name: std.array_hash_map.String(u32),
+    section_name_by_id: std.array_hash_map.Auto(u32, []const u8),
+    avatar_form_id_by_name: std.array_hash_map.String(u32),
+    avatar_form_name_by_id: std.array_hash_map.Auto(u32, []const u8),
+
+    pub fn init(arena: Allocator, text_map: *const templates.Text.Map) Allocator.Error!NameMap {
+        var avatar_id_by_name: std.array_hash_map.String(Storage.Avatar.Id) = .empty;
+        try avatar_id_by_name.ensureTotalCapacity(arena, templates.AvatarBase.table.count);
+        var avatar_name_by_id: std.array_hash_map.Auto(Storage.Avatar.Id, []const u8) = .empty;
+        try avatar_name_by_id.ensureTotalCapacity(arena, templates.AvatarBase.table.count);
+
+        for (
+            templates.AvatarBase.table.items(.id),
+            templates.AvatarBase.table.items(.code_name),
+        ) |id_int, code_name| {
+            const id = Storage.Avatar.Id.fromInt(id_int) orelse continue;
+
+            const code_name_slice = templates.AvatarBase.table.getString(code_name);
+            const code_name_text = text_map.get(code_name_slice) orelse code_name_slice;
+
+            avatar_id_by_name.putAssumeCapacityNoClobber(code_name_text, id);
+            avatar_name_by_id.putAssumeCapacityNoClobber(id, code_name_text);
+        }
+
+        var weapon_id_by_name: std.array_hash_map.String(Storage.Weapon.Id) = .empty;
+        try weapon_id_by_name.ensureTotalCapacity(arena, templates.Weapon.table.count);
+        var weapon_name_by_id: std.array_hash_map.Auto(Storage.Weapon.Id, []const u8) = .empty;
+        try weapon_name_by_id.ensureTotalCapacity(arena, templates.Weapon.table.count);
+
+        for (
+            templates.Weapon.table.items(.id),
+            templates.Weapon.table.items(.weapon_name),
+        ) |id_int, weapon_name| {
+            const id = Storage.Weapon.Id.fromInt(id_int) orelse continue;
+
+            const weapon_name_unformatted = templates.Weapon.table.getString(weapon_name);
+            const weapon_name_slice = try arena.print("Item_{s}_Name", .{weapon_name_unformatted});
+            const weapon_name_text = text_map.get(weapon_name_slice) orelse weapon_name_slice;
+
+            weapon_id_by_name.putAssumeCapacityNoClobber(weapon_name_text, id);
+            weapon_name_by_id.putAssumeCapacityNoClobber(id, weapon_name_text);
+        }
+
+        var equipment_id_by_name_rarity_s: std.array_hash_map.String(u32) = .empty;
+        try equipment_id_by_name_rarity_s.ensureTotalCapacity(arena, templates.Equipment.table.count);
+        var equipment_name_by_id_rarity_s: std.array_hash_map.Auto(u32, []const u8) = .empty;
+        try equipment_name_by_id_rarity_s.ensureTotalCapacity(arena, templates.Equipment.table.count);
+
+        for (templates.Equipment.table.items(.id)) |id_int| {
+            const rarity: Equipment.Id.Rarity = @fromBackingInt((id_int / 10) % 10);
+            if (rarity != .s) continue;
+
+            const equipment_name_slice = try arena.print("Item_Equipment_{d}_name", .{id_int});
+            const equipment_name_text = text_map.get(equipment_name_slice) orelse equipment_name_slice;
+
+            equipment_id_by_name_rarity_s.putAssumeCapacityNoClobber(equipment_name_text, id_int);
+            equipment_name_by_id_rarity_s.putAssumeCapacityNoClobber(id_int, equipment_name_text);
+        }
+
+        var section_id_by_name: std.array_hash_map.String(u32) = .empty;
+        try section_id_by_name.ensureTotalCapacity(arena, templates.SectionConfig.table.count);
+        var section_name_by_id: std.array_hash_map.Auto(u32, []const u8) = .empty;
+        try section_name_by_id.ensureTotalCapacity(arena, templates.SectionConfig.table.count);
+
+        for (
+            templates.SectionConfig.table.items(.id),
+            templates.SectionConfig.table.items(.display_name),
+        ) |id, display_name| {
+            const display_name_slice = templates.SectionConfig.table.getString(display_name);
+            if (display_name_slice.len == 0) continue;
+
+            var display_name_text = text_map.get(display_name_slice) orelse display_name_slice;
+            const get_or_put = section_id_by_name.getOrPutAssumeCapacity(display_name_text);
+            if (get_or_put.found_existing) {
+                display_name_text = try arena.print("Section_{d}", .{id});
+                section_id_by_name.putAssumeCapacityNoClobber(display_name_text, id);
+            } else {
+                get_or_put.value_ptr.* = id;
+            }
+
+            section_name_by_id.putAssumeCapacityNoClobber(id, display_name_text);
+        }
+
+        var avatar_form_id_by_name: std.array_hash_map.String(u32) = .empty;
+        try avatar_form_id_by_name.ensureTotalCapacity(arena, templates.AvatarForm.table.count);
+        var avatar_form_name_by_id: std.array_hash_map.Auto(u32, []const u8) = .empty;
+        try avatar_form_name_by_id.ensureTotalCapacity(arena, templates.AvatarForm.table.count);
+
+        for (
+            templates.AvatarForm.table.items(.id),
+            templates.AvatarForm.table.items(.name),
+        ) |id, name| {
+            const name_slice = templates.AvatarForm.table.getString(name);
+            const name_text = text_map.get(name_slice) orelse name_slice;
+            avatar_form_id_by_name.putAssumeCapacityNoClobber(name_text, id);
+            avatar_form_name_by_id.putAssumeCapacityNoClobber(id, name_text);
+        }
+
+        return .{
+            .avatar_id_by_name = avatar_id_by_name,
+            .avatar_name_by_id = avatar_name_by_id,
+            .weapon_id_by_name = weapon_id_by_name,
+            .weapon_name_by_id = weapon_name_by_id,
+            .equipment_name_by_id_rarity_s = equipment_name_by_id_rarity_s,
+            .equipment_id_by_name_rarity_s = equipment_id_by_name_rarity_s,
+            .section_id_by_name = section_id_by_name,
+            .section_name_by_id = section_name_by_id,
+            .avatar_form_id_by_name = avatar_form_id_by_name,
+            .avatar_form_name_by_id = avatar_form_name_by_id,
+        };
+    }
+
+    pub fn getEquipmentIdByNameForRarity(
+        name_map: *const NameMap,
+        name: []const u8,
+        rarity: Equipment.Id.Rarity,
+    ) ?Storage.Equipment.Id {
+        const id_rarity_s = name_map.equipment_id_by_name_rarity_s.get(name) orelse return null;
+        const slot = id_rarity_s % 10;
+        const id_int = ((id_rarity_s / 100) * 100) +
+            (@backingInt(rarity) * 10) +
+            slot;
+
+        return Storage.Equipment.Id.fromInt(id_int);
+    }
+
+    pub fn getEquipmentNameAndRarityById(
+        name_map: *const NameMap,
+        id: Storage.Equipment.Id,
+    ) Equipment.Id {
+        const id_int = @backingInt(id);
+        const slot = id_int % 10;
+        const id_rarity_s = ((id_int / 100) * 100) +
+            (@backingInt(Equipment.Id.Rarity.s) * 10) +
+            slot;
+
+        const name = name_map.equipment_name_by_id_rarity_s.get(id_rarity_s).?;
+        return .{ .name = name, .rarity = @fromBackingInt((id_int / 10) % 10) };
+    }
+};
