@@ -629,8 +629,9 @@ pub const Time = packed struct(u8) {
         evening = 2,
         night = 3,
 
-        const variants_count: usize = 4;
-        const minutes_per_hour: u16 = 60;
+        const variants_count = 4;
+        const minutes_in_day: u16 = 24 * 60;
+        const minutes_in_period: u16 = minutes_in_day / variants_count;
 
         pub const Change = struct {
             new_value: Period,
@@ -666,14 +667,8 @@ pub const Time = packed struct(u8) {
         }
 
         pub fn toMinutes(period: Period) u16 {
-            const hour: u16 = switch (period) {
-                .morning => 6,
-                .afternoon => 12,
-                .evening => 18,
-                .night => 23,
-            };
-
-            return hour * minutes_per_hour;
+            const period_int: u16 = @backingInt(period);
+            return (period_int + 1) * minutes_in_period;
         }
     };
 };
