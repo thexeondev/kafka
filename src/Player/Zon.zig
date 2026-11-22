@@ -4,6 +4,7 @@ const Zon = @This();
 
 const std = @import("std");
 const Io = std.Io;
+const mem = std.mem;
 const assert = std.debug.assert;
 const Allocator = std.mem.Allocator;
 
@@ -16,6 +17,7 @@ const Storage = remielle.Player.Storage;
 role: Role,
 main_city: MainCity,
 time: Time,
+big_scene: BigScene,
 keymap: Keymap,
 avatars: []Avatar,
 weapons_undressed: []Weapon,
@@ -44,6 +46,75 @@ const name_by_player_role_avatar: std.EnumArray(Storage.Role.Avatar, []const u8)
 pub const Time = struct {
     day: Player.Time.Day,
     period: Player.Time.Period,
+};
+
+pub const BigScene = struct {
+    current_floor: ?Floor,
+    lineup: Lineup,
+
+    pub const Floor = struct {
+        id: u32,
+        position: [3]i32,
+        rotation: [3]i32,
+    };
+
+    pub const Lineup = struct {
+        avatars: Avatars,
+
+        pub const Avatars = struct {
+            @"1": ?[]const u8,
+            @"2": ?[]const u8,
+            @"3": ?[]const u8,
+        };
+
+        pub fn init(storage: *const Storage.BigScene, nm: *const NameMap) Lineup {
+            return .{ .avatars = .{
+                .@"1" = lineupAvatarToName(storage.lineup_avatars[0], nm),
+                .@"2" = lineupAvatarToName(storage.lineup_avatars[1], nm),
+                .@"3" = lineupAvatarToName(storage.lineup_avatars[2], nm),
+            } };
+        }
+
+        fn lineupAvatarToName(
+            avatar: Storage.BigScene.LineupAvatar,
+            nm: *const NameMap,
+        ) ?[]const u8 {
+            if (avatar.unwrap()) |avatar_id|
+                return nm.avatar_name_by_id.get(@fromBackingInt(avatar_id)).?;
+
+            return null;
+        }
+
+        pub fn packAvatars(
+            lineup: *const Lineup,
+            nm: *const NameMap,
+            diag: *PackDiagnostics,
+        ) PackError![3]Storage.BigScene.LineupAvatar {
+            var avatars: [3]Storage.BigScene.LineupAvatar = @splat(.none);
+            inline for (
+                &avatars,
+                @typeInfo(Avatars).@"struct".field_names,
+            ) |*lineup_avatar, lineup_avatar_field| {
+                if (@field(lineup.avatars, lineup_avatar_field)) |avatar_name| {
+                    const avatar_id_tag = nm.avatar_id_by_name.get(avatar_name) orelse
+                        return diag.fail(
+                            .name_invalid,
+                            .{ .kind = "big scene avatar", .name = avatar_name },
+                        );
+
+                    const avatar: Storage.BigScene.LineupAvatar =
+                        @fromBackingInt(@backingInt(avatar_id_tag));
+
+                    if (mem.findScalar(Storage.BigScene.LineupAvatar, &avatars, avatar) != null)
+                        return diag.fail(.avatar_duplicated, .{ .avatar_name = avatar_name });
+
+                    lineup_avatar.* = avatar;
+                }
+            }
+
+            return avatars;
+        }
+    };
 };
 
 pub const Avatar = struct {
@@ -485,6 +556,17 @@ pub fn init(arena: Allocator, name_map: *const NameMap, player: *Storage) Alloca
         .role = role,
         .main_city = main_city,
         .time = time,
+        .big_scene = .{
+            .current_floor = if (player.big_scene.cur_floor_id.unwrap()) |floor_id|
+                .{
+                    .id = floor_id,
+                    .position = player.big_scene.position,
+                    .rotation = player.big_scene.rotation,
+                }
+            else
+                null,
+            .lineup = .init(&player.big_scene, name_map),
+        },
         .keymap = .{
             .keyboard = keyboard_keys,
             .mouse = mouse_buttons,
@@ -610,6 +692,19 @@ pub fn pack(
             .{ .kind = "section", .name = zon.main_city.section },
         );
 
+    var big_scene: Storage.BigScene = .{
+        .cur_floor_id = .none,
+        .position = @splat(0),
+        .rotation = @splat(0),
+        .lineup_avatars = try zon.big_scene.lineup.packAvatars(name_map, diag),
+    };
+
+    if (zon.big_scene.current_floor) |floor| {
+        big_scene.cur_floor_id = @fromBackingInt(floor.id);
+        big_scene.position = floor.position;
+        big_scene.rotation = floor.rotation;
+    }
+
     var player: Storage = .{
         .avatars = .empty,
         .weapons = .empty,
@@ -643,12 +738,7 @@ pub fn pack(
             .day = @backingInt(zon.time.day),
             .period = @backingInt(zon.time.period),
         },
-        .big_scene = .{
-            .cur_floor_id = .none, // TODO
-            .position = @splat(0), // TODO
-            .rotation = @splat(0), // TODO
-            .lineup_avatars = @splat(.none), // TODO
-        },
+        .big_scene = big_scene,
         .system_settings = .{
             .keyboard_keymap = .empty,
             .mouse_keymap = .empty,
