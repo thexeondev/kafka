@@ -578,7 +578,7 @@ pub fn init(arena: Allocator, name_map: *const NameMap, player: *Storage) Alloca
             .weapon = weapon_maybe,
             .equipment = equipment,
             .awake = .{
-                .level = bits.awake.toIndex() orelse 0,
+                .level = bits.awake.unwrap() orelse 0,
                 .enabled = bits.awake_enabled,
             },
             .skin_id = bits.dressed_skin_id,

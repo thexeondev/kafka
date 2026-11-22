@@ -50,6 +50,48 @@ pub const Header = extern struct {
     pub const current_version: u32 = 14;
 };
 
+fn OptionalInt(comptime Int: type, comptime none_value: Int) type {
+    return enum(Int) {
+        none = none_value,
+        _,
+
+        const Optional = @This();
+
+        pub fn wrap(int: Int) Optional {
+            assert(int != none_value);
+            return @fromBackingInt(int);
+        }
+
+        pub fn unwrap(optional: Optional) ?Int {
+            return switch (optional) {
+                .none => null,
+                else => |value| @backingInt(value),
+            };
+        }
+    };
+}
+
+fn OptionalEnum(comptime Enum: type, comptime none_value: @typeInfo(Enum).@"enum".tag_type) type {
+    return enum(@typeInfo(Enum).@"enum".tag_type) {
+        none = none_value,
+        _,
+
+        const Optional = @This();
+
+        pub fn wrap(value: Enum) Optional {
+            assert(@backingInt(value) != none_value);
+            return @fromBackingInt(@backingInt(value));
+        }
+
+        pub fn unwrap(optional: Optional) ?Enum {
+            return switch (optional) {
+                .none => null,
+                else => |value| @fromBackingInt(@backingInt(value)),
+            };
+        }
+    };
+}
+
 pub const Avatar = struct {
     id: Id,
     bits: Bits,
@@ -223,17 +265,7 @@ pub const Avatar = struct {
         };
     };
 
-    pub const Awake = enum(u3) {
-        none = 0,
-        _,
-
-        pub fn toIndex(awake: Awake) ?u32 {
-            return switch (awake) {
-                .none => null,
-                _ => @backingInt(awake),
-            };
-        }
-    };
+    pub const Awake = OptionalInt(u3, 0);
 };
 
 pub fn getOrAddAvatar(
@@ -326,21 +358,7 @@ pub const Weapon = packed struct(u64) {
             return @fromBackingInt(uid_int);
         }
 
-        pub const Optional = enum(u32) {
-            none = 0,
-            _,
-
-            pub fn wrap(uid: Uid) Optional {
-                return @fromBackingInt(@backingInt(uid));
-            }
-
-            pub fn unwrap(uid_maybe: Optional) ?Uid {
-                return switch (uid_maybe) {
-                    .none => null,
-                    else => |uid| @fromBackingInt(@backingInt(uid)),
-                };
-            }
-        };
+        pub const Optional = OptionalEnum(Uid, 0);
     };
 
     pub const Refine = enum(u8) {
@@ -411,22 +429,7 @@ pub const Equipment = extern struct {
         pub const Key = enum(u16) {
             _,
 
-            pub const Optional = enum(u16) {
-                none = 0,
-                _,
-
-                pub fn wrap(key: Key) Key.Optional {
-                    assert(@backingInt(key) != @backingInt(Key.Optional.none));
-                    return @fromBackingInt(@backingInt(key));
-                }
-
-                pub fn unwrap(key_maybe: Key.Optional) ?Key {
-                    return switch (key_maybe) {
-                        .none => null,
-                        _ => |key| @fromBackingInt(@backingInt(key)),
-                    };
-                }
-            };
+            pub const Optional = OptionalEnum(Key, 0);
         };
 
         pub const Optional = extern struct {
@@ -487,28 +490,7 @@ pub const Equipment = extern struct {
             return @fromBackingInt(uid_int);
         }
 
-        pub const Optional = enum(u32) {
-            none = 0,
-            _,
-
-            pub fn wrap(uid: Uid) Optional {
-                return @fromBackingInt(@backingInt(uid));
-            }
-
-            pub fn unwrap(uid_maybe: Optional) ?Uid {
-                return switch (uid_maybe) {
-                    .none => null,
-                    else => |uid| @fromBackingInt(@backingInt(uid)),
-                };
-            }
-
-            pub fn unwrapInt(uid_maybe: Optional) ?u32 {
-                return switch (uid_maybe) {
-                    .none => null,
-                    else => |uid| @backingInt(uid),
-                };
-            }
-        };
+        pub const Optional = OptionalEnum(Uid, 0);
     };
 };
 
@@ -618,40 +600,8 @@ pub const BigScene = extern struct {
     }
 
     pub const lineup_avatar_count = 3;
-
-    pub const LineupAvatar = enum(u32) {
-        none = 0,
-        _,
-
-        pub fn unwrap(avatar: LineupAvatar) ?u32 {
-            return switch (avatar) {
-                .none => null,
-                _ => @backingInt(avatar),
-            };
-        }
-
-        pub fn wrap(avatar_id: u32) LineupAvatar {
-            assert(avatar_id != 0);
-            return @fromBackingInt(avatar_id);
-        }
-    };
-
-    pub const OptionalFloorId = enum(u32) {
-        none = 0,
-        _,
-
-        pub fn unwrap(optional: OptionalFloorId) ?u32 {
-            return switch (optional) {
-                .none => null,
-                _ => @backingInt(optional),
-            };
-        }
-
-        pub fn wrap(floor_id: u32) OptionalFloorId {
-            assert(floor_id != 0);
-            return @fromBackingInt(floor_id);
-        }
-    };
+    pub const LineupAvatar = OptionalInt(u32, 0);
+    pub const OptionalFloorId = OptionalInt(u32, 0);
 };
 
 pub const SystemSettings = struct {

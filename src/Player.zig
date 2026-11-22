@@ -72,11 +72,13 @@ pub const Avatar = struct {
     favorite: bool,
     weapon_show: WeaponShow,
     weapon_uid_maybe: ?u32,
-    dressed_equipment: std.EnumMap(Equipment.Type, u32),
-    awake_index_maybe: ?u32,
+    dressed_equipment: DressedEquipment,
+    awake_index_maybe: ?u3,
     awake_enabled: bool,
     skin_id_maybe: ?u32,
     form_id_maybe: ?u32,
+
+    pub const DressedEquipment = std.EnumMap(Equipment.Type, u32);
 
     pub const Iterator = struct {
         index: u32,
@@ -295,6 +297,12 @@ pub const BigSceneTeam = struct {
 fn avatarAtIndex(player: *const Player, index: u32) Avatar {
     const storage_avatar = player.storage.avatars.getPtr(index);
 
+    var dressed_equipment: Avatar.DressedEquipment = .empty;
+    inline for (std.enums.values(Equipment.Type), 0..) |equipment_type, type_index| {
+        if (storage_avatar.dressed_equipment[type_index].unwrap()) |uid|
+            dressed_equipment.put(equipment_type, @backingInt(uid));
+    }
+
     return .{
         .id = @backingInt(storage_avatar.id.*),
         .level = storage_avatar.bits.level_up.getLevel(),
@@ -311,15 +319,8 @@ fn avatarAtIndex(player: *const Player, index: u32) Avatar {
             @backingInt(uid)
         else
             null,
-        .dressed_equipment = .init(.{
-            .@"1" = storage_avatar.dressed_equipment[0].unwrapInt(),
-            .@"2" = storage_avatar.dressed_equipment[1].unwrapInt(),
-            .@"3" = storage_avatar.dressed_equipment[2].unwrapInt(),
-            .@"4" = storage_avatar.dressed_equipment[3].unwrapInt(),
-            .@"5" = storage_avatar.dressed_equipment[4].unwrapInt(),
-            .@"6" = storage_avatar.dressed_equipment[5].unwrapInt(),
-        }),
-        .awake_index_maybe = storage_avatar.bits.awake.toIndex(),
+        .dressed_equipment = dressed_equipment,
+        .awake_index_maybe = storage_avatar.bits.awake.unwrap(),
         .awake_enabled = storage_avatar.bits.awake_enabled,
         .skin_id_maybe = switch (storage_avatar.bits.dressed_skin_id) {
             0 => null,
