@@ -83937,11 +83937,11 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             pub const encoding_by_field = struct {
             };
         };
-        pub const OLMFAOGEDAA = struct {
-            pub const message_name = "OLMFAOGEDAA";
+        pub const ActiveRollbackPointCsReq = struct {
+            pub const message_name = "ActiveRollbackPointCsReq";
             pub const cmd_id: u16 = 7174;
             @"group_id": u32 = 0,
-            @"BHFCLEAOBHP": []const u8 = &.{},
+            @"point_name": []const u8 = &.{},
             @"rollback_point": ?RollbackPointInfo = null,
             pub const xor_by_field = struct {
                 pub const @"group_id": u31 = 14467;
@@ -83950,20 +83950,20 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             };
             pub const FieldNumber = enum(u29) {
                 @"group_id" = 10,
-                @"BHFCLEAOBHP" = 13,
+                @"point_name" = 13,
                 @"rollback_point" = 15,
                 _,
             };
             pub const Decoded = struct {
-                pub const Parent = OLMFAOGEDAA;
+                pub const Parent = ActiveRollbackPointCsReq;
                 pub const init: @This() = .{};
                 @"group_id": u32 = 0,
-                @"BHFCLEAOBHP": []const u8 = &.{},
+                @"point_name": []const u8 = &.{},
                 @"rollback_point": ?RollbackPointInfo.Decoded = null,
             };
             pub const encoding_by_field = struct {
                 pub const @"group_id": Encoding = .normal;
-                pub const @"BHFCLEAOBHP": Encoding = .normal;
+                pub const @"point_name": Encoding = .normal;
                 pub const @"rollback_point": Encoding = .normal;
             };
         };
@@ -98376,7 +98376,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
             @"UNK_HDNHBOPDAMC_48": []const HHLPININDFO = &.{},
             @"UNK_HDNHBOPDAMC_32": []const JDCDPDGPDID = &.{},
             @"PLMGNNGLLKG": []const KeyValue([]const u8, i32) = &.{},
-            @"BHFCLEAOBHP": []const u8 = &.{},
+            @"point_name": []const u8 = &.{},
             @"LKBICGANCOB": u64 = 0,
             @"reason": ?GroupOrderReasonInfo = null,
             @"group_order_reason": ?GroupOrderReason = null,
@@ -98400,7 +98400,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"UNK_HDNHBOPDAMC_48" = 5,
                 @"UNK_HDNHBOPDAMC_32" = 6,
                 @"PLMGNNGLLKG" = 7,
-                @"BHFCLEAOBHP" = 8,
+                @"point_name" = 8,
                 @"LKBICGANCOB" = 9,
                 @"reason" = 10,
                 @"group_order_reason" = 11,
@@ -98424,7 +98424,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 @"UNK_HDNHBOPDAMC_48": Iterator(HHLPININDFO.Decoded) = .empty,
                 @"UNK_HDNHBOPDAMC_32": Iterator(JDCDPDGPDID.Decoded) = .empty,
                 @"PLMGNNGLLKG": Iterator(KeyValue([]const u8, i32).Decoded) = .empty,
-                @"BHFCLEAOBHP": []const u8 = &.{},
+                @"point_name": []const u8 = &.{},
                 @"LKBICGANCOB": u64 = 0,
                 @"reason": ?GroupOrderReasonInfo.Decoded = null,
                 @"group_order_reason": ?GroupOrderReason.Decoded = null,
@@ -98445,7 +98445,7 @@ pub fn makeNamespace(comptime protobuf: ProtobufOptions) type {
                 pub const @"UNK_HDNHBOPDAMC_48": Encoding = .normal;
                 pub const @"UNK_HDNHBOPDAMC_32": Encoding = .normal;
                 pub const @"PLMGNNGLLKG": Encoding = .normal;
-                pub const @"BHFCLEAOBHP": Encoding = .normal;
+                pub const @"point_name": Encoding = .normal;
                 pub const @"LKBICGANCOB": Encoding = .normal;
                 pub const @"reason": Encoding = .normal;
                 pub const @"group_order_reason": Encoding = .normal;

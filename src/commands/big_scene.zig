@@ -103,6 +103,21 @@ pub fn EnterFloorDoneCsReq(session: Session(.EnterFloorDoneCsReq)) !void {
     return session.success();
 }
 
+pub fn ActiveRollbackPointCsReq(session: Session(.ActiveRollbackPointCsReq)) !void {
+    const request = try session.decodeBody();
+    const rbp = request.rollback_point orelse return session.fail(.RET_INVALID_REQUEST_DATA);
+
+    const pos = rbp.position orelse return session.fail(.RET_INVALID_REQUEST_DATA);
+    const rot = rbp.rotation orelse return session.fail(.RET_INVALID_REQUEST_DATA);
+
+    session.player.updateRollbackPoint(.{
+        .position = .{ pos.x, pos.y, pos.z },
+        .rotation = .{ rot.x, rot.y, rot.z },
+    });
+
+    return session.success();
+}
+
 const gadget_count_max = assets.Group.table.gadget_ids.len;
 
 fn notifyGroupMemberCreate(

@@ -542,6 +542,17 @@ pub fn nextBigSceneEntityId(player: *Player, @"type": EntityId.Type) EntityId {
     return .{ .type = @"type", .seqn = player.temp.entity_id_seq };
 }
 
+pub const RollbackPointOptions = struct {
+    position: [3]i32,
+    rotation: [3]i32,
+};
+
+pub fn updateRollbackPoint(player: *Player, options: RollbackPointOptions) void {
+    player.needs_save = true;
+    player.storage.big_scene.position = options.position;
+    player.storage.big_scene.rotation = options.rotation;
+}
+
 pub fn updateMainCityTime(player: *Player, time: Time) void {
     player.needs_save = true;
     player.storage.time = .{
