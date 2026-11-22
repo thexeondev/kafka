@@ -294,6 +294,21 @@ pub const BigSceneTeam = struct {
     }
 };
 
+pub const EntityId = packed struct(u32) {
+    seqn: u24,
+    type: Type,
+
+    pub const Type = enum(u8) {
+        avatar = 1,
+        gadget = 7,
+        _,
+    };
+
+    pub fn toInt(id: EntityId) u32 {
+        return @backingInt(id);
+    }
+};
+
 fn avatarAtIndex(player: *const Player, index: u32) Avatar {
     const storage_avatar = player.storage.avatars.getPtr(index);
 
@@ -522,6 +537,11 @@ pub fn enterBigSceneFloor(player: *Player, options: struct {
     player.storage.big_scene.rotation = options.rotation;
 }
 
+pub fn nextBigSceneEntityId(player: *Player, @"type": EntityId.Type) EntityId {
+    defer player.temp.entity_id_seq +%= 1;
+    return .{ .type = @"type", .seqn = player.temp.entity_id_seq };
+}
+
 pub fn updateMainCityTime(player: *Player, time: Time) void {
     player.needs_save = true;
     player.storage.time = .{
@@ -549,6 +569,13 @@ pub fn getControlGuiseAvatarId(player: *Player) u32 {
     const avatar = player.getAvatarById(avatar_id) orelse return avatar_id;
 
     return avatar.form_id_maybe orelse avatar_id;
+}
+
+pub fn getControlBigSceneAvatarId(player: *const Player) u32 {
+    if (player.storage.big_scene.lineup_avatars[0].unwrap()) |avatar_id|
+        return avatar_id;
+
+    return 1011;
 }
 
 pub fn isInHall(player: *const Player) bool {
@@ -763,5 +790,16 @@ pub fn buildEnterFloorScNotify(player: *Player) ?gen.EnterFloorScNotify {
         .floor_id = floor_id,
         .day_of_week = @backingInt(time.day),
         .time_in_minutes = time.period.minutes(),
+        .control_entity = .{
+            .position = .{
+                .x = pos[0],
+                .y = pos[1],
+                .z = pos[2],
+            },
+            .rotation = .{},
+            .entity = .{ .Avatar = .{
+                .avatar_id = @intCast(player.getControlBigSceneAvatarId()),
+            } },
+        },
     };
 }

@@ -1,6 +1,7 @@
 //! Data that lives throughout requests but gets reset after a relogin.
 
 cur_battle: ?Battle,
+entity_id_seq: u24,
 
 const Temporaries = @This();
 const std = @import("std");
@@ -8,6 +9,7 @@ const assert = std.debug.assert;
 
 pub const init: Temporaries = .{
     .cur_battle = null,
+    .entity_id_seq = 1,
 };
 
 pub const Battle = union(enum) {
