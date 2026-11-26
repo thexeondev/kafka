@@ -2,7 +2,7 @@
     .name = .remielle,
     .fingerprint = 0xcb34a77745661337,
     .version = "0.1.0",
-    .minimum_zig_version = "0.17.0",
+    .minimum_zig_version = "0.17.1",
     .paths = .{
         "LICENSE",
         "build.zig",
