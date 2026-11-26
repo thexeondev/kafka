@@ -6,12 +6,12 @@ A free and open-source server emulator for the game Zenless Zone Zero.
 You can download a pre-built, ready-to-use executable from the [releases page](https://git.xeondev.com/CovenantOfDayat/remielle/releases).
 
 ## Building from Source
-Ensure you have Zig compiler of version `0.17.0`. You can download it from the official website: [Linux](https://ziglang.org/download/0.17.0/zig-x86_64-linux-0.17.0.tar.xz)/[Windows](https://ziglang.org/download/0.17.0/zig-x86_64-windows-0.17.0.zip), or by using a [version manager](https://git.xeondev.com/nyan/zvm/releases).
+Ensure you have Zig compiler of version `0.17.1`. You can download it from the official website: [Linux](https://ziglang.org/download/0.17.1/zig-x86_64-linux-0.17.1.tar.xz)/[Windows](https://ziglang.org/download/0.17.1/zig-x86_64-windows-0.17.1.zip), or by using a [version manager](https://git.xeondev.com/nyan/zvm/releases).
 
 First, double-check the compiler version
 ```sh
 $ zig version
-0.17.0
+0.17.1
 ```
 
 If the output matches, simply run
