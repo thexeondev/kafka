@@ -26,3 +26,8 @@ pub const big_scene_sync: bool =
 
 pub const big_scene_floor: bool =
     @hasDecl(gen, "EnterFloorScNotify");
+
+pub const big_scene_group_members: bool =
+    @hasDecl(gen, "GroupMemberCreateScNotify") and
+    @hasDecl(gen, "GroupOrderReadyScNotify") and
+    @hasDecl(gen, "SceneEntityAppearScNotify");

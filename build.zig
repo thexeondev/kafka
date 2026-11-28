@@ -115,7 +115,8 @@ fn maybeCompileProto(b: *Build) !?*Build.Step {
 
     var entries = proto_dir.iterateAssumeFirstIteration();
     while (try entries.next(b.graph.io)) |entry| {
-        if (entry.kind != .file) continue;
+        if (entry.kind != .file or
+            !mem.endsWith(u8, entry.name, ".proto")) continue;
 
         const path = b.fmt("proto/{s}", .{entry.name});
         run.addFileArg2(b.path(path), .{});

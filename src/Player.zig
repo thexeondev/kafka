@@ -891,7 +891,7 @@ pub fn notifyViewObjects(
     }
 
     const group_id_list = view_objects.groups.flushGroupOrders();
-    if (group_id_list.len != 0) {
+    if (features.big_scene_group_members and group_id_list.len != 0) {
         try notifyGroupMemberCreation(sink, group_id_list);
         try notifyGroupOrders(sink, group_id_list);
         try notifyGroupEntitiesAppearance(view_objects, sink, group_id_list);
